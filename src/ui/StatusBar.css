@@ -1,0 +1,56 @@
+.sp-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  background: var(--sp-color-bg-panel);
+  color: var(--sp-color-fg-muted);
+  border-top: 1px solid var(--sp-color-border);
+  font-size: var(--sp-font-size-ui);
+  line-height: var(--sp-line-height);
+  white-space: nowrap;
+}
+
+.sp-statusbar__group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-lg);
+  min-width: 0;
+}
+
+.sp-statusbar__item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-statusbar__button {
+  color: inherit;
+  padding: 0 var(--sp-space-xs);
+  border-radius: var(--sp-radius-sm);
+}
+.sp-statusbar__button:hover {
+  background: var(--sp-color-bg-hover);
+  color: var(--sp-color-fg);
+}
+
+.sp-statusbar__spawn.is-running {
+  color: var(--sp-color-accent);
+}
+.sp-statusbar.is-ok .sp-statusbar__spawn {
+  color: var(--sp-color-success);
+}
+.sp-statusbar.is-croak .sp-statusbar__spawn {
+  color: var(--sp-color-croak);
+}
+.sp-statusbar.is-stopped .sp-statusbar__spawn {
+  color: var(--sp-color-warning);
+}
+
+.sp-statusbar__badge {
+  padding: 0 var(--sp-space-sm);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  color: var(--sp-color-success);
+}

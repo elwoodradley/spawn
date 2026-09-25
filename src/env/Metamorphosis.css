@@ -1,0 +1,99 @@
+.sp-meta__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.sp-meta {
+  position: fixed;
+  right: var(--sp-space-md);
+  bottom: calc(
+    var(--sp-font-size-ui) * var(--sp-line-height) + var(--sp-space-sm) * 2 + var(--sp-space-sm)
+  );
+  z-index: 41;
+  min-width: 22em;
+  max-width: 40em;
+  background: var(--sp-color-bg-elevated);
+  color: var(--sp-color-fg);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+  padding: var(--sp-space-sm);
+  box-shadow: 0 var(--sp-space-sm) var(--sp-space-xl) rgba(0, 0, 0, 0.35);
+}
+
+.sp-meta__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-xs) var(--sp-space-sm);
+}
+
+.sp-meta__title {
+  font-weight: bold;
+}
+
+.sp-meta__refresh {
+  color: var(--sp-color-fg-muted);
+  padding: var(--sp-space-xs) var(--sp-space-sm);
+  border-radius: var(--sp-radius-sm);
+}
+.sp-meta__refresh:hover:not(:disabled) {
+  background: var(--sp-color-bg-hover);
+  color: var(--sp-color-fg);
+}
+
+.sp-meta__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.sp-meta__item {
+  display: grid;
+  grid-template-columns: 4em 1fr auto;
+  align-items: center;
+  gap: var(--sp-space-md);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-space-sm);
+  border-radius: var(--sp-radius-sm);
+}
+.sp-meta__item:hover {
+  background: var(--sp-color-bg-hover);
+}
+.sp-meta__item.is-selected {
+  background: var(--sp-color-bg-active);
+}
+.sp-meta__item.is-selected .sp-meta__source {
+  color: var(--sp-color-accent);
+}
+
+.sp-meta__source {
+  color: var(--sp-color-fg-muted);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sp-meta__path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-meta__version {
+  color: var(--sp-color-fg-muted);
+}
+
+.sp-meta__empty,
+.sp-meta__croak {
+  margin: 0;
+  padding: var(--sp-space-sm);
+  color: var(--sp-color-fg-muted);
+}
+.sp-meta__croak {
+  color: var(--sp-color-croak);
+}

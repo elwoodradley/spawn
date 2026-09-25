@@ -93,12 +93,18 @@ pub async fn run(spawned: Spawned, kill: oneshot::Receiver<()>, on_event: Channe
     }
     drop(tx);
 
-    let forward = async {
-        while let Some(event) = rx.recv().await {
-            if on_event.send(event).is_err() {
-                break;
+    // Forward concurrently with waiting on the child: output must reach the
+    // frontend while the program runs, not after it exits, and the pumps
+    // would block once the queue filled if nobody drained it.
+    let forwarder = {
+        let on_event = on_event.clone();
+        tokio::spawn(async move {
+            while let Some(event) = rx.recv().await {
+                if on_event.send(event).is_err() {
+                    break;
+                }
             }
-        }
+        })
     };
 
     let status = tokio::select! {
@@ -110,7 +116,7 @@ pub async fn run(spawned: Spawned, kill: oneshot::Receiver<()>, on_event: Channe
     };
 
     // Drain whatever the pumps still hold after the child has exited.
-    forward.await;
+    let _ = forwarder.await;
     // Make sure stdin is released even if the frontend never closed it.
     stdin.lock().await.take();
 
