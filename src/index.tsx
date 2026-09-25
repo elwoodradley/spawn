@@ -1,8 +1,7 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 
+import App from "./app/App";
 import "./styles/base.css";
-import { initTheme } from "./theme/store";
 
-void initTheme();
-render(() => <div class="sp-chrome">SPAWN</div>, document.getElementById("root") as HTMLElement);
+render(() => <App />, document.getElementById("root") as HTMLElement);

@@ -9,6 +9,9 @@
  */
 import { createSignal, type Accessor } from "solid-js";
 
+import { closeDocument, isDirty, openDocument, reveal } from "../editor/documents";
+import { baseName, confirm } from "../ipc";
+
 export interface Tab {
   path: string;
   /** File name, for the tab strip. */
@@ -18,13 +21,52 @@ export interface Tab {
 const [brood, setBrood] = createSignal<string | null>(null);
 const [tabs, setTabs] = createSignal<readonly Tab[]>([]);
 const [activeFilePath, setActiveFilePath] = createSignal<string | null>(null);
+const [lastCroak, setLastCroak] = createSignal<string | null>(null);
 
-export { brood, setBrood, tabs, setTabs, activeFilePath, setActiveFilePath };
-
-export const openFile: (path: string, line?: number) => Promise<void> = async () => {
-  // Implemented by the editor/brood work; stub keeps the contract compiling.
+export {
+  brood,
+  setBrood,
+  tabs,
+  setTabs,
+  activeFilePath,
+  setActiveFilePath,
+  lastCroak,
+  setLastCroak,
 };
 
-export const closeTab: (path: string) => Promise<void> = async () => {};
-
 export type BroodAccessor = Accessor<string | null>;
+
+export function openBrood(path: string): void {
+  setBrood(path);
+}
+
+export const openFile = async (path: string, line?: number): Promise<void> => {
+  try {
+    await openDocument(path);
+  } catch (err) {
+    setLastCroak(`Could not open ${path}: ${err instanceof Error ? err.message : String(err)}`);
+    return;
+  }
+  if (!tabs().some((t) => t.path === path)) {
+    setTabs([...tabs(), { path, name: baseName(path) }]);
+  }
+  setActiveFilePath(path);
+  if (line !== undefined) reveal(path, line);
+};
+
+export const closeTab = async (path: string): Promise<void> => {
+  if (isDirty(path)) {
+    const ok = await confirm(`Close ${baseName(path)} without saving?`);
+    if (!ok) return;
+  }
+  const current = tabs();
+  const index = current.findIndex((t) => t.path === path);
+  if (index === -1) return;
+  const remaining = current.filter((t) => t.path !== path);
+  setTabs(remaining);
+  closeDocument(path);
+  if (activeFilePath() === path) {
+    const neighbour = remaining[Math.min(index, remaining.length - 1)];
+    setActiveFilePath(neighbour?.path ?? null);
+  }
+};

@@ -7,18 +7,109 @@
  * - `isDirty(path)` for tab decorations.
  * - `cursorPosition()` for the status bar, 1-based line and column.
  */
+import type { EditorState } from "@codemirror/state";
+import type { ViewUpdate } from "@codemirror/view";
 import { createSignal } from "solid-js";
+
+import { readText, writeText } from "../ipc";
+import { currentTheme } from "../theme/store";
+import { createDocumentState } from "./createEditor";
 
 export interface CursorPosition {
   line: number;
   col: number;
 }
 
+export interface DocEntry {
+  /** Always the latest state; the update listener keeps it fresh. */
+  state: EditorState;
+  savedText: string;
+  scrollTop: number;
+}
+
+export interface RevealRequest {
+  path: string;
+  line: number;
+  nonce: number;
+}
+
+const docs = new Map<string, DocEntry>();
+
 const [cursorPosition, setCursorPosition] = createSignal<CursorPosition | null>(null);
-export { cursorPosition, setCursorPosition };
+const [dirtyPaths, setDirtyPaths] = createSignal<ReadonlySet<string>>(new Set());
+const [revealRequest, setRevealRequest] = createSignal<RevealRequest | null>(null);
+export { cursorPosition, setCursorPosition, dirtyPaths, revealRequest };
 
-export async function saveAllDirty(): Promise<void> {}
+function setDirty(path: string, dirty: boolean): void {
+  const current = dirtyPaths();
+  if (current.has(path) === dirty) return;
+  const next = new Set(current);
+  if (dirty) next.add(path);
+  else next.delete(path);
+  setDirtyPaths(next);
+}
 
-export function isDirty(_path: string): boolean {
-  return false;
+function listenerFor(path: string): (update: ViewUpdate) => void {
+  return (update) => {
+    const entry = docs.get(path);
+    if (!entry) return;
+    entry.state = update.state;
+    if (update.docChanged) {
+      setDirty(path, update.state.doc.toString() !== entry.savedText);
+    }
+    if (update.selectionSet || update.docChanged || update.focusChanged) {
+      const head = update.state.selection.main.head;
+      const line = update.state.doc.lineAt(head);
+      setCursorPosition({ line: line.number, col: head - line.from + 1 });
+    }
+  };
+}
+
+/** Load a file into the registry (no-op if already open). */
+export async function openDocument(path: string): Promise<DocEntry> {
+  const existing = docs.get(path);
+  if (existing) return existing;
+  const text = await readText(path);
+  const entry: DocEntry = {
+    state: createDocumentState(text, currentTheme().appearance, listenerFor(path)),
+    savedText: text,
+    scrollTop: 0,
+  };
+  docs.set(path, entry);
+  return entry;
+}
+
+export function getDocument(path: string): DocEntry | undefined {
+  return docs.get(path);
+}
+
+export function documentText(path: string): string | null {
+  return docs.get(path)?.state.doc.toString() ?? null;
+}
+
+export function closeDocument(path: string): void {
+  docs.delete(path);
+  setDirty(path, false);
+}
+
+export async function saveDocument(path: string): Promise<void> {
+  const entry = docs.get(path);
+  if (!entry) return;
+  const text = entry.state.doc.toString();
+  await writeText(path, text);
+  entry.savedText = text;
+  setDirty(path, false);
+}
+
+export async function saveAllDirty(): Promise<void> {
+  await Promise.all([...dirtyPaths()].map(saveDocument));
+}
+
+export function isDirty(path: string): boolean {
+  return dirtyPaths().has(path);
+}
+
+/** Ask the editor to put the cursor on a 1-based line and scroll to it. */
+export function reveal(path: string, line: number): void {
+  setRevealRequest({ path, line, nonce: Date.now() });
 }

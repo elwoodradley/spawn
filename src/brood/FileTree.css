@@ -1,0 +1,63 @@
+.sp-tree {
+  height: 100%;
+  overflow: auto;
+  background: var(--sp-color-bg-panel);
+  color: var(--sp-color-fg);
+}
+
+.sp-tree-header {
+  padding: var(--sp-space-sm) var(--sp-space-lg);
+  font-weight: bold;
+  color: var(--sp-color-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-tree-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+  padding: var(--sp-space-xs) var(--sp-space-sm);
+  padding-left: calc(var(--sp-space-sm) + var(--depth) * var(--sp-space-lg));
+  white-space: nowrap;
+  border-radius: var(--sp-radius-sm);
+}
+
+.sp-tree-row:hover {
+  background: var(--sp-color-bg-hover);
+}
+
+.sp-tree-row.is-active {
+  background: var(--sp-color-bg-active);
+  color: var(--sp-color-accent);
+}
+
+.sp-tree-chevron,
+.sp-tree-icon {
+  display: inline-flex;
+  width: 16px;
+  justify-content: center;
+  color: var(--sp-color-fg-muted);
+  flex: none;
+}
+
+.sp-tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-tree-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-xl);
+  color: var(--sp-color-fg-muted);
+}
+
+.sp-tree-empty p {
+  margin: 0;
+}

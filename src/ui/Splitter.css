@@ -1,0 +1,25 @@
+.sp-splitter {
+  flex: none;
+  background: var(--sp-color-border);
+  transition: background 120ms;
+  z-index: 1;
+}
+
+.sp-splitter:hover,
+.sp-splitter:active {
+  background: var(--sp-color-accent);
+}
+
+.sp-splitter-vertical {
+  width: 1px;
+  cursor: col-resize;
+  /* A wider hit area than the drawn line. */
+  box-shadow: 0 0 0 3px transparent;
+  outline: 3px solid transparent;
+}
+
+.sp-splitter-horizontal {
+  height: 1px;
+  cursor: row-resize;
+  outline: 3px solid transparent;
+}

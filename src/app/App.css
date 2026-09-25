@@ -1,0 +1,83 @@
+.sp-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--sp-color-bg-panel);
+}
+
+.sp-main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.sp-sidebar {
+  flex: none;
+  min-width: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--sp-color-border);
+}
+
+.sp-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.sp-editor-area {
+  flex: 1;
+  min-height: 0;
+}
+
+.sp-output-area {
+  flex: none;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--sp-color-bg-panel);
+}
+
+.sp-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-space-md);
+  color: var(--sp-color-fg-muted);
+}
+
+.sp-welcome h1 {
+  margin: 0;
+  font-size: calc(var(--sp-font-size-ui) * 2.4);
+  letter-spacing: 0.2em;
+  color: var(--sp-color-accent);
+}
+
+.sp-welcome p {
+  margin: 0;
+}
+
+.sp-welcome-hint {
+  color: var(--sp-color-fg-faint);
+}
+
+.sp-button {
+  padding: var(--sp-space-sm) var(--sp-space-lg);
+  background: var(--sp-color-accent);
+  color: var(--sp-color-accent-fg);
+  border-radius: var(--sp-radius-md);
+  font-weight: bold;
+}
+
+.sp-button:hover {
+  filter: brightness(1.1);
+}
+
+#sp-print {
+  font-family: var(--sp-font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
