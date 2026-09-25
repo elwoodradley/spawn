@@ -49,8 +49,23 @@ Everything else uses the plain word. Settings is settings.
 
 ## Quick start (users)
 
-There are no release builds yet. Follow the developer steps below to run from
-source.
+There are no downloadable release builds yet. Building and installing from
+source takes a few minutes and needs the developer prerequisites below.
+
+On Linux, this builds a release binary and puts it in your launcher with the
+toad icon (no root needed):
+
+```
+npm install; and npm run install:linux
+```
+
+That installs `~/.local/bin/spawn`, a desktop entry, and the icon. Remove it
+again with `bash scripts/install-linux.sh --uninstall`. On macOS and Windows,
+`npm run tauri build` produces a `.app` / installer under
+`src-tauri/target/release/bundle/`.
+
+The icon lives in `app-icon.svg`; `npm run icons` regenerates every platform
+size from it.
 
 ### Linux and a blank window
 

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- SPAWN app icon: a toad, Bog palette. Source of truth for src-tauri/icons (run `npm run icons`). -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#151c20"/>
+      <stop offset="1" stop-color="#07090a"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b6ff3b"/>
+      <stop offset="1" stop-color="#6fb52a"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="0.5" cy="0.45" r="0.55">
+      <stop offset="0" stop-color="#ffd23f"/>
+      <stop offset="1" stop-color="#d99a1e"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+
+  <!-- body -->
+  <ellipse cx="512" cy="640" rx="352" ry="236" fill="url(#skin)"/>
+  <!-- head bridge between the eyes -->
+  <rect x="330" y="360" width="364" height="220" rx="110" fill="url(#skin)"/>
+  <!-- eye mounds -->
+  <circle cx="368" cy="392" r="132" fill="url(#skin)"/>
+  <circle cx="656" cy="392" r="132" fill="url(#skin)"/>
+
+  <!-- warts -->
+  <circle cx="300" cy="700" r="26" fill="#4f8a1c" opacity="0.7"/>
+  <circle cx="380" cy="770" r="18" fill="#4f8a1c" opacity="0.7"/>
+  <circle cx="700" cy="740" r="24" fill="#4f8a1c" opacity="0.7"/>
+  <circle cx="612" cy="800" r="16" fill="#4f8a1c" opacity="0.7"/>
+  <circle cx="512" cy="560" r="14" fill="#4f8a1c" opacity="0.6"/>
+
+  <!-- eyes -->
+  <circle cx="368" cy="392" r="86" fill="url(#eye)"/>
+  <circle cx="656" cy="392" r="86" fill="url(#eye)"/>
+  <ellipse cx="368" cy="392" rx="30" ry="62" fill="#07090a"/>
+  <ellipse cx="656" cy="392" rx="30" ry="62" fill="#07090a"/>
+  <circle cx="386" cy="360" r="16" fill="#ffffff" opacity="0.9"/>
+  <circle cx="674" cy="360" r="16" fill="#ffffff" opacity="0.9"/>
+
+  <!-- nostrils -->
+  <circle cx="476" cy="560" r="9" fill="#2f5a12" opacity="0.8"/>
+  <circle cx="548" cy="560" r="9" fill="#2f5a12" opacity="0.8"/>
+
+  <!-- the wide, slightly smug mouth -->
+  <path d="M 292 660 Q 512 800 732 660" fill="none" stroke="#0c1012" stroke-width="30" stroke-linecap="round"/>
+  <path d="M 292 660 Q 512 800 732 660" fill="none" stroke="#7bd63a" stroke-width="8" stroke-linecap="round" opacity="0.45" transform="translate(0 -20)"/>
+</svg>
