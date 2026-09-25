@@ -1,0 +1,48 @@
+[package]
+name = "spawn"
+version = "0.1.0"
+description = "SPAWN: a Python IDE for machine learning work"
+authors = ["Stone Toad"]
+license = "MIT"
+repository = "https://github.com/stonetoad/spawn"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "spawn_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-fs = { version = "2.5.2", features = ["watch"] }
+tauri-plugin-dialog = "2.7.3"
+tauri-plugin-store = "2.4.5"
+tokio = { version = "1.53.1", features = ["process", "io-util", "sync", "macros", "rt-multi-thread"] }
+thiserror = "2.0.21"
+
+
+# Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
+[lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+dbg_macro = "deny"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

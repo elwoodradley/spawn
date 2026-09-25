@@ -1,0 +1,71 @@
+{
+  "name": "Bog",
+  "appearance": "dark",
+  "author": "Stone Toad",
+  "colors": {
+    "bg": "#07090a",
+    "bgPanel": "#0c1012",
+    "bgElevated": "#12181b",
+    "bgHover": "#172024",
+    "bgActive": "#1e2a2f",
+    "fg": "#d6e4d2",
+    "fgMuted": "#7f9483",
+    "fgFaint": "#4a5a4e",
+    "border": "#1c2629",
+    "accent": "#b6ff3b",
+    "accentFg": "#07090a",
+    "selection": "rgba(182, 255, 59, 0.22)",
+    "cursor": "#b6ff3b",
+    "lineHighlight": "rgba(182, 255, 59, 0.05)",
+    "gutterFg": "#3d4d42",
+    "gutterActiveFg": "#b6ff3b",
+    "matchingBracket": "rgba(182, 255, 59, 0.3)",
+    "success": "#b6ff3b",
+    "warning": "#ffb02e",
+    "croak": "#ff3d5a",
+    "info": "#4fd1ff",
+    "stderr": "#d9a441"
+  },
+  "fonts": {
+    "ui": "system-ui",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.55
+  },
+  "syntax": {
+    "keyword": { "color": "#ff3d8f", "fontStyle": "italic" },
+    "controlKeyword": { "color": "#ff3d8f", "fontStyle": "italic" },
+    "definitionKeyword": { "color": "#ff3d8f", "fontStyle": "italic" },
+    "moduleKeyword": { "color": "#ff3d8f", "fontStyle": "italic" },
+    "operator": { "color": "#ff8c42" },
+    "string": { "color": "#ffd23f" },
+    "docString": { "color": "#a0a860", "fontStyle": "italic" },
+    "comment": { "color": "#4a5a4e", "fontStyle": "italic" },
+    "number": { "color": "#4fd1ff" },
+    "bool": { "color": "#4fd1ff" },
+    "null": { "color": "#4fd1ff" },
+    "self": { "color": "#ff8c42" },
+    "function": { "color": "#b6ff3b" },
+    "className": { "color": "#4fd1ff", "fontWeight": "bold" },
+    "typeName": { "color": "#4fd1ff" },
+    "variableName": { "color": "#d6e4d2" },
+    "propertyName": { "color": "#9fe7ff" },
+    "definition": { "color": "#b6ff3b", "fontWeight": "bold" },
+    "decorator": { "color": "#ff8c42" },
+    "punctuation": { "color": "#7f9483" },
+    "bracket": { "color": "#7f9483" },
+    "invalid": { "color": "#ff3d5a", "textDecoration": "underline" },
+    "escape": { "color": "#ff8c42" },
+    "regexp": { "color": "#ffd23f" }
+  },
+  "plot": {
+    "background": "#0c1012",
+    "foreground": "#d6e4d2",
+    "grid": "#1c2629",
+    "series": ["#b6ff3b", "#ff3d8f", "#4fd1ff", "#ffd23f", "#ff8c42", "#c58cff"]
+  },
+  "filter": {
+    "editor": "contrast(1.08) saturate(1.15)"
+  }
+}

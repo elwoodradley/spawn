@@ -1,0 +1,104 @@
+/*
+ * Base styles. No colours, fonts, sizes or radii appear as literals anywhere
+ * in src/ CSS: everything reads a --sp-* token written by src/theme/apply.ts.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--sp-color-bg-panel);
+  color: var(--sp-color-fg);
+  font-family: var(--sp-font-ui);
+  font-size: var(--sp-font-size-ui);
+  line-height: var(--sp-line-height);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 1px solid var(--sp-color-accent);
+  outline-offset: -1px;
+}
+
+code,
+pre,
+.mono {
+  font-family: var(--sp-font-mono);
+  font-size: var(--sp-font-size-mono);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--sp-color-fg-faint);
+  background-clip: padding-box;
+}
+
+/* The chrome filter wraps everything except the editor surface, which has its
+   own token so a theme can treat text and UI differently. */
+.sp-chrome {
+  filter: var(--sp-filter-chrome);
+}
+
+/* Paper printing: only the active file's source, in ink-friendly form. */
+@media print {
+  html,
+  body,
+  #root {
+    height: auto;
+    overflow: visible;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+  .sp-no-print {
+    display: none !important;
+  }
+  .sp-print-only {
+    display: block !important;
+  }
+}
+.sp-print-only {
+  display: none;
+}
