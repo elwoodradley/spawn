@@ -185,7 +185,7 @@ describe("robustRange", () => {
 
   it("does not pad a non-negative metric below zero", () => {
     expect(robustRange([0.02, 0.1, 0.3, 0.5, 0.7, 0.9]).min).toBe(0);
-    expect(robustRange([-0.5, 0.1, 0.3, 0.5, 0.7, 0.9]).min).toBeLessThan(-0.5);
+    expect(robustRange([-0.5, 0.1, 0.3, 0.5, 0.7, 0.9], 0.08, Infinity).min).toBeLessThan(-0.5);
   });
 
   it("never clips with fewer than six points", () => {
