@@ -58,6 +58,10 @@ export const SettingsSchema = z.object({
   run: z
     .object({
       patterns: z.array(RunPattern).default([]),
+      /** Finished runs kept for comparison in the run panel. */
+      keepRuns: z.number().int().min(0).max(20).default(5),
+      /** Draw the previous runs' curves behind the live one. */
+      overlayPrevious: z.boolean().default(true),
     })
     .prefault({}),
 });

@@ -20,6 +20,7 @@ import { saveAllDirty } from "../editor/documents";
 import { selectedInterpreter } from "../env/store";
 import { baseName, dirName, notify, spawnProcess, type ProcEvent, type ProcHandle } from "../ipc";
 import { MetricsModel } from "./metrics";
+import { recordRun } from "./runHistory";
 import { OutputModel } from "./output";
 
 export type SpawnStatus = "idle" | "running";
@@ -196,6 +197,25 @@ function finish(code: number | null, signal: number | null, failure?: string): v
     output.system(`${how} after ${seconds}s`);
   }
   notifyIfAway(code, seconds);
+  snapshotRun();
+}
+
+/** Keep this run's curves so the next run can be compared against it. */
+function snapshotRun(): void {
+  const ran = spawnCommand();
+  const kind = outcome();
+  if (!ran || kind === "none") return;
+  recordRun(
+    {
+      startedAt,
+      file: baseName(ran.args[ran.args.length - 1] ?? ""),
+      command: `${baseName(ran.program)} ${ran.args.map(baseName).join(" ")}`,
+      durationMs: elapsedMs(),
+      outcome: kind,
+      series: metrics.series,
+    },
+    settings().run.keepRuns,
+  );
 }
 
 /** A desktop notification when a spawn ends while the user is elsewhere. */

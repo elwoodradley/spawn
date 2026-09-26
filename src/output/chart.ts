@@ -123,3 +123,57 @@ export function nearestIndex(xs: readonly number[], x: number): number {
   if (a !== undefined && b !== undefined && Math.abs(a - x) <= Math.abs(b - x)) return prev;
   return lo;
 }
+
+export interface XY {
+  step: number;
+  value: number;
+}
+
+/** `M x y L x y …` for a polyline through points already in pixel space. */
+export function linePath(points: readonly XY[], x: Scale, y: Scale): string {
+  return points
+    .map((p, i) => `${i === 0 ? "M" : "L"}${x(p.step).toFixed(1)} ${y(p.value).toFixed(1)}`)
+    .join(" ");
+}
+
+/**
+ * Interpolate series `b` at each x of series `a` over their shared x range.
+ * Points outside the overlap are dropped, so the band never extrapolates.
+ */
+export function alignSeries(a: readonly XY[], b: readonly XY[]): Array<[XY, XY]> {
+  if (a.length === 0 || b.length === 0) return [];
+  const lo = Math.max(a[0]?.step ?? 0, b[0]?.step ?? 0);
+  const hi = Math.min(a[a.length - 1]?.step ?? 0, b[b.length - 1]?.step ?? 0);
+  if (hi < lo) return [];
+  const out: Array<[XY, XY]> = [];
+  let j = 0;
+  for (const p of a) {
+    if (p.step < lo || p.step > hi) continue;
+    while (j + 1 < b.length && (b[j + 1]?.step ?? Infinity) <= p.step) j++;
+    const b0 = b[j];
+    const b1 = b[j + 1];
+    if (!b0) continue;
+    let value = b0.value;
+    if (b1 && b1.step !== b0.step && p.step > b0.step) {
+      const t = (p.step - b0.step) / (b1.step - b0.step);
+      value = b0.value + t * (b1.value - b0.value);
+    }
+    out.push([p, { step: p.step, value }]);
+  }
+  return out;
+}
+
+/**
+ * A closed path filling the area between two lines over their shared x
+ * range: forward along `a`, back along `b`. Empty when they do not overlap.
+ */
+export function gapPath(a: readonly XY[], b: readonly XY[], x: Scale, y: Scale): string {
+  const pairs = alignSeries(a, b);
+  if (pairs.length < 2) return "";
+  const forward = pairs.map(([p]) => `${x(p.step).toFixed(1)} ${y(p.value).toFixed(1)}`);
+  const back = pairs
+    .slice()
+    .reverse()
+    .map(([, q]) => `${x(q.step).toFixed(1)} ${y(q.value).toFixed(1)}`);
+  return `M${forward.join(" L")} L${back.join(" L")} Z`;
+}

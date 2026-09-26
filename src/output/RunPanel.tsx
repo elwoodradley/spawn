@@ -1,12 +1,16 @@
 /**
  * The run panel: what a training script is doing right now. Elapsed time,
- * iteration rate, progress with an ETA, and a live chart per metric series.
+ * iteration rate, progress with an ETA, a strip of kept runs, and a live
+ * chart per metric group (train and val of one metric share a chart).
  */
-import { For, Show } from "solid-js";
+import { createMemo, createSignal, For, Show } from "solid-js";
 
-import { elapsedMs, metrics, spawnStatus } from "../spawn/controller";
+import { settings } from "../app/settings";
+import { elapsedMs, metrics, spawnCommand, spawnStatus } from "../spawn/controller";
+import { groupSeries } from "../spawn/pairs";
+import { removeRun, runLabel, runs } from "../spawn/runHistory";
 import { formatDuration, formatRate } from "./chart";
-import LossChart from "./LossChart";
+import LossChart, { type OverlayRun } from "./LossChart";
 import "./RunPanel.css";
 
 export default function RunPanel() {
@@ -21,6 +25,23 @@ export default function RunPanel() {
     return elapsed / p.fraction - elapsed;
   };
   const percent = () => Math.round((progress()?.fraction ?? 0) * 100);
+
+  const groups = createMemo(() => groupSeries(metrics.series));
+
+  /** Runs the user switched off in a legend; everything else overlays. */
+  const [hidden, setHidden] = createSignal<ReadonlySet<number>>(new Set());
+  const toggle = (id: number) =>
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const overlays = createMemo<OverlayRun[]>(() =>
+    settings().run.overlayPrevious
+      ? runs().map((run) => ({ run, enabled: !hidden().has(run.id) }))
+      : [],
+  );
 
   return (
     <section class="sp-run" aria-label="Run">
@@ -55,6 +76,40 @@ export default function RunPanel() {
           )}
         </Show>
       </div>
+      <Show when={runs().length > 0 || spawnCommand()}>
+        <div class="sp-run__runs" aria-label="Kept runs">
+          <span class="sp-run__runs-label">runs</span>
+          <For each={runs()}>
+            {(run) => (
+              <span class="sp-run__run" title={run.command}>
+                <span class="sp-run__run-dot" classList={{ [`is-${run.outcome}`]: true }} />
+                <span>{run.file}</span>
+                <span>{runLabel(run)}</span>
+                <button
+                  class="sp-run__run-x"
+                  title="Forget this run"
+                  aria-label={`Forget run ${run.id}`}
+                  onClick={() => removeRun(run.id)}
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </For>
+          <Show when={spawnCommand()}>
+            {(cmd) => (
+              <span class="sp-run__run is-now">
+                <span
+                  class="sp-run__run-dot"
+                  classList={{ "is-ok": spawnStatus() === "running" }}
+                />
+                <span>{cmd().args[cmd().args.length - 1]?.split(/[\\/]/).pop()}</span>
+                <span>now</span>
+              </span>
+            )}
+          </Show>
+        </div>
+      </Show>
       <Show when={metrics.patternErrors().length > 0}>
         <p class="sp-run__error">
           Custom pattern problem:{" "}
@@ -65,21 +120,28 @@ export default function RunPanel() {
         </p>
       </Show>
       <Show
-        when={metrics.series.length > 0}
+        when={groups().length > 0}
         fallback={
           <div class="sp-run__empty">
             <p>No metrics yet.</p>
             <p class="sp-run__hint">
               Print <code>loss: 0.234</code>, <code>epoch 3/10</code>, or use tqdm and they show up
-              here as the spawn runs. Add your own patterns under the <code>run.patterns</code>{" "}
-              setting.
+              here as the spawn runs. <code>val_loss</code> lands on the same chart as{" "}
+              <code>loss</code>. Add your own patterns in Settings.
             </p>
           </div>
         }
       >
         <div class="sp-run__charts">
-          <For each={metrics.series}>
-            {(series, i) => <LossChart series={series} index={i()} xUnit={metrics.xUnit()} />}
+          <For each={groups()}>
+            {(group) => (
+              <LossChart
+                group={group}
+                xUnit={metrics.xUnit()}
+                overlays={overlays()}
+                onToggleOverlay={toggle}
+              />
+            )}
           </For>
         </div>
       </Show>

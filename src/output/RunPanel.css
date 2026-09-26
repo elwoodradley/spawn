@@ -162,6 +162,106 @@
   stroke-linejoin: round;
   stroke-linecap: round;
 }
+.sp-chart__line.is-previous {
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+.sp-chart__gap {
+  opacity: 0.18;
+  stroke: none;
+}
+.sp-chart__legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-space-md);
+  padding: 0 var(--sp-space-md) var(--sp-space-xs);
+  font-size: calc(var(--sp-font-size-ui) * 0.8);
+  color: var(--sp-color-fg-muted);
+}
+.sp-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+  white-space: nowrap;
+}
+.sp-chart__legend-item.is-previous {
+  cursor: pointer;
+}
+.sp-chart__legend-item.is-off {
+  opacity: 0.45;
+}
+.sp-chart__legend-item input {
+  margin: 0;
+  accent-color: var(--sp-color-accent);
+}
+.sp-chart__line-swatch {
+  width: 14px;
+  height: 0;
+  border-top: 2px solid currentColor;
+}
+.sp-chart__line-swatch.is-previous {
+  border-top-width: 1px;
+  border-top-style: dashed;
+}
+.sp-chart__gap-value {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.sp-chart__gap-value.is-worse {
+  color: var(--sp-color-warning);
+}
+
+.sp-run__runs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-space-sm);
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  border-bottom: 1px solid var(--sp-color-border);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  color: var(--sp-color-fg-muted);
+}
+.sp-run__runs-label {
+  color: var(--sp-color-fg-faint);
+}
+.sp-run__run {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+  padding: 0 var(--sp-space-sm);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-color-bg);
+  font-variant-numeric: tabular-nums;
+}
+.sp-run__run.is-now {
+  color: var(--sp-color-fg);
+  border-color: var(--sp-color-accent);
+}
+.sp-run__run-dot {
+  width: var(--sp-space-md);
+  height: var(--sp-space-md);
+  border-radius: 50%;
+  background: var(--sp-color-fg-faint);
+}
+.sp-run__run-dot.is-ok {
+  background: var(--sp-color-success);
+}
+.sp-run__run-dot.is-croak {
+  background: var(--sp-color-croak);
+}
+.sp-run__run-dot.is-stopped {
+  background: var(--sp-color-warning);
+}
+.sp-run__run-x {
+  color: var(--sp-color-fg-faint);
+  padding: 0 var(--sp-space-xs);
+}
+.sp-run__run-x:hover {
+  color: var(--sp-color-croak);
+}
 .sp-chart__end,
 .sp-chart__dot {
   stroke: var(--sp-plot-bg);

@@ -5,9 +5,12 @@ import {
   formatDuration,
   formatRate,
   formatValue,
-  linearScale,
-  nearestIndex,
+  alignSeries,
+  gapPath,
   integerTicks,
+  linearScale,
+  linePath,
+  nearestIndex,
   niceTicks,
   valueTicks,
 } from "./chart";
@@ -93,5 +96,68 @@ describe("valueTicks", () => {
     const ticks = valueTicks(0.71, 0.93, 3);
     expect(ticks).toContain(0.93);
     expect(ticks).toContain(0.71);
+  });
+});
+
+describe("alignSeries and gapPath", () => {
+  const x = linearScale([0, 10], [0, 100]);
+  const y = linearScale([0, 1], [100, 0]);
+
+  it("interpolates the second series at the first series' steps over the overlap", () => {
+    const a = [
+      { step: 0, value: 0 },
+      { step: 5, value: 0.5 },
+      { step: 10, value: 1 },
+    ];
+    const b = [
+      { step: 2, value: 1 },
+      { step: 8, value: 0 },
+    ];
+    const pairs = alignSeries(a, b);
+    expect(pairs.map(([p]) => p.step)).toEqual([5]);
+    expect(pairs[0]?.[1].value).toBeCloseTo(0.5);
+  });
+
+  it("returns an empty path when the lines do not overlap or are single points", () => {
+    expect(gapPath([{ step: 0, value: 0 }], [{ step: 0, value: 1 }], x, y)).toBe("");
+    expect(
+      gapPath(
+        [
+          { step: 0, value: 0 },
+          { step: 1, value: 0 },
+        ],
+        [
+          { step: 5, value: 1 },
+          { step: 6, value: 1 },
+        ],
+        x,
+        y,
+      ),
+    ).toBe("");
+  });
+
+  it("closes a band between two lines", () => {
+    const a = [
+      { step: 0, value: 0 },
+      { step: 10, value: 0 },
+    ];
+    const b = [
+      { step: 0, value: 1 },
+      { step: 10, value: 1 },
+    ];
+    expect(gapPath(a, b, x, y)).toBe("M0.0 100.0 L100.0 100.0 L100.0 0.0 L0.0 0.0 Z");
+  });
+
+  it("linePath draws in pixel space", () => {
+    expect(
+      linePath(
+        [
+          { step: 0, value: 0 },
+          { step: 10, value: 1 },
+        ],
+        x,
+        y,
+      ),
+    ).toBe("M0.0 100.0 L100.0 0.0");
   });
 });
