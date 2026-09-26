@@ -9,7 +9,12 @@ const [outputHeight, setOutputHeight] = createSignal(240);
 const [sidebarVisible, setSidebarVisible] = createSignal(true);
 const [outputVisible, setOutputVisible] = createSignal(true);
 
+export type SidebarTab = "brood" | "pool";
+const [sidebarTab, setSidebarTab] = createSignal<SidebarTab>("brood");
+
 export {
+  sidebarTab,
+  setSidebarTab,
   sidebarWidth,
   setSidebarWidth,
   outputHeight,

@@ -17,6 +17,7 @@ describe("normalizeClutch", () => {
       outputHeight: 300,
       sidebarVisible: false,
       outputVisible: "yes",
+      sidebarTab: "pool",
     });
     expect(clutch).toEqual({
       brood: "/b",
@@ -26,6 +27,11 @@ describe("normalizeClutch", () => {
       outputHeight: 300,
       sidebarVisible: false,
       outputVisible: true,
+      sidebarTab: "pool",
     });
+  });
+
+  it("falls back to the brood tab for an unknown sidebar tab", () => {
+    expect(normalizeClutch({ sidebarTab: "lily-pad" }).sidebarTab).toBe("brood");
   });
 });

@@ -19,6 +19,7 @@ import { drawSelection, EditorView, keymap, type ViewUpdate } from "@codemirror/
 import { settings } from "../app/settings";
 import { spawnEditorTheme } from "../theme/codemirror";
 import type { Theme } from "../theme/schema";
+import { cellExtensions } from "./cellDecorations";
 import { prefsExtensions } from "./prefs";
 
 /** Holds the editor theme; reconfigured when the app theme changes. */
@@ -48,6 +49,7 @@ export function baseExtensions(appearance: Theme["appearance"]): Extension[] {
       indentWithTab,
     ]),
     python(),
+    ...cellExtensions(),
     themeCompartment.of(spawnEditorTheme(appearance)),
   ];
 }

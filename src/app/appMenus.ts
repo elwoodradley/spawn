@@ -102,6 +102,21 @@ export function appMenus(): Menu[] {
       ],
     },
     {
+      label: "Pool",
+      items: [
+        cmd("pool.spawnCell"),
+        cmd("pool.spawnCellStay"),
+        cmd("pool.spawnSelection"),
+        cmd("pool.spawnAbove"),
+        cmd("pool.spawnFile"),
+        separator,
+        cmd("pool.interrupt", { label: "Interrupt" }),
+        cmd("pool.restart", { label: "Restart pool" }),
+        separator,
+        cmd("pool.toggleVariables", { label: "Variables pane" }),
+      ],
+    },
+    {
       label: "View",
       items: [
         cmd("view.toggleSidebar"),

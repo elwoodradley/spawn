@@ -14,9 +14,10 @@
 import { createSignal, type Accessor } from "solid-js";
 import { createStore, produce, type SetStoreFunction } from "solid-js/store";
 
+import type { DisplayPayload } from "../pool/protocol";
 import { isCroakContinuation, isCroakEnd, isCroakStart, parseFrameLine } from "./croak";
 
-export type Stream = "stdout" | "stderr" | "stdin" | "croak" | "system";
+export type Stream = "stdout" | "stderr" | "stdin" | "croak" | "system" | "pool";
 
 export interface OutputLink {
   file: string;
@@ -30,6 +31,10 @@ export interface OutputLine {
   /** Wall-clock ms when the line was opened, for the timestamps gutter. */
   at: number;
   link?: OutputLink;
+  /** A rich block from the pool (figure, table, array…). `text` is its summary. */
+  rich?: DisplayPayload;
+  /** Which pool exec produced a rich block. */
+  exec?: number;
 }
 
 export interface OutputModelOptions {
@@ -50,6 +55,8 @@ export function stripAnsi(text: string): string {
 interface Pending {
   stream: Stream;
   text: string;
+  rich?: DisplayPayload;
+  exec?: number;
 }
 
 interface OpenLine {
@@ -102,6 +109,19 @@ export class OutputModel {
     this.append("system", `${text}\n`);
   }
 
+  /**
+   * A rich block from the pool. Queued like text so it lands in order with
+   * the prints around it; it closes every open line first so it sits on a
+   * row of its own.
+   */
+  appendRich(payload: DisplayPayload, exec: number): void {
+    this.pending.push({ stream: "pool", text: richSummary(payload), rich: payload, exec });
+    if (!this.scheduled) {
+      this.scheduled = true;
+      this.schedule(() => this.flush());
+    }
+  }
+
   clear(): void {
     this.pending = [];
     this.open = {};
@@ -123,7 +143,10 @@ export class OutputModel {
     this.pending = [];
     this.setLines(
       produce((lines) => {
-        for (const item of batch) this.write(lines, item.stream, stripAnsi(item.text));
+        for (const item of batch) {
+          if (item.rich) this.writeRich(lines, item);
+          else this.write(lines, item.stream, stripAnsi(item.text));
+        }
         this.trim(lines);
       }),
     );
@@ -143,6 +166,18 @@ export class OutputModel {
       else if (token === "\r") this.ensureOpen(lines, stream).col = 0;
       else this.overwrite(lines, stream, token);
     }
+  }
+
+  private writeRich(lines: OutputLine[], item: Pending): void {
+    for (const stream of Object.keys(this.open) as Stream[]) this.closeLine(lines, stream);
+    lines.push({
+      id: this.nextId++,
+      stream: "pool",
+      text: item.text,
+      at: Date.now(),
+      rich: item.rich,
+      exec: item.exec,
+    });
   }
 
   private ensureOpen(lines: OutputLine[], stream: Stream): OpenLine {
@@ -212,4 +247,22 @@ function findIndex(lines: OutputLine[], id: number): number {
     if (lines[i]?.id === id) return i;
   }
   return -1;
+}
+
+/** One line of text standing in for a rich block in copy, save and find. */
+export function richSummary(payload: DisplayPayload): string {
+  switch (payload.kind) {
+    case "text":
+      return payload.text;
+    case "figure":
+      return `[figure ${payload.width}×${payload.height}${payload.title ? ` ${payload.title}` : ""}]`;
+    case "table":
+      return `[table ${payload.shape[0]}×${payload.shape[1]} ${payload.columns.map((c) => c.name).join(", ")}]`;
+    case "array":
+      return `[${payload.library} array shape (${payload.shape.join(", ")}) ${payload.dtype}]`;
+    case "html":
+      return "[html]";
+    case "error":
+      return `${payload.type}: ${payload.message}`;
+  }
 }

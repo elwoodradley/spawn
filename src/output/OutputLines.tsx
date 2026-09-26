@@ -7,6 +7,7 @@ import { For, Show, type JSX } from "solid-js";
 
 import { openFile } from "../app/state";
 import type { OutputLine } from "../spawn/output";
+import RichBlock from "./rich/RichBlock";
 import { formatStamp, lineMatches } from "./view";
 
 export interface OutputLinesProps {
@@ -53,6 +54,7 @@ export function highlight(text: string, query: string): JSX.Element {
 function Row(props: { line: OutputLine; query: string; timestamps: boolean }) {
   const link = () => props.line.link;
   const hit = () => lineMatches(props.line.text, props.query);
+  const rich = () => props.line.rich;
   return (
     <div
       class={`sp-output__line is-${props.line.stream}`}
@@ -64,7 +66,9 @@ function Row(props: { line: OutputLine; query: string; timestamps: boolean }) {
           {formatStamp(props.line.at)}
         </span>
       </Show>
-      {link() ? (
+      {rich() ? (
+        <RichBlock payload={rich() as NonNullable<OutputLine["rich"]>} />
+      ) : link() ? (
         <button
           class="sp-output__link"
           title={`Open ${link()?.file} at line ${link()?.line}`}

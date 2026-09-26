@@ -61,6 +61,42 @@ describe("OutputModel lines", () => {
   });
 });
 
+describe("OutputModel rich", () => {
+  it("closes open lines and adds a rich block in order", () => {
+    const { m } = model();
+    m.append("stdout", "before");
+    m.appendRich({ kind: "text", text: "array([1, 2])" }, 3);
+    m.append("stdout", "after\n");
+    m.flush();
+    expect(m.lines.map((l) => [l.stream, l.text, l.exec ?? null])).toEqual([
+      ["stdout", "before", null],
+      ["pool", "array([1, 2])", 3],
+      ["stdout", "after", null],
+    ]);
+    expect(m.lines[1]?.rich?.kind).toBe("text");
+  });
+
+  it("summarises non-text payloads for copy and find", () => {
+    const { m } = model();
+    m.appendRich(
+      {
+        kind: "array",
+        library: "numpy",
+        shape: [3, 64, 64],
+        dtype: "float64",
+        device: null,
+        requiresGrad: null,
+        stats: null,
+        preview: [],
+        previewAxes: null,
+      },
+      1,
+    );
+    m.flush();
+    expect(m.text()).toBe("[numpy array shape (3, 64, 64) float64]");
+  });
+});
+
 describe("OutputModel stdin", () => {
   it("ends a pending prompt line so the reply does not glue onto it", () => {
     const { m, flushed } = model();

@@ -35,3 +35,38 @@
 .sp-editor-empty-hint {
   color: var(--sp-color-fg-faint);
 }
+
+/* Cells: `# %%` marker lines and the cell the cursor is in. */
+.sp-editor-surface .cm-line.sp-cell-marker {
+  background: color-mix(in srgb, var(--sp-color-accent) 10%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--sp-color-accent) 35%, transparent);
+}
+.sp-editor-surface .cm-line.sp-cell-active {
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--sp-color-accent) 45%, transparent);
+}
+.sp-editor-surface .sp-cell-spawn {
+  float: right;
+  margin-left: var(--sp-space-md);
+  padding: 0 var(--sp-space-sm);
+  font-family: var(--sp-font-ui);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  line-height: inherit;
+  color: var(--sp-color-accent);
+  border-radius: var(--sp-radius-sm);
+  opacity: 0.7;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease;
+}
+.sp-editor-surface .sp-cell-spawn:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--sp-color-accent) 18%, transparent);
+}
+.sp-editor-surface .sp-cell-gutter {
+  width: calc(var(--sp-space-md) * 3);
+}
+.sp-editor-surface .sp-cell-gutter-mark {
+  color: var(--sp-color-accent);
+  font-size: calc(var(--sp-font-size-mono) * 0.75);
+  opacity: 0.8;
+}

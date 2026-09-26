@@ -4,12 +4,13 @@
  */
 import { createEffect, createSignal, on } from "solid-js";
 
+import { poolStatus } from "../pool/client";
 import { closeStdin, spawnStatus, stdinFocusTick, writeStdin } from "../spawn/controller";
 
 export default function StdinRow() {
   let input: HTMLInputElement | undefined;
   const [value, setValue] = createSignal("");
-  const running = () => spawnStatus() === "running";
+  const running = () => spawnStatus() === "running" || poolStatus() === "busy";
 
   createEffect(
     on(stdinFocusTick, (tick) => {

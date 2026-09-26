@@ -24,6 +24,8 @@ import {
 } from "../env/store";
 import { baseName, type MlInfo } from "../ipc";
 import { formatBytes } from "../output/chart";
+import { poolStatus } from "../pool/client";
+import { poolClickCommand, poolLabel, poolTitle } from "../pool/status";
 import { elapsedMs, outcome, spawnStatus } from "../spawn/controller";
 import { currentTheme } from "../theme/store";
 import FindInFiles from "./FindInFiles";
@@ -103,6 +105,15 @@ export default function StatusBar() {
           onClick={() => void runCommand("brood.open")}
         >
           {brood() ? baseName(brood() ?? "") : "no brood"}
+        </button>
+        <button
+          class="sp-statusbar__item sp-statusbar__button sp-statusbar__pool"
+          classList={{ [`is-${poolStatus()}`]: true }}
+          title={poolTitle()}
+          onClick={() => void runCommand(poolClickCommand())}
+        >
+          <span class="sp-statusbar__dot" aria-hidden="true" />
+          {poolLabel()}
         </button>
         <button
           class="sp-statusbar__item sp-statusbar__button sp-statusbar__spawn"

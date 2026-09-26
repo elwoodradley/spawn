@@ -1,0 +1,147 @@
+.sp-vars {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--sp-color-bg-panel);
+  color: var(--sp-color-fg);
+}
+.sp-vars__header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+}
+.sp-vars__title {
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  color: var(--sp-color-fg-muted);
+}
+.sp-vars__status {
+  padding: 0 var(--sp-space-sm);
+  border-radius: var(--sp-radius-sm);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  color: var(--sp-color-fg-muted);
+  background: var(--sp-color-bg-active);
+}
+.sp-vars__status.is-idle {
+  color: var(--sp-color-success);
+}
+.sp-vars__status.is-busy {
+  color: var(--sp-color-warning);
+}
+.sp-vars__status.is-croaked {
+  color: var(--sp-color-croak);
+}
+.sp-vars__spacer {
+  flex: 1;
+}
+.sp-vars__btn {
+  display: inline-flex;
+  padding: var(--sp-space-xs);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-fg-muted);
+}
+.sp-vars__btn:hover:not(:disabled) {
+  background: var(--sp-color-bg-hover);
+  color: var(--sp-color-fg);
+}
+.sp-vars__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.sp-vars__search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+  margin: 0 var(--sp-space-md) var(--sp-space-sm);
+  padding: var(--sp-space-xs) var(--sp-space-sm);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-color-bg-elevated);
+  color: var(--sp-color-fg-muted);
+}
+.sp-vars__search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--sp-color-fg);
+}
+.sp-vars__empty,
+.sp-vars__error {
+  margin: var(--sp-space-md);
+  color: var(--sp-color-fg-muted);
+}
+.sp-vars__error {
+  color: var(--sp-color-croak);
+}
+.sp-vars__list {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+.sp-vars__row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "badge name"
+    "badge summary";
+  column-gap: var(--sp-space-sm);
+  width: 100%;
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  text-align: left;
+  color: inherit;
+  border-left: 2px solid transparent;
+}
+.sp-vars__row:hover {
+  background: var(--sp-color-bg-hover);
+}
+.sp-vars__row.is-recent {
+  border-left-color: var(--sp-color-accent);
+}
+.sp-vars__badge {
+  grid-area: badge;
+  align-self: start;
+  min-width: 6ch;
+  padding: 0 var(--sp-space-xs);
+  border-radius: var(--sp-radius-sm);
+  font-size: calc(var(--sp-font-size-ui) * 0.8);
+  text-align: center;
+  background: var(--sp-color-bg-active);
+  color: var(--sp-color-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 12ch;
+}
+.sp-vars__badge.is-table {
+  color: var(--sp-color-info);
+}
+.sp-vars__badge.is-array {
+  color: var(--sp-color-accent);
+}
+.sp-vars__badge.is-number {
+  color: var(--sp-color-warning);
+}
+.sp-vars__badge.is-string {
+  color: var(--sp-color-success);
+}
+.sp-vars__name {
+  grid-area: name;
+  color: var(--sp-color-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sp-vars__summary {
+  grid-area: summary;
+  color: var(--sp-color-fg-muted);
+  font-size: calc(var(--sp-font-size-mono) * 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

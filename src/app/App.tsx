@@ -10,12 +10,15 @@ import {
   Show,
 } from "solid-js";
 
-import FileTree from "../brood/FileTree";
 import { startBroodTree } from "../brood/store";
 import { isDirty, saveAllDirty } from "../editor/documents";
 import Editor from "../editor/Editor";
 import { baseName } from "../ipc";
 import OutputPanel from "../output/OutputPanel";
+import { attachPoolEvents } from "../output/rich/attach";
+import { registerPoolCommands } from "../pool/commands";
+import { installLivePool } from "../pool/live";
+import { output } from "../spawn/controller";
 import { registerSpawnCommands } from "../spawn/commands";
 import { initTheme } from "../theme/store";
 import { loadSettings } from "./settings";
@@ -24,6 +27,7 @@ import ContextMenuHost from "../ui/ContextMenu";
 import DialogHost from "../ui/Dialog";
 import MenuBar from "../ui/MenuBar";
 import SettingsDialog from "../ui/SettingsDialog";
+import Sidebar from "../ui/Sidebar";
 import Splitter from "../ui/Splitter";
 import StatusBar from "../ui/StatusBar";
 import Tabs from "../ui/Tabs";
@@ -67,6 +71,9 @@ export default function App() {
   registerAppCommands();
   onCleanup(registerEditCommands());
   onCleanup(registerViewCommands());
+  onCleanup(registerPoolCommands());
+  onCleanup(installLivePool());
+  onCleanup(attachPoolEvents(output));
   startBroodTree();
 
   onMount(() => {
@@ -119,7 +126,7 @@ export default function App() {
       <div class="sp-main" ref={(el) => (main = el)}>
         <Show when={sidebarVisible()}>
           <aside class="sp-sidebar sp-chrome sp-no-print" style={{ width: `${sidebarWidth()}px` }}>
-            <FileTree />
+            <Sidebar />
           </aside>
           <div class="sp-chrome sp-no-print">
             <Splitter

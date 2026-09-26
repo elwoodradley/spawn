@@ -11,10 +11,13 @@ import {
   outputVisible,
   setOutputHeight,
   setOutputVisible,
+  setSidebarTab,
   setSidebarVisible,
   setSidebarWidth,
+  sidebarTab,
   sidebarVisible,
   sidebarWidth,
+  type SidebarTab,
 } from "./layout";
 import { activeFilePath, brood, openBrood, openFile, tabs } from "./state";
 
@@ -28,6 +31,8 @@ export interface Clutch {
   outputHeight: number;
   sidebarVisible: boolean;
   outputVisible: boolean;
+  /** Which sidebar tab was showing: the brood tree or the pool's variables. */
+  sidebarTab: SidebarTab;
 }
 
 export const EMPTY_CLUTCH: Clutch = {
@@ -38,6 +43,7 @@ export const EMPTY_CLUTCH: Clutch = {
   outputHeight: 240,
   sidebarVisible: true,
   outputVisible: true,
+  sidebarTab: "brood",
 };
 
 /** Accept whatever was on disk; anything malformed falls back to defaults. */
@@ -55,6 +61,7 @@ export function normalizeClutch(input: unknown): Clutch {
     outputHeight: num(raw.outputHeight, EMPTY_CLUTCH.outputHeight),
     sidebarVisible: bool(raw.sidebarVisible, true),
     outputVisible: bool(raw.outputVisible, true),
+    sidebarTab: raw.sidebarTab === "pool" ? "pool" : "brood",
   };
 }
 
@@ -67,6 +74,7 @@ export function snapshotClutch(): Clutch {
     outputHeight: outputHeight(),
     sidebarVisible: sidebarVisible(),
     outputVisible: outputVisible(),
+    sidebarTab: sidebarTab(),
   };
 }
 
@@ -76,6 +84,7 @@ export async function restoreClutch(): Promise<void> {
   setOutputHeight(clutch.outputHeight);
   setSidebarVisible(clutch.sidebarVisible);
   setOutputVisible(clutch.outputVisible);
+  setSidebarTab(clutch.sidebarTab);
 
   if (clutch.brood && (await pathExists(clutch.brood))) {
     openBrood(clutch.brood);
@@ -92,7 +101,16 @@ export async function restoreClutch(): Promise<void> {
 export function autosaveClutch(): void {
   createEffect(
     on(
-      [brood, tabs, activeFilePath, sidebarWidth, outputHeight, sidebarVisible, outputVisible],
+      [
+        brood,
+        tabs,
+        activeFilePath,
+        sidebarWidth,
+        outputHeight,
+        sidebarVisible,
+        outputVisible,
+        sidebarTab,
+      ],
       () => {
         void setSetting(KEY, snapshotClutch());
       },

@@ -11,6 +11,7 @@
  * Python runs with `-u` and PYTHONUNBUFFERED so prompts from input() reach
  * the panel before the program blocks waiting for the answer.
  */
+import { invoke } from "@tauri-apps/api/core";
 import { createSignal } from "solid-js";
 
 import { settings, type RunPattern } from "../app/settings";
@@ -109,22 +110,39 @@ export async function stopSpawn(): Promise<void> {
 }
 
 /** Send one line to the child's stdin and echo it in the panel. */
+/** Where stdin goes when no spawn is running: the pool, if one is up. */
+let stdinFallback: (() => number | null) | null = null;
+export function setStdinFallback(fn: (() => number | null) | null): void {
+  stdinFallback = fn;
+}
+
 export async function writeStdin(text: string): Promise<void> {
-  if (!handle) return;
+  const target = handle ?? poolStdinHandle();
+  if (!target) return;
   output.append("stdin", `${text}\n`);
   try {
-    await handle.write(`${text}\n`);
+    await target.write(`${text}\n`);
   } catch (err) {
     output.append("croak", `stdin: ${describe(err)}\n`);
   }
 }
 
+function poolStdinHandle(): Pick<ProcHandle, "write" | "closeStdin"> | null {
+  const id = stdinFallback?.();
+  if (id === null || id === undefined) return null;
+  return {
+    write: (data) => invoke("proc_write", { id, data }),
+    closeStdin: () => invoke("proc_close_stdin", { id }),
+  };
+}
+
 /** Send EOF; input() in the child raises EOFError from here on. */
 export async function closeStdin(): Promise<void> {
-  if (!handle) return;
+  const target = handle ?? poolStdinHandle();
+  if (!target) return;
   output.system("stdin closed (EOF)");
   try {
-    await handle.closeStdin();
+    await target.closeStdin();
   } catch (err) {
     output.append("croak", `stdin: ${describe(err)}\n`);
   }

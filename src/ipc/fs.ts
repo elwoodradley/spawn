@@ -15,6 +15,7 @@ import {
   rename,
   stat,
   watch as tauriWatch,
+  writeFile,
   writeTextFile,
   type WatchEvent,
 } from "@tauri-apps/plugin-fs";
@@ -48,6 +49,11 @@ export function readText(path: string): Promise<string> {
 
 export function writeText(path: string, contents: string): Promise<void> {
   return writeTextFile(path, contents);
+}
+
+/** Write binary contents (a saved figure, for example). */
+export function writeBytes(path: string, contents: Uint8Array): Promise<void> {
+  return writeFile(path, contents);
 }
 
 export function pathExists(path: string): Promise<boolean> {
