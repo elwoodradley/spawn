@@ -165,3 +165,34 @@
 .sp-output__stdin-input:focus-visible {
   outline: none;
 }
+
+.sp-output__tabs {
+  display: flex;
+  gap: var(--sp-space-xs);
+  margin-right: var(--sp-space-sm);
+}
+.sp-output__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-fg-muted);
+}
+.sp-output__tab:hover {
+  background: var(--sp-color-bg-hover);
+  color: var(--sp-color-fg);
+}
+.sp-output__tab.is-active {
+  background: var(--sp-color-bg-active);
+  color: var(--sp-color-fg);
+}
+.sp-output__tab-badge {
+  min-width: 1.4em;
+  padding: 0 var(--sp-space-xs);
+  border-radius: var(--sp-radius-lg);
+  background: var(--sp-color-accent);
+  color: var(--sp-color-accent-fg);
+  font-size: calc(var(--sp-font-size-ui) * 0.8);
+  text-align: center;
+}

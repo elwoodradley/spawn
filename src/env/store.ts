@@ -14,10 +14,14 @@ import {
   discoverInterpreters,
   getSetting,
   probeInterpreter,
+  probeMl,
   setSetting,
+  sysMemory,
   uvPath,
   type Candidate,
   type CandidateSource,
+  type MemoryInfo,
+  type MlInfo,
   type PythonInfo,
 } from "../ipc";
 
@@ -28,6 +32,10 @@ const [uvAvailable, setUvAvailable] = createSignal<string | null>(null);
 const [refreshing, setRefreshing] = createSignal(false);
 const [envError, setEnvError] = createSignal<string | null>(null);
 const [metamorphosisOpen, setMetamorphosisOpen] = createSignal(false);
+const [mlInfo, setMlInfo] = createSignal<MlInfo | null>(null);
+const [mlProbing, setMlProbing] = createSignal(false);
+const [mlError, setMlError] = createSignal<string | null>(null);
+const [memory, setMemory] = createSignal<MemoryInfo | null>(null);
 
 export {
   candidates,
@@ -41,6 +49,10 @@ export {
   envError,
   metamorphosisOpen,
   setMetamorphosisOpen,
+  mlInfo,
+  mlProbing,
+  mlError,
+  memory,
 };
 
 function settingKey(root: string | null): string {
@@ -81,7 +93,10 @@ export async function selectInterpreter(path: string | null, persist = true): Pr
   setSelectedInterpreter(path);
   setInterpreterInfo(null);
   if (persist) await setSetting(settingKey(brood()), path);
-  if (!path) return;
+  if (!path) {
+    setMlInfo(null);
+    return;
+  }
   try {
     const info = await probeInterpreter(path);
     // Ignore a late answer if the user has already moved on.
@@ -89,6 +104,57 @@ export async function selectInterpreter(path: string | null, persist = true): Pr
   } catch (err) {
     setEnvError(describe(err));
   }
+  void refreshMlInfo();
+}
+
+/**
+ * Ask the selected interpreter about numpy, pandas, torch, jax and its device.
+ * Slow (imports torch) so it runs in the background; a failure is shown in the
+ * chrome, never thrown at the caller.
+ */
+export async function refreshMlInfo(): Promise<void> {
+  const path = selectedInterpreter();
+  if (!path) {
+    setMlInfo(null);
+    return;
+  }
+  setMlProbing(true);
+  setMlError(null);
+  try {
+    const info = await probeMl(path);
+    if (selectedInterpreter() === path) setMlInfo(info);
+  } catch (err) {
+    if (selectedInterpreter() === path) {
+      setMlInfo(null);
+      setMlError(describe(err));
+    }
+  } finally {
+    setMlProbing(false);
+  }
+}
+
+const MEMORY_POLL_MS = 5000;
+
+export async function refreshMemory(): Promise<void> {
+  try {
+    setMemory(await sysMemory());
+  } catch {
+    setMemory(null);
+  }
+}
+
+/** Poll system memory while the window is visible. Returns a stop function. */
+export function startMemoryPolling(): () => void {
+  const tick = () => {
+    if (document.visibilityState === "visible") void refreshMemory();
+  };
+  tick();
+  const timer = setInterval(tick, MEMORY_POLL_MS);
+  document.addEventListener("visibilitychange", tick);
+  return () => {
+    clearInterval(timer);
+    document.removeEventListener("visibilitychange", tick);
+  };
 }
 
 export function toggleMetamorphosis(open?: boolean): void {

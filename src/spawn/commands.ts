@@ -6,8 +6,21 @@ import { createEffect, createRoot, on } from "solid-js";
 
 import { registerCommands } from "../app/commands";
 import { activeFilePath, brood } from "../app/state";
-import { refreshInterpreters, toggleMetamorphosis } from "../env/store";
-import { output, requestStdinFocus, spawnFile, spawnStatus, stopSpawn } from "./controller";
+import {
+  refreshInterpreters,
+  refreshMlInfo,
+  startMemoryPolling,
+  toggleMetamorphosis,
+} from "../env/store";
+import { showOutputTab } from "../output/OutputPanel";
+import {
+  loadRunPatterns,
+  output,
+  requestStdinFocus,
+  spawnFile,
+  spawnStatus,
+  stopSpawn,
+} from "./controller";
 
 export function registerSpawnCommands(): () => void {
   const runActive = async () => {
@@ -58,7 +71,25 @@ export function registerSpawnCommands(): () => void {
       title: "Metamorphosis: rediscover interpreters",
       run: () => refreshInterpreters(brood()),
     },
+    {
+      id: "env.probeMl",
+      title: "Environment: re-probe numpy, torch and the device",
+      run: refreshMlInfo,
+    },
+    {
+      id: "output.showRun",
+      title: "Output: show the run panel",
+      run: () => showOutputTab("run"),
+    },
+    {
+      id: "output.showConsole",
+      title: "Output: show the console",
+      run: () => showOutputTab("output"),
+    },
   ]);
+
+  void loadRunPatterns();
+  const stopMemory = startMemoryPolling();
 
   // Rediscover interpreters whenever the brood changes (and once at start).
   const disposeRoot = createRoot((disposeFn) => {
@@ -69,5 +100,6 @@ export function registerSpawnCommands(): () => void {
   return () => {
     dispose();
     disposeRoot();
+    stopMemory();
   };
 }

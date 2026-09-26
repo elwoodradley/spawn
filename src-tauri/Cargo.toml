@@ -28,6 +28,7 @@ tauri-plugin-dialog = "2.7.3"
 tauri-plugin-store = "2.4.5"
 tokio = { version = "1.53.1", features = ["process", "io-util", "sync", "macros", "rt-multi-thread"] }
 thiserror = "2.0.21"
+sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

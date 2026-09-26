@@ -16,7 +16,15 @@ import { createSignal } from "solid-js";
 import { brood } from "../app/state";
 import { saveAllDirty } from "../editor/documents";
 import { selectedInterpreter } from "../env/store";
-import { baseName, dirName, spawnProcess, type ProcEvent, type ProcHandle } from "../ipc";
+import {
+  baseName,
+  dirName,
+  getSetting,
+  spawnProcess,
+  type ProcEvent,
+  type ProcHandle,
+} from "../ipc";
+import { MetricsModel, type UserPattern } from "./metrics";
 import { OutputModel } from "./output";
 
 export type SpawnStatus = "idle" | "running";
@@ -35,6 +43,23 @@ const schedule = (flush: () => void) =>
 
 /** Everything the output panel renders. */
 export const output = new OutputModel({ schedule });
+/** Series, progress and rate scraped from the same output, for the run panel. */
+export const metrics = new MetricsModel();
+
+/** Load the user's extra metric patterns from settings (key `run.patterns`). */
+export async function loadRunPatterns(): Promise<void> {
+  const raw = await getSetting<unknown>("run.patterns", []);
+  const list = Array.isArray(raw)
+    ? raw.filter(
+        (p): p is UserPattern =>
+          typeof p === "object" &&
+          p !== null &&
+          typeof (p as UserPattern).name === "string" &&
+          typeof (p as UserPattern).regex === "string",
+      )
+    : [];
+  metrics.setPatterns(list);
+}
 
 const [spawnStatus, setSpawnStatus] = createSignal<SpawnStatus>("idle");
 const [spawnCommand, setSpawnCommand] = createSignal<SpawnCommand | null>(null);
@@ -69,6 +94,7 @@ export async function spawnFile(path: string): Promise<void> {
   setSpawnCommand(command);
   setExitCode(null);
   setOutcome("none");
+  metrics.reset();
   output.system(`spawn ${baseName(path)} · ${program} · in ${cwd}`);
 
   stoppedByUser = false;
@@ -129,9 +155,11 @@ function onEvent(event: ProcEvent): void {
       break;
     case "stdout":
       output.append("stdout", event.text);
+      metrics.feed(event.text);
       break;
     case "stderr":
       output.append("stderr", event.text);
+      metrics.feed(event.text);
       break;
     case "croak":
       output.append("croak", `${event.message}\n`);
@@ -144,6 +172,7 @@ function onEvent(event: ProcEvent): void {
 
 function finish(code: number | null, signal: number | null, failure?: string): void {
   stopTimer();
+  metrics.flush();
   handle = null;
   setSpawnStatus("idle");
   setExitCode(code);

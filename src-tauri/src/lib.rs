@@ -34,6 +34,8 @@ pub fn run() {
             env::env_discover,
             env::env_probe,
             env::env_uv_path,
+            env::ml::env_probe_ml,
+            env::ml::sys_memory,
             print_page,
         ])
         .run(tauri::generate_context!())

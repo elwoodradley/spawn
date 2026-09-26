@@ -1,17 +1,17 @@
 /**
- * Output panel: everything a spawn says, plus a way to talk back.
- *
- * Header: command, status dot, elapsed, exit code, Spawn/Stop, Clear.
- * Body: the line list, following the bottom unless the user scrolls up.
- * Footer: the stdin row, so input() works without leaving SPAWN.
+ * The output area: one header (status, command, Spawn/Stop, Clear) and two
+ * tabs under it. "Output" is the console with stdin; "Run" is the live
+ * metrics view. The Run tab opens itself the first time a spawn prints a
+ * metric, unless the user has picked a tab by hand this session.
  */
-import { createEffect, on, onCleanup, Show } from "solid-js";
+import { createEffect, createSignal, on, Show } from "solid-js";
 
 import { activeFilePath } from "../app/state";
 import { baseName } from "../ipc";
 import {
   elapsedMs,
   exitCode,
+  metrics,
   outcome,
   output,
   spawnCommand,
@@ -19,37 +19,29 @@ import {
   spawnStatus,
   stopSpawn,
 } from "../spawn/controller";
-import OutputLines from "./OutputLines";
+import OutputConsole from "./OutputConsole";
 import "./OutputPanel.css";
-import StdinRow from "./StdinRow";
+import RunPanel from "./RunPanel";
+
+type Tab = "output" | "run";
+
+const [tab, setTab] = createSignal<Tab>("output");
+let userPicked = false;
+
+export function showOutputTab(next: Tab): void {
+  userPicked = true;
+  setTab(next);
+}
 
 export default function OutputPanel() {
-  let scroller: HTMLDivElement | undefined;
-  let following = true;
-
-  const onScroll = () => {
-    if (!scroller) return;
-    following = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4;
-  };
-
-  // New lines: stick to the bottom if we were already there.
   createEffect(
     on(
-      () => output.lines.length,
-      () => {
-        if (following && scroller) scroller.scrollTop = scroller.scrollHeight;
+      () => metrics.series.length,
+      (count) => {
+        if (count > 0 && !userPicked && spawnStatus() === "running") setTab("run");
       },
     ),
   );
-
-  // A fresh spawn always starts at the bottom.
-  createEffect(
-    on(spawnStatus, (status) => {
-      if (status === "running") following = true;
-    }),
-  );
-
-  onCleanup(() => output.flush());
 
   const commandLabel = () => {
     const cmd = spawnCommand();
@@ -67,6 +59,10 @@ export default function OutputPanel() {
   return (
     <section class="sp-output sp-no-print" aria-label="Output">
       <header class="sp-output__header">
+        <div class="sp-output__tabs" role="tablist">
+          <TabButton id="output" label="Output" current={tab()} />
+          <TabButton id="run" label="Run" current={tab()} badge={metrics.series.length} />
+        </div>
         <span class="sp-output__dot" classList={{ [`is-${dotState()}`]: true }} />
         <span class="sp-output__command mono" title={commandTitle()}>
           {commandLabel()}
@@ -106,11 +102,27 @@ export default function OutputPanel() {
           Clear
         </button>
       </header>
-      <div class="sp-output__scroller" ref={(el) => (scroller = el)} onScroll={onScroll}>
-        <OutputLines lines={output.lines} />
-      </div>
-      <StdinRow />
+      <Show when={tab() === "output"} fallback={<RunPanel />}>
+        <OutputConsole />
+      </Show>
     </section>
+  );
+}
+
+function TabButton(props: { id: Tab; label: string; current: Tab; badge?: number }) {
+  return (
+    <button
+      role="tab"
+      class="sp-output__tab"
+      classList={{ "is-active": props.current === props.id }}
+      aria-selected={props.current === props.id}
+      onClick={() => showOutputTab(props.id)}
+    >
+      {props.label}
+      <Show when={(props.badge ?? 0) > 0}>
+        <span class="sp-output__tab-badge">{props.badge}</span>
+      </Show>
+    </button>
   );
 }
 

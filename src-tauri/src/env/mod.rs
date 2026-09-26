@@ -10,6 +10,8 @@ use tokio::process::Command;
 
 use crate::error::{Error, Result};
 
+pub mod ml;
+
 /// A Python interpreter SPAWN could use.
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -158,7 +160,7 @@ fn is_executable(path: &Path) -> bool {
 }
 
 /// Never let a probe pop a console window on Windows.
-fn quiet(cmd: &mut Command) -> &mut Command {
+pub(super) fn quiet(cmd: &mut Command) -> &mut Command {
     #[cfg(windows)]
     cmd.creation_flags(0x0800_0000);
     cmd

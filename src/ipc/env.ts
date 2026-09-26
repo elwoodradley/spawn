@@ -26,3 +26,30 @@ export function probeInterpreter(python: string): Promise<PythonInfo> {
 export function uvPath(): Promise<string | null> {
   return invoke<string | null>("env_uv_path");
 }
+
+/** What the ML stack looks like in an interpreter. Every package is optional. */
+export interface MlInfo {
+  numpy: string | null;
+  pandas: string | null;
+  torch: string | null;
+  device: "cuda" | "mps" | "cpu" | null;
+  deviceName: string | null;
+  cuda: string | null;
+  gpuMemUsed: number | null;
+  gpuMemTotal: number | null;
+  jax: string | null;
+}
+
+export interface MemoryInfo {
+  used: number;
+  total: number;
+}
+
+/** Slow (imports torch); run it in the background. Times out after 20 s. */
+export function probeMl(python: string): Promise<MlInfo> {
+  return invoke<MlInfo>("env_probe_ml", { python });
+}
+
+export function sysMemory(): Promise<MemoryInfo> {
+  return invoke<MemoryInfo>("sys_memory");
+}
