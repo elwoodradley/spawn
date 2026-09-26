@@ -28,6 +28,7 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - **theme:** Use Adwaita Sans and a real UI font stack instead of system-ui
 - **spawn:** Run panel axes, value range, end labels, and rate from epoch lines
 - **spawn:** Run panel promotes only real series, fits the axis around spikes, repels labels
+- **ui:** Splitters get a real grab zone, a grip, double-click reset, and keyboard resize
 
 ### Documentation
 
@@ -39,6 +40,7 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - Scaffold SPAWN with Rust process layer, theme system, and command registry
 - Add module contracts as stubs for parallel Phase 1 work
 - Generate changelog
+- Regenerate changelog
 - Regenerate changelog
 - Regenerate changelog
 - Regenerate changelog
