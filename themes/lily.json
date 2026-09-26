@@ -27,37 +27,89 @@
     "stderr": "#8a6d3b"
   },
   "fonts": {
-    "ui": "system-ui",
+    "ui": "Adwaita Sans",
     "mono": "JetBrains Mono",
     "sizeUi": 13,
     "sizeMono": 13,
     "lineHeight": 1.5
   },
   "syntax": {
-    "keyword": { "color": "#7a4a9c" },
-    "controlKeyword": { "color": "#7a4a9c" },
-    "definitionKeyword": { "color": "#7a4a9c" },
-    "moduleKeyword": { "color": "#7a4a9c" },
-    "operator": { "color": "#5c5650" },
-    "string": { "color": "#3f7d5a" },
-    "docString": { "color": "#6c8a75", "fontStyle": "italic" },
-    "comment": { "color": "#9a948b", "fontStyle": "italic" },
-    "number": { "color": "#2f6f9f" },
-    "bool": { "color": "#2f6f9f" },
-    "null": { "color": "#2f6f9f" },
-    "self": { "color": "#7a4a9c" },
-    "function": { "color": "#2f6f9f" },
-    "className": { "color": "#b0741a" },
-    "typeName": { "color": "#b0741a" },
-    "variableName": { "color": "#2e2a26" },
-    "propertyName": { "color": "#4a5a6a" },
-    "definition": { "color": "#2e2a26", "fontWeight": "bold" },
-    "decorator": { "color": "#b0741a" },
-    "punctuation": { "color": "#7a746c" },
-    "bracket": { "color": "#7a746c" },
-    "invalid": { "color": "#b3302f", "textDecoration": "underline" },
-    "escape": { "color": "#b0741a" },
-    "regexp": { "color": "#3f7d5a" }
+    "keyword": {
+      "color": "#7a4a9c"
+    },
+    "controlKeyword": {
+      "color": "#7a4a9c"
+    },
+    "definitionKeyword": {
+      "color": "#7a4a9c"
+    },
+    "moduleKeyword": {
+      "color": "#7a4a9c"
+    },
+    "operator": {
+      "color": "#5c5650"
+    },
+    "string": {
+      "color": "#3f7d5a"
+    },
+    "docString": {
+      "color": "#6c8a75",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#9a948b",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#2f6f9f"
+    },
+    "bool": {
+      "color": "#2f6f9f"
+    },
+    "null": {
+      "color": "#2f6f9f"
+    },
+    "self": {
+      "color": "#7a4a9c"
+    },
+    "function": {
+      "color": "#2f6f9f"
+    },
+    "className": {
+      "color": "#b0741a"
+    },
+    "typeName": {
+      "color": "#b0741a"
+    },
+    "variableName": {
+      "color": "#2e2a26"
+    },
+    "propertyName": {
+      "color": "#4a5a6a"
+    },
+    "definition": {
+      "color": "#2e2a26",
+      "fontWeight": "bold"
+    },
+    "decorator": {
+      "color": "#b0741a"
+    },
+    "punctuation": {
+      "color": "#7a746c"
+    },
+    "bracket": {
+      "color": "#7a746c"
+    },
+    "invalid": {
+      "color": "#b3302f",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#b0741a"
+    },
+    "regexp": {
+      "color": "#3f7d5a"
+    }
   },
   "plot": {
     "background": "#ffffff",

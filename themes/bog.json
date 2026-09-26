@@ -27,37 +27,94 @@
     "stderr": "#d9a441"
   },
   "fonts": {
-    "ui": "system-ui",
+    "ui": "Adwaita Sans",
     "mono": "JetBrains Mono",
     "sizeUi": 13,
     "sizeMono": 13,
     "lineHeight": 1.55
   },
   "syntax": {
-    "keyword": { "color": "#ff3d8f", "fontStyle": "italic" },
-    "controlKeyword": { "color": "#ff3d8f", "fontStyle": "italic" },
-    "definitionKeyword": { "color": "#ff3d8f", "fontStyle": "italic" },
-    "moduleKeyword": { "color": "#ff3d8f", "fontStyle": "italic" },
-    "operator": { "color": "#ff8c42" },
-    "string": { "color": "#ffd23f" },
-    "docString": { "color": "#a0a860", "fontStyle": "italic" },
-    "comment": { "color": "#4a5a4e", "fontStyle": "italic" },
-    "number": { "color": "#4fd1ff" },
-    "bool": { "color": "#4fd1ff" },
-    "null": { "color": "#4fd1ff" },
-    "self": { "color": "#ff8c42" },
-    "function": { "color": "#b6ff3b" },
-    "className": { "color": "#4fd1ff", "fontWeight": "bold" },
-    "typeName": { "color": "#4fd1ff" },
-    "variableName": { "color": "#d6e4d2" },
-    "propertyName": { "color": "#9fe7ff" },
-    "definition": { "color": "#b6ff3b", "fontWeight": "bold" },
-    "decorator": { "color": "#ff8c42" },
-    "punctuation": { "color": "#7f9483" },
-    "bracket": { "color": "#7f9483" },
-    "invalid": { "color": "#ff3d5a", "textDecoration": "underline" },
-    "escape": { "color": "#ff8c42" },
-    "regexp": { "color": "#ffd23f" }
+    "keyword": {
+      "color": "#ff3d8f",
+      "fontStyle": "italic"
+    },
+    "controlKeyword": {
+      "color": "#ff3d8f",
+      "fontStyle": "italic"
+    },
+    "definitionKeyword": {
+      "color": "#ff3d8f",
+      "fontStyle": "italic"
+    },
+    "moduleKeyword": {
+      "color": "#ff3d8f",
+      "fontStyle": "italic"
+    },
+    "operator": {
+      "color": "#ff8c42"
+    },
+    "string": {
+      "color": "#ffd23f"
+    },
+    "docString": {
+      "color": "#a0a860",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#4a5a4e",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#4fd1ff"
+    },
+    "bool": {
+      "color": "#4fd1ff"
+    },
+    "null": {
+      "color": "#4fd1ff"
+    },
+    "self": {
+      "color": "#ff8c42"
+    },
+    "function": {
+      "color": "#b6ff3b"
+    },
+    "className": {
+      "color": "#4fd1ff",
+      "fontWeight": "bold"
+    },
+    "typeName": {
+      "color": "#4fd1ff"
+    },
+    "variableName": {
+      "color": "#d6e4d2"
+    },
+    "propertyName": {
+      "color": "#9fe7ff"
+    },
+    "definition": {
+      "color": "#b6ff3b",
+      "fontWeight": "bold"
+    },
+    "decorator": {
+      "color": "#ff8c42"
+    },
+    "punctuation": {
+      "color": "#7f9483"
+    },
+    "bracket": {
+      "color": "#7f9483"
+    },
+    "invalid": {
+      "color": "#ff3d5a",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#ff8c42"
+    },
+    "regexp": {
+      "color": "#ffd23f"
+    }
   },
   "plot": {
     "background": "#0c1012",

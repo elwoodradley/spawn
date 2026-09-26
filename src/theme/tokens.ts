@@ -7,7 +7,11 @@ import { SYNTAX_KEYS, type SyntaxStyle, type Theme } from "./schema";
 
 export const VAR_PREFIX = "--sp";
 
-const UI_FALLBACK = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+// WebKitGTK resolves `system-ui` through fontconfig's sans-serif alias, which
+// on many Linux boxes is Liberation Sans and looks fuzzy at UI sizes, so the
+// stack names good UI faces first and falls back to the platform font.
+const UI_FALLBACK =
+  '"Adwaita Sans", Inter, Cantarell, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 const MONO_FALLBACK =
   '"JetBrains Mono", "Fira Code", "Cascadia Code", "SF Mono", Menlo, Consolas, ui-monospace, monospace';
 
