@@ -37,6 +37,8 @@ src/                         TypeScript, SolidJS
               keybindings, clutch (session persistence)
   editor/     CodeMirror setup, document registry, dirty tracking, save
   brood/      folder tree model, file open, watcher
+  pool/       protocol (display payloads), live client, cells commands,
+              variables pane
   spawn/      spawn controller, output model, croak (traceback) parser,
               metrics parser for the run panel (loss curves, tqdm, epochs)
   output/     output console, run panel with live charts (Phase 2 adds
@@ -50,6 +52,7 @@ src-tauri/src/
   lib.rs      builder, plugins, handler list, Linux render workaround
   error.rs    one Error type, serialised as a message string
   proc/       spawn a child, stream output over a Channel, stdin, kill
+  pool/       pool.py (the kernel, stdlib only), socket host, interrupt
   env/        find interpreters, probe one for version and prefix; ml.rs
               probes numpy/pandas/torch/jax + device, reads system memory
 src-tauri/capabilities/   what the webview may call (see Security)
@@ -259,14 +262,68 @@ scope (`**`) because an IDE opens whatever folder the user picks. The boundary
 that matters is different: the webview never loads remote content, so there
 is no untrusted code inside the sandbox to abuse those permissions.
 
+## The pool
+
+The pool is SPAWN's persistent kernel: one Python process per brood that
+keeps state between spawns, so a dataset loaded once stays loaded while you
+iterate on the model. It is deliberately not Jupyter.
+
+**Kernel.** `src-tauri/src/pool/pool.py` is a single stdlib-only script,
+embedded in the binary with `include_str!` and written to the app cache dir
+at first use. It runs under whatever interpreter metamorphosis selected, so a
+bare `.venv` works with nothing installed. It executes code in one namespace
+on its main thread, echoes a bare trailing expression the way IPython does
+(triple-quoted docstrings excepted), and turns values into the payloads in
+`src/pool/protocol.ts`: matplotlib figures (rendered on the theme's plot
+colours; `plt.show()` is hooked so every figure is captured, in order),
+pandas and polars tables (dtypes, null counts, stats, a first page of rows,
+more on request), numpy/torch/jax arrays (shape, dtype, device, stats, a
+downsampled 2D preview), anything with `_repr_html_`/`_repr_png_`/`_repr_svg_`,
+and tracebacks with line numbers offset to the real file.
+
+**Transport.** Rust (`src-tauri/src/pool/mod.rs`) binds a loopback TCP port,
+generates a random token, and launches the kernel with both in its
+environment. It accepts exactly one connection and drops it unless the first
+line is the token; then the listener closes. Requests and events are JSON
+lines. The kernel's own stdout and stderr are the same pipes a plain spawn
+uses, so prints stream to the console like before. Rust never interprets the
+protocol; it is a pipe with an id.
+
+**Interrupt.** Two mechanisms, because one is not enough: an `interrupt` line
+on the socket makes the kernel's reader thread raise `KeyboardInterrupt` in
+the main thread (works everywhere, including Windows), and on Unix Rust also
+sends SIGINT so a blocking call such as `time.sleep` wakes up.
+
+**Frontend.** `src/pool/live.ts` implements `PoolClient`: it starts the kernel
+lazily on the first exec, matches replies by id, streams display events into
+the output model (`src/output/rich/attach.ts`), sends the theme's plot tokens
+on start and on theme change, and shuts the kernel down when the interpreter
+changes. `src/editor/cells.ts` finds `# %%` cells; `src/pool/commands.ts`
+owns Shift+Enter and friends; `src/pool/VariablesPane.tsx` lists the
+namespace. Rich blocks live in `src/output/rich/`.
+
+**Security.** The kernel runs the user's code with the user's privileges,
+exactly like F5. Only the child can connect to the socket (token, loopback,
+single accept). Library HTML renders in a sandboxed iframe with no scripts and
+an opaque origin, so it cannot reach the Tauri bridge. Hover and pane
+inspection evaluate dotted names only, never expressions, so looking at a
+value cannot run code.
+
+**Testing without SPAWN.** `python src-tauri/src/pool/pool_test.py <python>`
+hosts the kernel from a tiny socket server and checks echo, persistence,
+tracebacks, inspect, tables, figures, arrays, both interrupt paths and clean
+shutdown.
+
 ## Roadmap and honest risks
 
 **Phase 1** (now): window, brood tree, tabs, editor, spawn with streamed
 output and stdin, theming. Usable for coursework.
 
-**Phase 2**: the pool (persistent kernel), spawn a selection or `# %%` cell,
-inline plots, DataFrame viewer, tensor inspector, environment
-details in the chrome.
+**Phase 2** (in progress): the pool, cells and selections, inline plots,
+DataFrame viewer and array cards are in. Still to come: array hover in the
+editor, and the shape-aware renderers (confusion matrix, image grids, module
+trees, scatter, attention, histograms, classification reports) on top of the
+pool, plus train-vs-val overlay and run comparison in the run panel.
 
 **Phase 3**: pyright over LSP. `@codemirror/lsp-client` (an official
 CodeMirror package) owns document sync, position mapping and request

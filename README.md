@@ -20,10 +20,10 @@ streamed output and stdin, and the theme system. Not yet released.
 | Spawn with live output | Run a file; stdout, stderr and `input()` prompts stream into the panel below the editor. Stop button. Tracebacks link to file and line.                                  | 1     |
 | Theming as data        | Every colour, font, spacing and radius is a token in a JSON file. Editor, chrome, output and plots theme together.                                                       | 1     |
 | Environment chrome     | Interpreter, Python version and source (brood venv, uv, PATH), numpy and torch versions, device (cuda/mps/cpu), GPU and system memory, always visible in the status bar. | 1     |
-| The pool               | Persistent kernel. Spawn a selection, a `# %%` cell, or the whole file into the same live state.                                                                         | 2     |
-| Inline plots           | matplotlib, seaborn and plotly figures render in the output panel, not a popped window.                                                                                  | 2     |
-| DataFrame viewer       | A real scrollable table for pandas and polars: dtypes, shape, null counts, basic stats.                                                                                  | 2     |
-| Tensor inspector       | Hover a torch, numpy or jax array to see shape, dtype, device, min/max/mean, and a small heatmap.                                                                        | 2     |
+| The pool               | Persistent kernel. Shift+Enter spawns a `# %%` cell, Alt+Enter a selection, into the same live state. Bare values echo. Variables pane. No extra packages needed.        | 2 ✓   |
+| Inline plots           | matplotlib and seaborn figures render in the output panel on the theme's plot colours; every `plt.show()` and every bare figure. Plotly: later.                          | 2 ✓   |
+| DataFrame viewer       | A real scrollable table for pandas and polars: dtypes, shape, null counts, stats on hover, sortable, pages in more rows as you scroll.                                   | 2 ✓   |
+| Tensor inspector       | Evaluate a torch, numpy or jax array (or click it in the Pool pane) for shape, dtype, device, min/max/mean/std, NaN count and a heatmap. Editor hover: next.             | 2 ◐   |
 | Run panel              | Live loss and metric curves, progress, elapsed time and iteration rate parsed from stdout (tqdm, `loss: 0.234`, `epoch 3/10`, or your own regex).                        | 1     |
 | Language intelligence  | pyright over LSP: completion, diagnostics, hover, go-to-definition.                                                                                                      | 3     |
 | Debugger               | DAP: breakpoints, stepping, variable inspection.                                                                                                                         | 4     |
