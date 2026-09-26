@@ -1,0 +1,73 @@
+/* Hover inspection card. Every value is a --sp-* token. */
+
+.sp-hover {
+  font-family: var(--sp-font-ui);
+  font-size: var(--sp-font-size-ui);
+}
+
+.sp-hover__card {
+  max-width: 360px;
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  background: var(--sp-color-bg-elevated);
+  color: var(--sp-color-fg);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-xs);
+  user-select: text;
+}
+
+.sp-hover__name {
+  color: var(--sp-color-accent);
+}
+
+.sp-hover__line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-hover__muted {
+  color: var(--sp-color-fg-muted);
+}
+
+.sp-hover__text {
+  margin: 0;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sp-hover__heatmap {
+  display: block;
+  image-rendering: pixelated;
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  margin-top: var(--sp-space-xs);
+}
+
+.sp-hover__columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-space-xs) var(--sp-space-md);
+}
+
+.sp-hover__thumb {
+  display: block;
+  height: auto;
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-plot-bg);
+}
+
+.sp-hover__hint {
+  color: var(--sp-color-fg-faint);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  margin-top: var(--sp-space-xs);
+}
+
+/* CodeMirror wraps our node in its own tooltip element; keep it unstyled. */
+.cm-tooltip:has(> .sp-hover) {
+  background: transparent;
+  border: none;
+}

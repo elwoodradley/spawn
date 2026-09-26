@@ -20,6 +20,7 @@ import { settings } from "../app/settings";
 import { spawnEditorTheme } from "../theme/codemirror";
 import type { Theme } from "../theme/schema";
 import { cellExtensions } from "./cellDecorations";
+import { hoverInspection } from "./hover";
 import { prefsExtensions } from "./prefs";
 
 /** Holds the editor theme; reconfigured when the app theme changes. */
@@ -50,6 +51,7 @@ export function baseExtensions(appearance: Theme["appearance"]): Extension[] {
     ]),
     python(),
     ...cellExtensions(),
+    hoverInspection(),
     themeCompartment.of(spawnEditorTheme(appearance)),
   ];
 }
