@@ -3,6 +3,7 @@ import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js"
 
 import { listCommands, runCommand, type Command } from "../app/commands";
 import { chordLabel } from "../app/keybindings";
+import { addRecentCommand, recentCommands } from "../app/recent";
 import { rankCommands } from "./fuzzy";
 import Icon from "./Icon";
 import "./CommandPalette.css";
@@ -22,12 +23,20 @@ export default function CommandPalette() {
   const [index, setIndex] = createSignal(0);
   let input: HTMLInputElement | undefined;
 
-  const results = createMemo(() =>
-    rankCommands(
-      listCommands().filter((c) => c.id !== "palette.open"),
+  // With no query, the commands used most recently come first.
+  const results = createMemo(() => {
+    const ranked = rankCommands(
+      listCommands().filter((c) => c.id !== "palette.open" && !c.hidden),
       query(),
-    ),
-  );
+    );
+    if (query().length > 0) return ranked;
+    const recent = recentCommands();
+    const rank = (c: Command) => {
+      const i = recent.indexOf(c.id);
+      return i === -1 ? recent.length : i;
+    };
+    return [...ranked].sort((a, b) => rank(a) - rank(b));
+  });
 
   createEffect(
     on(isOpen, (open) => {
@@ -42,6 +51,7 @@ export default function CommandPalette() {
   const pick = (command: Command | undefined) => {
     if (!command) return;
     closePalette();
+    addRecentCommand(command.id);
     void runCommand(command.id);
   };
 

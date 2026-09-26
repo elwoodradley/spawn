@@ -1,24 +1,69 @@
 /**
  * The line list. `<For>` over the store means an append creates one row and
- * a `\r` rewrite touches one text node; nothing else re-renders.
+ * a `\r` rewrite touches one text node; nothing else re-renders. A find
+ * query highlights hits (and can hide the rest); timestamps add a gutter.
  */
-import { For } from "solid-js";
+import { For, Show, type JSX } from "solid-js";
 
 import { openFile } from "../app/state";
 import type { OutputLine } from "../spawn/output";
+import { formatStamp, lineMatches } from "./view";
 
-export default function OutputLines(props: { lines: OutputLine[] }) {
+export interface OutputLinesProps {
+  lines: OutputLine[];
+  query?: string;
+  filterOnly?: boolean;
+  timestamps?: boolean;
+}
+
+export default function OutputLines(props: OutputLinesProps) {
+  const query = () => props.query ?? "";
+  const visible = (line: OutputLine) => !props.filterOnly || lineMatches(line.text, query());
   return (
     <div class="sp-output__lines mono" role="log" aria-live="polite">
-      <For each={props.lines}>{(line) => <Row line={line} />}</For>
+      <For each={props.lines}>
+        {(line) => (
+          <Show when={visible(line)}>
+            <Row line={line} query={query()} timestamps={props.timestamps ?? false} />
+          </Show>
+        )}
+      </For>
     </div>
   );
 }
 
-function Row(props: { line: OutputLine }) {
+/** Split text into plain and highlighted spans around case-insensitive hits. */
+export function highlight(text: string, query: string): JSX.Element {
+  if (query.length === 0 || !lineMatches(text, query)) return text || " ";
+  const parts: JSX.Element[] = [];
+  const lower = text.toLowerCase();
+  const q = query.toLowerCase();
+  let from = 0;
+  let idx = lower.indexOf(q, from);
+  while (idx !== -1) {
+    if (idx > from) parts.push(text.slice(from, idx));
+    parts.push(<mark class="sp-output__hit">{text.slice(idx, idx + q.length)}</mark>);
+    from = idx + q.length;
+    idx = lower.indexOf(q, from);
+  }
+  if (from < text.length) parts.push(text.slice(from));
+  return parts;
+}
+
+function Row(props: { line: OutputLine; query: string; timestamps: boolean }) {
   const link = () => props.line.link;
+  const hit = () => lineMatches(props.line.text, props.query);
   return (
-    <div class={`sp-output__line is-${props.line.stream}`}>
+    <div
+      class={`sp-output__line is-${props.line.stream}`}
+      classList={{ "is-hit": hit() }}
+      data-line-id={props.line.id}
+    >
+      <Show when={props.timestamps}>
+        <span class="sp-output__stamp" aria-hidden="true">
+          {formatStamp(props.line.at)}
+        </span>
+      </Show>
       {link() ? (
         <button
           class="sp-output__link"
@@ -28,10 +73,10 @@ function Row(props: { line: OutputLine }) {
             if (target) void openFile(target.file, target.line);
           }}
         >
-          {props.line.text}
+          {highlight(props.line.text, props.query)}
         </button>
       ) : (
-        <span class="sp-output__text">{props.line.text || " "}</span>
+        <span class="sp-output__text">{highlight(props.line.text, props.query)}</span>
       )}
     </div>
   );

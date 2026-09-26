@@ -21,8 +21,11 @@ export function isMac(platform: string = navigator.platform): boolean {
 }
 
 export function parseChord(chord: string, mac = isMac()): Chord {
-  const parts = chord.split("-");
-  const key = parts.pop() ?? "";
+  // "Mod--" means Mod plus the minus key; a trailing dash is the key itself.
+  const dashKey = chord.endsWith("-");
+  const parts = (dashKey ? chord.slice(0, -1) : chord).split("-");
+  const key = dashKey ? "-" : (parts.pop() ?? "");
+  if (dashKey && parts[parts.length - 1] === "") parts.pop();
   const out: Chord = {
     key: key === "Space" ? " " : key.toLowerCase(),
     ctrl: false,

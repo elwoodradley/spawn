@@ -110,3 +110,37 @@
   max-width: 100%;
   white-space: nowrap;
 }
+
+.sp-welcome__tips h2 {
+  margin: 0 0 var(--sp-space-sm);
+  font-size: var(--sp-font-size-ui);
+  color: var(--sp-color-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sp-welcome__tips ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-xs);
+  min-width: 260px;
+}
+
+.sp-welcome__tips li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-space-lg);
+  color: var(--sp-color-fg-muted);
+}
+
+.sp-welcome__tips kbd {
+  font-family: var(--sp-font-ui);
+  color: var(--sp-color-fg);
+  background: var(--sp-color-bg-elevated);
+  padding: 0 var(--sp-space-sm);
+  border-radius: var(--sp-radius-sm);
+  border: 1px solid var(--sp-color-border);
+}

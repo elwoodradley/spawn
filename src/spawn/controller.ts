@@ -13,18 +13,12 @@
  */
 import { createSignal } from "solid-js";
 
+import { settings, type RunPattern } from "../app/settings";
 import { brood } from "../app/state";
 import { saveAllDirty } from "../editor/documents";
 import { selectedInterpreter } from "../env/store";
-import {
-  baseName,
-  dirName,
-  getSetting,
-  spawnProcess,
-  type ProcEvent,
-  type ProcHandle,
-} from "../ipc";
-import { MetricsModel, type UserPattern } from "./metrics";
+import { baseName, dirName, notify, spawnProcess, type ProcEvent, type ProcHandle } from "../ipc";
+import { MetricsModel } from "./metrics";
 import { OutputModel } from "./output";
 
 export type SpawnStatus = "idle" | "running";
@@ -46,19 +40,9 @@ export const output = new OutputModel({ schedule });
 /** Series, progress and rate scraped from the same output, for the run panel. */
 export const metrics = new MetricsModel();
 
-/** Load the user's extra metric patterns from settings (key `run.patterns`). */
-export async function loadRunPatterns(): Promise<void> {
-  const raw = await getSetting<unknown>("run.patterns", []);
-  const list = Array.isArray(raw)
-    ? raw.filter(
-        (p): p is UserPattern =>
-          typeof p === "object" &&
-          p !== null &&
-          typeof (p as UserPattern).name === "string" &&
-          typeof (p as UserPattern).regex === "string",
-      )
-    : [];
-  metrics.setPatterns(list);
+/** Hand the user's extra metric patterns (settings `run.patterns`) to the parser. */
+export function applyRunPatterns(patterns: readonly RunPattern[]): void {
+  metrics.setPatterns(patterns.map((p) => ({ name: p.name, regex: p.regex })));
 }
 
 const [spawnStatus, setSpawnStatus] = createSignal<SpawnStatus>("idle");
@@ -81,7 +65,8 @@ export async function spawnFile(path: string): Promise<void> {
     output.system("A spawn is already running. Stop it first.");
     return;
   }
-  await saveAllDirty();
+  if (settings().spawn.saveBeforeSpawn) await saveAllDirty();
+  if (settings().spawn.clearOutputOnSpawn) output.clear();
 
   const program = selectedInterpreter();
   if (!program) {
@@ -192,6 +177,24 @@ function finish(code: number | null, signal: number | null, failure?: string): v
     const how = code === null ? `killed by signal ${signal ?? "?"}` : `exited with code ${code}`;
     output.system(`${how} after ${seconds}s`);
   }
+  notifyIfAway(code, seconds);
+}
+
+/** A desktop notification when a spawn ends while the user is elsewhere. */
+function notifyIfAway(code: number | null, seconds: string): void {
+  if (!settings().spawn.notifyWhenDone || document.hasFocus()) return;
+  const ran = spawnCommand();
+  const file = ran ? baseName(ran.args[ran.args.length - 1] ?? "") : "spawn";
+  const how =
+    outcome() === "ok"
+      ? `exit 0`
+      : outcome() === "stopped"
+        ? "stopped"
+        : code === null
+          ? "killed"
+          : `exit ${code}`;
+  const verb = outcome() === "croak" ? "croaked" : "finished";
+  void notify("SPAWN", `spawn ${verb}: ${file} · ${how} · ${seconds}s`);
 }
 
 function startTimer(): void {

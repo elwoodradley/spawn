@@ -12,7 +12,7 @@ import {
 
 import FileTree from "../brood/FileTree";
 import { startBroodTree } from "../brood/store";
-import { isDirty } from "../editor/documents";
+import { isDirty, saveAllDirty } from "../editor/documents";
 import Editor from "../editor/Editor";
 import { baseName } from "../ipc";
 import OutputPanel from "../output/OutputPanel";
@@ -23,9 +23,11 @@ import CommandPalette from "../ui/CommandPalette";
 import ContextMenuHost from "../ui/ContextMenu";
 import DialogHost from "../ui/Dialog";
 import MenuBar from "../ui/MenuBar";
+import SettingsDialog from "../ui/SettingsDialog";
 import Splitter from "../ui/Splitter";
 import StatusBar from "../ui/StatusBar";
 import Tabs from "../ui/Tabs";
+import ToastHost from "../ui/Toast";
 import { PRINT_HOST_ID, registerAppCommands } from "./appCommands";
 import { appMenus } from "./appMenus";
 import { autosaveClutch, restoreClutch } from "./clutch";
@@ -42,7 +44,10 @@ import {
   sidebarWidth,
 } from "./layout";
 import { loadRecent } from "./recent";
+import { settings } from "./settings";
 import { activeFilePath, brood } from "./state";
+import { croakToast } from "./toast";
+import { registerViewCommands } from "./viewCommands";
 import Welcome from "./Welcome";
 import { dropHover, installCloseGuard, installDragDrop } from "./window";
 import "./App.css";
@@ -61,6 +66,7 @@ export default function App() {
 
   registerAppCommands();
   onCleanup(registerEditCommands());
+  onCleanup(registerViewCommands());
   startBroodTree();
 
   onMount(() => {
@@ -69,10 +75,16 @@ export default function App() {
     const unlisteners: Array<() => void> = [];
     void installCloseGuard().then((fn) => unlisteners.push(fn));
     void installDragDrop().then((fn) => unlisteners.push(fn));
+    // Autosave "when switching windows": save everything on blur.
+    const onBlur = () => {
+      if (settings().editor.autosave === "onFocusChange") void saveAllDirty();
+    };
+    window.addEventListener("blur", onBlur);
     onCleanup(() => {
       disposeSpawn();
       uninstall();
       unlisteners.forEach((fn) => fn());
+      window.removeEventListener("blur", onBlur);
     });
     // After the awaits the reactive owner is gone, so re-enter it explicitly
     // or the autosave effect would never be disposed with the component.
@@ -86,6 +98,8 @@ export default function App() {
       setReady(true);
     })().catch((err: unknown) => {
       console.error("SPAWN startup failed", err);
+      croakToast(`Startup failed: ${err instanceof Error ? err.message : String(err)}`);
+      setReady(true);
     });
   });
 
@@ -154,6 +168,8 @@ export default function App() {
         <CommandPalette />
         <ContextMenuHost />
         <DialogHost />
+        <SettingsDialog />
+        <ToastHost />
       </div>
       <Show when={dropHover()}>
         <div class="sp-drop-overlay sp-no-print" aria-hidden="true">

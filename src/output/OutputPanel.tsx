@@ -1,11 +1,14 @@
 /**
- * The output area: one header (status, command, Spawn/Stop, Clear) and two
- * tabs under it. "Output" is the console with stdin; "Run" is the live
- * metrics view. The Run tab opens itself the first time a spawn prints a
- * metric, unless the user has picked a tab by hand this session.
+ * The output area: one header (status, command, Spawn/Stop, Clear, more)
+ * and two tabs under it. "Output" is the console with stdin; "Run" is the
+ * live metrics view. The Run tab opens itself the first time a spawn prints
+ * a metric, when the setting allows and the user has not picked a tab by
+ * hand this session.
  */
 import { createEffect, createSignal, on, Show } from "solid-js";
 
+import { runCommand } from "../app/commands";
+import { settings } from "../app/settings";
 import { activeFilePath } from "../app/state";
 import { baseName } from "../ipc";
 import {
@@ -19,9 +22,13 @@ import {
   spawnStatus,
   stopSpawn,
 } from "../spawn/controller";
+import { showContextMenu } from "../ui/ContextMenu";
+import Icon from "../ui/Icon";
+import { cmd, separator, type MenuEntry } from "../ui/menus";
 import OutputConsole from "./OutputConsole";
 import "./OutputPanel.css";
 import RunPanel from "./RunPanel";
+import { setShowTimestamps, setWrapLines, showTimestamps, wrapLines } from "./view";
 
 type Tab = "output" | "run";
 
@@ -33,31 +40,84 @@ export function showOutputTab(next: Tab): void {
   setTab(next);
 }
 
+/** The right-click / "more" menu for the console. */
+export function outputMenu(): MenuEntry[] {
+  return [
+    cmd("output.find"),
+    cmd("output.copy"),
+    cmd("output.save"),
+    separator,
+    {
+      kind: "action",
+      label: "Wrap long lines",
+      checked: wrapLines(),
+      run: () => {
+        setWrapLines(!wrapLines());
+      },
+    },
+    {
+      kind: "action",
+      label: "Show timestamps",
+      checked: showTimestamps(),
+      run: () => {
+        setShowTimestamps(!showTimestamps());
+      },
+    },
+    separator,
+    cmd("output.clear"),
+  ];
+}
+
 export default function OutputPanel() {
   createEffect(
     on(
       () => metrics.series.length,
       (count) => {
-        if (count > 0 && !userPicked && spawnStatus() === "running") setTab("run");
+        if (
+          count > 0 &&
+          !userPicked &&
+          settings().spawn.autoShowRunTab &&
+          spawnStatus() === "running"
+        ) {
+          setTab("run");
+        }
       },
     ),
   );
 
   const commandLabel = () => {
-    const cmd = spawnCommand();
-    if (!cmd) return "nothing spawned yet";
-    return `${baseName(cmd.program)} ${cmd.args.map(baseName).join(" ")}`;
+    const ran = spawnCommand();
+    if (!ran) return "nothing spawned yet";
+    return `${baseName(ran.program)} ${ran.args.map(baseName).join(" ")}`;
   };
 
   const commandTitle = () => {
-    const cmd = spawnCommand();
-    return cmd ? `${cmd.program} ${cmd.args.join(" ")}\nin ${cmd.cwd}` : "";
+    const ran = spawnCommand();
+    return ran ? `${ran.program} ${ran.args.join(" ")}\nin ${ran.cwd}` : "";
   };
 
   const dotState = () => (spawnStatus() === "running" ? "running" : outcome());
 
+  const linesLabel = () => {
+    const dropped = output.dropped();
+    return dropped > 0 ? `${output.lines.length} lines · ${dropped} dropped` : "";
+  };
+
+  const openMore = (e: MouseEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    showContextMenu(rect.left, rect.bottom + 2, outputMenu());
+  };
+
   return (
-    <section class="sp-output sp-no-print" aria-label="Output">
+    <section
+      class="sp-output sp-no-print"
+      aria-label="Output"
+      onContextMenu={(e) => {
+        if (tab() !== "output") return;
+        e.preventDefault();
+        showContextMenu(e.clientX, e.clientY, outputMenu());
+      }}
+    >
       <header class="sp-output__header">
         <div class="sp-output__tabs" role="tablist">
           <TabButton id="output" label="Output" current={tab()} />
@@ -72,6 +132,14 @@ export default function OutputPanel() {
           <Show when={exitCode() !== null}>
             <span class="sp-output__meta">exit {exitCode()}</span>
           </Show>
+        </Show>
+        <Show when={linesLabel()}>
+          <span
+            class="sp-output__meta sp-output__dropped"
+            title="The console keeps the last 10,000 lines"
+          >
+            {linesLabel()}
+          </span>
         </Show>
         <span class="sp-output__spacer" />
         <Show
@@ -100,6 +168,22 @@ export default function OutputPanel() {
         </Show>
         <button class="sp-output__button" title="Clear the output" onClick={() => output.clear()}>
           Clear
+        </button>
+        <button
+          class="sp-output__button sp-output__icon-button"
+          title="Find in output (Ctrl+F while the output is focused)"
+          aria-label="Find in output"
+          onClick={() => void runCommand("output.find")}
+        >
+          <Icon name="search" size={14} />
+        </button>
+        <button
+          class="sp-output__button sp-output__icon-button"
+          title="More"
+          aria-label="More output actions"
+          onClick={openMore}
+        >
+          ⋯
         </button>
       </header>
       <Show when={tab() === "output"} fallback={<RunPanel />}>

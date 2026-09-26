@@ -106,7 +106,7 @@ const shellCommands: Command[] = [
     },
   },
   { id: "file.saveAll", title: "Save all files", keys: "Mod-Alt-S", run: saveAllDirty },
-  { id: "file.print", title: "Print file", keys: "Mod-P", enabled: hasFile, run: printActive },
+  { id: "file.print", title: "Print file", enabled: hasFile, run: printActive },
   {
     id: "tab.close",
     title: "Close tab",

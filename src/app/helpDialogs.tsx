@@ -17,18 +17,23 @@ const EDITOR_ROWS: Array<[string, string]> = [
   ["Toggle fold", chordLabel("Ctrl-Shift-[")],
 ];
 
-export function showShortcuts(): void {
+/** Every command with a chord, plus the editor's own keys, for tables. */
+export function shortcutRows(): Array<readonly [string, string]> {
   const rows = listCommands()
-    .filter((c) => c.keys)
+    .filter((c) => c.keys && !c.hidden)
     .map((c) => [c.title, chordLabel(c.keys ?? "")] as const)
     .sort((a, b) => a[0].localeCompare(b[0]));
+  return [...rows, ...EDITOR_ROWS];
+}
+
+export function showShortcuts(): void {
   showDialog({
     title: "Keyboard shortcuts",
     wide: true,
     content: (
       <table>
         <tbody>
-          <For each={[...rows, ...EDITOR_ROWS]}>
+          <For each={shortcutRows()}>
             {([title, keys]) => (
               <tr>
                 <td>{title}</td>

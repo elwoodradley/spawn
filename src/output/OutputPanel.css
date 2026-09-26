@@ -196,3 +196,95 @@
   font-size: calc(var(--sp-font-size-ui) * 0.8);
   text-align: center;
 }
+
+/* Console wrapper: find bar + scroller + stdin. */
+.sp-output__console {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.sp-output__find {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  border-bottom: 1px solid var(--sp-color-border);
+  background: var(--sp-color-bg-elevated);
+  color: var(--sp-color-fg-muted);
+}
+.sp-output__find-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--sp-color-fg);
+  caret-color: var(--sp-color-cursor);
+}
+.sp-output__find-input::placeholder {
+  color: var(--sp-color-fg-faint);
+}
+.sp-output__find-input:focus-visible {
+  outline: none;
+}
+.sp-output__find-count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sp-output__find-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+  white-space: nowrap;
+}
+.sp-output__find-close {
+  display: inline-flex;
+  padding: var(--sp-space-xs);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-fg-faint);
+}
+.sp-output__find-close:hover {
+  background: var(--sp-color-bg-hover);
+  color: var(--sp-color-fg);
+}
+
+.sp-output__hit {
+  background: var(--sp-color-selection);
+  color: inherit;
+  border-radius: var(--sp-radius-sm);
+}
+.sp-output__line.is-hit {
+  background: var(--sp-color-line-highlight);
+}
+
+.sp-output__scroller.is-nowrap .sp-output__line {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.sp-output__stamp {
+  display: inline-block;
+  margin-right: var(--sp-space-md);
+  color: var(--sp-color-fg-faint);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.sp-output__icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(var(--sp-font-size-ui) * 2);
+  padding: var(--sp-space-xs) var(--sp-space-sm);
+}
+
+.sp-output__dropped {
+  color: var(--sp-color-warning);
+}
+
+.sp-output__scroller:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--sp-color-accent);
+}

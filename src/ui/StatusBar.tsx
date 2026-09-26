@@ -26,6 +26,8 @@ import { baseName, type MlInfo } from "../ipc";
 import { formatBytes } from "../output/chart";
 import { elapsedMs, outcome, spawnStatus } from "../spawn/controller";
 import { currentTheme } from "../theme/store";
+import FindInFiles from "./FindInFiles";
+import QuickOpen from "./QuickOpen";
 import "./StatusBar.css";
 
 /** `2.9.0+cu126` -> `2.9` */
@@ -95,22 +97,32 @@ export default function StatusBar() {
   return (
     <footer class="sp-statusbar sp-no-print" classList={{ [`is-${outcome()}`]: true }}>
       <div class="sp-statusbar__group">
-        <span class="sp-statusbar__item" title={brood() ?? "No brood open"}>
+        <button
+          class="sp-statusbar__item sp-statusbar__button"
+          title={brood() ? `${brood()}\nClick to open another brood` : "Open a brood"}
+          onClick={() => void runCommand("brood.open")}
+        >
           {brood() ? baseName(brood() ?? "") : "no brood"}
-        </span>
-        <span
-          class="sp-statusbar__item sp-statusbar__spawn"
+        </button>
+        <button
+          class="sp-statusbar__item sp-statusbar__button sp-statusbar__spawn"
           classList={{ "is-running": spawnStatus() === "running" }}
+          title="Toggle the output panel"
+          onClick={() => void runCommand("view.toggleOutput")}
         >
           {spawnLabel()}
-        </span>
+        </button>
       </div>
       <div class="sp-statusbar__group">
         <Show when={cursorPosition()}>
           {(pos) => (
-            <span class="sp-statusbar__item">
+            <button
+              class="sp-statusbar__item sp-statusbar__button"
+              title="Go to line"
+              onClick={() => void runCommand("edit.gotoLine")}
+            >
               Ln {pos().line}, Col {pos().col}
-            </span>
+            </button>
           )}
         </Show>
         <MlItems />
@@ -144,6 +156,8 @@ export default function StatusBar() {
         </button>
       </div>
       <Metamorphosis />
+      <QuickOpen />
+      <FindInFiles />
     </footer>
   );
 }

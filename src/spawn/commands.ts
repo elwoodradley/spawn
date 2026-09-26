@@ -5,6 +5,7 @@
 import { createEffect, createRoot, on } from "solid-js";
 
 import { registerCommands } from "../app/commands";
+import { settings } from "../app/settings";
 import { activeFilePath, brood } from "../app/state";
 import {
   refreshInterpreters,
@@ -12,9 +13,19 @@ import {
   startMemoryPolling,
   toggleMetamorphosis,
 } from "../env/store";
+import { copyOutput, saveOutput } from "../output/outputActions";
 import { showOutputTab } from "../output/OutputPanel";
 import {
-  loadRunPatterns,
+  openFind,
+  setShowTimestamps,
+  setWrapLines,
+  showTimestamps,
+  wrapLines,
+} from "../output/view";
+import { openFindInFiles } from "../ui/FindInFiles";
+import { openQuickOpen } from "../ui/QuickOpen";
+import {
+  applyRunPatterns,
   output,
   requestStdinFocus,
   spawnFile,
@@ -86,14 +97,53 @@ export function registerSpawnCommands(): () => void {
       title: "Output: show the console",
       run: () => showOutputTab("output"),
     },
+    {
+      id: "output.find",
+      title: "Output: find in output",
+      run: () => {
+        showOutputTab("output");
+        openFind();
+      },
+    },
+    { id: "output.copy", title: "Output: copy all", run: copyOutput },
+    { id: "output.save", title: "Output: save to file…", run: saveOutput },
+    {
+      id: "output.toggleWrap",
+      title: "Output: toggle line wrapping",
+      run: () => {
+        setWrapLines(!wrapLines());
+      },
+    },
+    {
+      id: "output.toggleTimestamps",
+      title: "Output: toggle timestamps",
+      run: () => {
+        setShowTimestamps(!showTimestamps());
+      },
+    },
+    {
+      id: "brood.quickOpen",
+      title: "Go to file…",
+      keys: "Mod-P",
+      enabled: () => brood() !== null,
+      run: openQuickOpen,
+    },
+    {
+      id: "brood.findInFiles",
+      title: "Find in files…",
+      keys: "Mod-Shift-F",
+      enabled: () => brood() !== null,
+      run: openFindInFiles,
+    },
   ]);
 
-  void loadRunPatterns();
   const stopMemory = startMemoryPolling();
 
-  // Rediscover interpreters whenever the brood changes (and once at start).
+  // Rediscover interpreters whenever the brood changes (and once at start);
+  // keep the metrics parser in step with the user's patterns.
   const disposeRoot = createRoot((disposeFn) => {
     createEffect(on(brood, (root) => void refreshInterpreters(root)));
+    createEffect(on(() => settings().run.patterns, applyRunPatterns));
     return disposeFn;
   });
 

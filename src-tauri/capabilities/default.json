@@ -2,7 +2,9 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "The main SPAWN window. An IDE opens whatever folder the user picks, so the filesystem scope is open; the boundary we keep is that the webview never loads remote content.",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "core:window:allow-set-title",
@@ -10,6 +12,8 @@
     "core:window:allow-destroy",
     "dialog:default",
     "store:default",
+    "window-state:default",
+    "notification:default",
     "fs:default",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
@@ -23,7 +27,14 @@
     "fs:allow-unwatch",
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "**" }, { "path": "$APPCONFIG/**" }]
+      "allow": [
+        {
+          "path": "**"
+        },
+        {
+          "path": "$APPCONFIG/**"
+        }
+      ]
     }
   ]
 }

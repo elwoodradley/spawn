@@ -7,13 +7,17 @@
  * - `isDirty(path)` for tab decorations.
  * - `cursorPosition()` for the status bar, 1-based line and column.
  */
-import type { EditorState } from "@codemirror/state";
+import type { EditorState, TransactionSpec } from "@codemirror/state";
 import type { ViewUpdate } from "@codemirror/view";
 import { createSignal } from "solid-js";
 
+import { settings } from "../app/settings";
+import { croakToast } from "../app/toast";
 import { readText, writeText } from "../ipc";
 import { currentTheme } from "../theme/store";
+import { AutosaveTimers, ensureFinalNewline, trimTrailingWhitespace } from "./autosave";
 import { createDocumentState } from "./createEditor";
+import { activeView } from "./view";
 
 export interface CursorPosition {
   line: number;
@@ -40,6 +44,12 @@ const [dirtyPaths, setDirtyPaths] = createSignal<ReadonlySet<string>>(new Set())
 const [revealRequest, setRevealRequest] = createSignal<RevealRequest | null>(null);
 export { cursorPosition, setCursorPosition, dirtyPaths, revealRequest };
 
+const autosave = new AutosaveTimers((path) => {
+  saveDocument(path).catch((err: unknown) => {
+    croakToast(`Autosave failed for ${path}: ${err instanceof Error ? err.message : String(err)}`);
+  });
+});
+
 function setDirty(path: string, dirty: boolean): void {
   const current = dirtyPaths();
   if (current.has(path) === dirty) return;
@@ -55,7 +65,10 @@ function listenerFor(path: string): (update: ViewUpdate) => void {
     if (!entry) return;
     entry.state = update.state;
     if (update.docChanged) {
-      setDirty(path, update.state.doc.toString() !== entry.savedText);
+      const dirty = update.state.doc.toString() !== entry.savedText;
+      setDirty(path, dirty);
+      const prefs = settings().editor;
+      if (dirty && prefs.autosave === "afterDelay") autosave.schedule(path, prefs.autosaveDelayMs);
     }
     if (update.selectionSet || update.docChanged || update.focusChanged) {
       const head = update.state.selection.main.head;
@@ -91,6 +104,7 @@ export function documentText(path: string): string | null {
 export function renameDocument(from: string, to: string): void {
   const entry = docs.get(from);
   if (!entry) return;
+  autosave.cancel(from);
   docs.delete(from);
   docs.set(to, entry);
   const dirty = dirtyPaths().has(from);
@@ -99,13 +113,34 @@ export function renameDocument(from: string, to: string): void {
 }
 
 export function closeDocument(path: string): void {
+  autosave.cancel(path);
   docs.delete(path);
   setDirty(path, false);
+}
+
+/** Apply a change to a document, through the view if it is showing. */
+function transact(entry: DocEntry, spec: TransactionSpec): void {
+  const view = activeView();
+  if (view && view.state === entry.state) view.dispatch(spec);
+  else entry.state = entry.state.update(spec).state;
+}
+
+/** Save-time clean-ups from settings, applied as a real edit so undo works. */
+function applySaveTransforms(entry: DocEntry): void {
+  const prefs = settings().editor;
+  const before = entry.state.doc.toString();
+  let after = before;
+  if (prefs.trimTrailingWhitespace) after = trimTrailingWhitespace(after);
+  if (prefs.insertFinalNewline) after = ensureFinalNewline(after);
+  if (after === before) return;
+  transact(entry, { changes: { from: 0, to: before.length, insert: after } });
 }
 
 export async function saveDocument(path: string): Promise<void> {
   const entry = docs.get(path);
   if (!entry) return;
+  autosave.cancel(path);
+  applySaveTransforms(entry);
   const text = entry.state.doc.toString();
   await writeText(path, text);
   entry.savedText = text;

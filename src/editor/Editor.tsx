@@ -6,10 +6,12 @@ import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { createEffect, on, onCleanup, onMount, Show } from "solid-js";
 
+import { settings } from "../app/settings";
 import { activeFilePath } from "../app/state";
 import { currentTheme } from "../theme/store";
 import { applyEditorTheme, createView } from "./createEditor";
-import { getDocument, revealRequest, setCursorPosition } from "./documents";
+import { getDocument, isDirty, revealRequest, saveDocument, setCursorPosition } from "./documents";
+import { applyEditorPrefs } from "./prefs";
 import { setActiveView } from "./view";
 import "./Editor.css";
 
@@ -34,6 +36,9 @@ export default function Editor() {
       if (previous) {
         const old = getDocument(previous);
         if (old) old.scrollTop = view.scrollDOM.scrollTop;
+        if (settings().editor.autosave === "onFocusChange" && isDirty(previous)) {
+          void saveDocument(previous);
+        }
       }
       previous = path;
 
@@ -44,6 +49,7 @@ export default function Editor() {
       }
       view.setState(entry.state);
       applyEditorTheme(view, currentTheme().appearance);
+      applyEditorPrefs(view, settings().editor);
       view.scrollDOM.scrollTop = entry.scrollTop;
       const head = entry.state.selection.main.head;
       const line = entry.state.doc.lineAt(head);
@@ -57,6 +63,16 @@ export default function Editor() {
       currentTheme,
       (theme) => {
         if (view) applyEditorTheme(view, theme.appearance);
+      },
+      { defer: true },
+    ),
+  );
+
+  createEffect(
+    on(
+      () => settings().editor,
+      (prefs) => {
+        if (view) applyEditorPrefs(view, prefs);
       },
       { defer: true },
     ),

@@ -54,6 +54,11 @@ describe("parseChord", () => {
     expect(parseChord("Ctrl-Space", false)).toMatchObject({ key: " ", ctrl: true });
   });
 
+  it("treats a trailing dash as the minus key", () => {
+    expect(parseChord("Mod--", false)).toMatchObject({ key: "-", ctrl: true });
+    expect(parseChord("-", false)).toMatchObject({ key: "-", ctrl: false });
+  });
+
   it("rejects unknown modifiers", () => {
     expect(() => parseChord("Hyper-S", false)).toThrow(/unknown modifier/);
   });

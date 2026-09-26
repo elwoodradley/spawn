@@ -50,3 +50,20 @@
   background: var(--sp-color-bg-active);
   color: var(--sp-color-fg);
 }
+
+.sp-tab {
+  touch-action: none;
+  position: relative;
+}
+.sp-tab.is-dragging {
+  opacity: 0.5;
+}
+.sp-tab.is-drop-before::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: var(--sp-space-xs);
+  bottom: var(--sp-space-xs);
+  width: 2px;
+  background: var(--sp-color-accent);
+}

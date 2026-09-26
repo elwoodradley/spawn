@@ -11,6 +11,7 @@
  * one render per frame. Lines live in a Solid store so the panel re-renders
  * only the rows that changed.
  */
+import { createSignal, type Accessor } from "solid-js";
 import { createStore, produce, type SetStoreFunction } from "solid-js/store";
 
 import { isCroakContinuation, isCroakEnd, isCroakStart, parseFrameLine } from "./croak";
@@ -26,6 +27,8 @@ export interface OutputLine {
   id: number;
   stream: Stream;
   text: string;
+  /** Wall-clock ms when the line was opened, for the timestamps gutter. */
+  at: number;
   link?: OutputLink;
 }
 
@@ -69,9 +72,15 @@ export class OutputModel {
   /** One unterminated line per stream, so stdout and stderr never merge. */
   private open: Partial<Record<Stream, OpenLine>> = {};
   private inCroak = false;
+  /** Lines discarded by the cap since the last clear. Reactive. */
+  readonly dropped: Accessor<number>;
+  private readonly setDropped: (n: number) => void;
 
   constructor(options: OutputModelOptions = {}) {
     const [lines, setLines] = createStore<OutputLine[]>([]);
+    const [dropped, setDropped] = createSignal(0);
+    this.dropped = dropped;
+    this.setDropped = setDropped;
     this.lines = lines;
     this.setLines = setLines;
     this.maxLines = options.maxLines ?? DEFAULT_MAX_LINES;
@@ -98,6 +107,12 @@ export class OutputModel {
     this.open = {};
     this.inCroak = false;
     this.setLines([]);
+    this.setDropped(0);
+  }
+
+  /** Everything currently shown, one line per row, for copy and save. */
+  text(): string {
+    return this.lines.map((l) => l.text).join("\n");
   }
 
   /** Apply queued appends. Safe to call with nothing queued. */
@@ -134,7 +149,7 @@ export class OutputModel {
     let open = this.open[stream];
     if (!open) {
       open = { id: this.nextId++, col: 0 };
-      lines.push({ id: open.id, stream, text: "" });
+      lines.push({ id: open.id, stream, text: "", at: Date.now() });
       this.open[stream] = open;
     }
     return open;
@@ -184,7 +199,10 @@ export class OutputModel {
 
   private trim(lines: OutputLine[]): void {
     const excess = lines.length - this.maxLines;
-    if (excess > 0) lines.splice(0, excess);
+    if (excess > 0) {
+      lines.splice(0, excess);
+      this.setDropped(this.dropped() + excess);
+    }
   }
 }
 

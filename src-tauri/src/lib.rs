@@ -25,6 +25,8 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_notification::init())
         .manage(Arc::new(proc::ProcRegistry::default()))
         .invoke_handler(tauri::generate_handler![
             proc::proc_spawn,

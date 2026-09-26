@@ -10,48 +10,31 @@ import {
 } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { python } from "@codemirror/lang-python";
-import {
-  bracketMatching,
-  foldGutter,
-  foldKeymap,
-  indentOnInput,
-  indentUnit,
-} from "@codemirror/language";
+import { bracketMatching, foldGutter, foldKeymap, indentOnInput } from "@codemirror/language";
 import { lintKeymap } from "@codemirror/lint";
 import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
-import {
-  drawSelection,
-  EditorView,
-  highlightActiveLine,
-  highlightActiveLineGutter,
-  keymap,
-  lineNumbers,
-  type ViewUpdate,
-} from "@codemirror/view";
+import { drawSelection, EditorView, keymap, type ViewUpdate } from "@codemirror/view";
 
+import { settings } from "../app/settings";
 import { spawnEditorTheme } from "../theme/codemirror";
 import type { Theme } from "../theme/schema";
+import { prefsExtensions } from "./prefs";
 
 /** Holds the editor theme; reconfigured when the app theme changes. */
 export const themeCompartment = new Compartment();
 
-export const PYTHON_INDENT = "    ";
-
 export function baseExtensions(appearance: Theme["appearance"]): Extension[] {
   return [
-    lineNumbers(),
-    highlightActiveLineGutter(),
+    ...prefsExtensions(settings().editor),
     history(),
     foldGutter(),
     drawSelection(),
     EditorState.allowMultipleSelections.of(true),
     indentOnInput(),
-    indentUnit.of(PYTHON_INDENT),
     bracketMatching(),
     closeBrackets(),
     autocompletion(),
-    highlightActiveLine(),
     highlightSelectionMatches(),
     search({ top: true }),
     keymap.of([

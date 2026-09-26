@@ -3,6 +3,7 @@ import { For, Show } from "solid-js";
 
 import { baseName, dirName } from "../ipc";
 import { runCommand } from "./commands";
+import { chordLabel } from "./keybindings";
 import { recentBroods, recentFiles } from "./recent";
 import { openBrood, openFile } from "./state";
 import "./Welcome.css";
@@ -33,6 +34,32 @@ function RecentList(props: {
   );
 }
 
+const TIPS: ReadonlyArray<[string, string]> = [
+  ["Spawn the current file", "F5"],
+  ["Command palette", "Mod-Shift-P"],
+  ["Open a file", "Mod-O"],
+  ["Send input to a running program", "Mod-I"],
+  ["Settings", "Mod-,"],
+];
+
+function Tips() {
+  return (
+    <section class="sp-welcome__tips">
+      <h2>Tips</h2>
+      <ul>
+        <For each={TIPS}>
+          {([what, chord]) => (
+            <li>
+              <span>{what}</span>
+              <kbd>{chordLabel(chord)}</kbd>
+            </li>
+          )}
+        </For>
+      </ul>
+    </section>
+  );
+}
+
 export default function Welcome() {
   return (
     <div class="sp-welcome sp-chrome sp-no-print">
@@ -59,6 +86,7 @@ export default function Welcome() {
           items={recentFiles()}
           onPick={(path) => void openFile(path)}
         />
+        <Tips />
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import { createSignal, type Accessor } from "solid-js";
 
 import { closeDocument, isDirty, openDocument, renameDocument, reveal } from "../editor/documents";
 import { baseName, confirm } from "../ipc";
+import { croakToast } from "./toast";
 import { addRecentBrood, addRecentFile, forgetRecent } from "./recent";
 
 export interface Tab {
@@ -22,7 +23,13 @@ export interface Tab {
 const [brood, setBrood] = createSignal<string | null>(null);
 const [tabs, setTabs] = createSignal<readonly Tab[]>([]);
 const [activeFilePath, setActiveFilePath] = createSignal<string | null>(null);
-const [lastCroak, setLastCroak] = createSignal<string | null>(null);
+const [lastCroak, setLastCroakSignal] = createSignal<string | null>(null);
+
+/** Record a user-facing error and show it as a toast. */
+function setLastCroak(message: string | null): void {
+  setLastCroakSignal(message);
+  if (message) croakToast(message);
+}
 
 export {
   brood,

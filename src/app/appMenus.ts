@@ -6,6 +6,7 @@ import { currentTheme, selectTheme, themes } from "../theme/store";
 import { cmd, separator, type Menu, type MenuEntry } from "../ui/menus";
 import { EDITOR_HINTS } from "./editCommands";
 import { forgetRecent, recentBroods, recentFiles } from "./recent";
+import { settings } from "./settings";
 import { openBrood, openFile } from "./state";
 
 function recentEntries(): MenuEntry[] {
@@ -57,11 +58,14 @@ export function appMenus(): Menu[] {
         cmd("file.open", { label: "Open file…" }),
         cmd("brood.open", { label: "Open brood…" }),
         { kind: "submenu", label: "Open recent", items: recentEntries() },
+        cmd("brood.quickOpen", { label: "Go to file…" }),
         separator,
         cmd("file.save"),
         cmd("file.saveAll"),
         separator,
         cmd("file.print", { label: "Print…" }),
+        separator,
+        cmd("settings.open", { label: "Settings…" }),
         separator,
         cmd("tab.close"),
         cmd("app.quit"),
@@ -75,6 +79,7 @@ export function appMenus(): Menu[] {
         separator,
         cmd("edit.find"),
         cmd("edit.replace"),
+        cmd("brood.findInFiles", { label: "Find in files…" }),
         cmd("edit.selectAll", { hint: EDITOR_HINTS.selectAll }),
         separator,
         cmd("edit.gotoLine", { label: "Go to line…", hint: EDITOR_HINTS.gotoLine }),
@@ -88,6 +93,12 @@ export function appMenus(): Menu[] {
         separator,
         cmd("output.clear"),
         cmd("output.focusStdin"),
+        separator,
+        cmd("output.find"),
+        cmd("output.copy"),
+        cmd("output.save"),
+        cmd("output.toggleWrap"),
+        cmd("output.toggleTimestamps"),
       ],
     },
     {
@@ -95,10 +106,19 @@ export function appMenus(): Menu[] {
       items: [
         cmd("view.toggleSidebar"),
         cmd("view.toggleOutput"),
+        cmd("view.toggleWordWrap", {
+          label: "Word wrap",
+          checked: () => settings().editor.wordWrap,
+        }),
+        separator,
+        cmd("view.zoomIn"),
+        cmd("view.zoomOut"),
+        cmd("view.zoomReset"),
         separator,
         cmd("palette.open"),
         separator,
         { kind: "submenu", label: "Theme", items: themeEntries() },
+        cmd("settings.open", { label: "Settings…" }),
       ],
     },
     {

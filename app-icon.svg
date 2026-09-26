@@ -1,21 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <!-- SPAWN app icon. Flat, one glyph colour, no gradients: a toad reduced to
-       two eyes on a wide body with a cut-out smile. Source of truth for
-       src-tauri/icons; run `npm run icons` after editing. -->
+  <!-- SPAWN app icon: one becomes two. A circle budding a smaller circle,
+       separated by a hairline of ground. Flat, single glyph colour, no
+       gradients. Source of truth for src-tauri/icons; run `npm run icons`. -->
   <rect width="1024" height="1024" rx="232" fill="#0f1214"/>
-
-  <g fill="#b6ff3b">
-    <!-- body -->
-    <rect x="212" y="452" width="600" height="332" rx="166"/>
-    <!-- eyes -->
-    <circle cx="368" cy="396" r="104"/>
-    <circle cx="656" cy="396" r="104"/>
-  </g>
-
-  <!-- pupils and smile are cut from the glyph with the background colour -->
-  <g fill="#0f1214">
-    <circle cx="368" cy="396" r="40"/>
-    <circle cx="656" cy="396" r="40"/>
-  </g>
-  <path d="M 330 610 Q 512 720 694 610" fill="none" stroke="#0f1214" stroke-width="34" stroke-linecap="round"/>
+  <circle cx="430" cy="512" r="250" fill="#b6ff3b"/>
+  <circle cx="700" cy="440" r="176" fill="#0f1214"/>
+  <circle cx="700" cy="440" r="140" fill="#b6ff3b"/>
 </svg>

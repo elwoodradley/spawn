@@ -1,0 +1,22 @@
+.sp-quickopen-item {
+  justify-content: flex-start;
+  gap: var(--sp-space-md);
+  min-width: 0;
+}
+
+.sp-quickopen-name {
+  flex: none;
+}
+
+.sp-quickopen-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.6;
+  font-size: calc(var(--sp-font-size-ui) * 0.9);
+}
+
+.sp-quickopen-status {
+  color: var(--sp-color-fg-faint);
+  font-size: calc(var(--sp-font-size-ui) * 0.9);
+}

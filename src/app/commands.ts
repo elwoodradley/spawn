@@ -13,6 +13,8 @@ export interface Command {
   keys?: string;
   /** Return false to hide from the palette and ignore the chord. */
   enabled?: () => boolean;
+  /** Keep the chord working but leave it out of the palette (key aliases). */
+  hidden?: boolean;
   run: () => void | Promise<void>;
 }
 

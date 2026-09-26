@@ -14,6 +14,8 @@ export type MenuEntry =
       label?: string;
       /** A chord to display when the command has no global key (e.g. editor keys). */
       hint?: string;
+      /** Draw a check mark when true (toggles). */
+      checked?: () => boolean;
     }
   | {
       kind: "action";
@@ -51,7 +53,7 @@ export function resolveEntry(entry: MenuEntry): ResolvedEntry {
         label: entry.label ?? command?.title ?? entry.id,
         keys: keys ? chordLabel(keys) : "",
         disabled: !command || command.enabled?.() === false,
-        checked: false,
+        checked: entry.checked?.() ?? false,
         hasSubmenu: false,
         separator: false,
       };
@@ -96,7 +98,10 @@ export async function activateEntry(entry: MenuEntry): Promise<void> {
 }
 
 export const separator: MenuEntry = { kind: "separator" };
-export const cmd = (id: string, extra?: { label?: string; hint?: string }): MenuEntry => ({
+export const cmd = (
+  id: string,
+  extra?: { label?: string; hint?: string; checked?: () => boolean },
+): MenuEntry => ({
   kind: "command",
   id,
   ...extra,

@@ -9,6 +9,7 @@ import { getSetting, setSetting } from "../ipc";
 export const RECENT_MAX = 10;
 const BROODS_KEY = "recent.broods";
 const FILES_KEY = "recent.files";
+const COMMANDS_KEY = "recent.commands";
 
 /** Move `item` to the front, dropping duplicates and anything past `max`. */
 export function pushRecent(list: readonly string[], item: string, max = RECENT_MAX): string[] {
@@ -25,11 +26,19 @@ function onlyStrings(value: unknown): string[] {
 
 const [recentBroods, setRecentBroods] = createSignal<readonly string[]>([]);
 const [recentFiles, setRecentFiles] = createSignal<readonly string[]>([]);
-export { recentBroods, recentFiles };
+const [recentCommands, setRecentCommands] = createSignal<readonly string[]>([]);
+export { recentBroods, recentFiles, recentCommands };
 
 export async function loadRecent(): Promise<void> {
   setRecentBroods(onlyStrings(await getSetting<unknown>(BROODS_KEY, [])));
   setRecentFiles(onlyStrings(await getSetting<unknown>(FILES_KEY, [])));
+  setRecentCommands(onlyStrings(await getSetting<unknown>(COMMANDS_KEY, [])));
+}
+
+/** Remember a command the user ran from the palette, most recent first. */
+export function addRecentCommand(id: string): void {
+  setRecentCommands((list) => pushRecent(list, id));
+  void setSetting(COMMANDS_KEY, recentCommands());
 }
 
 export function addRecentBrood(path: string): void {

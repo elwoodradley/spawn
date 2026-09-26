@@ -24,6 +24,7 @@
   padding: var(--sp-space-xs) var(--sp-space-md);
   border-radius: var(--sp-radius-sm);
   color: var(--sp-color-fg);
+  transition: background 120ms ease-out;
 }
 
 .sp-menubar__button:hover,
@@ -80,6 +81,9 @@
   text-align: left;
   white-space: nowrap;
   position: relative;
+  transition:
+    background 120ms ease-out,
+    color 120ms ease-out;
 }
 
 .sp-menu__item:hover:not(:disabled),

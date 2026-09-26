@@ -9,3 +9,4 @@ export * from "./fs";
 export * from "./dialog";
 export * from "./store";
 export * from "./print";
+export * from "./notification";
