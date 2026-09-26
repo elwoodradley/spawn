@@ -12,6 +12,12 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - **editor:** Menu bar, open file, recents, drag and drop, tree file operations
 - **spawn:** Run panel with live metric curves and ML environment chrome
 - **theme:** Minimalist flat toad icon
+- Typed settings core with font, size and zoom overrides over the theme
+- Settings dialog, zoom, editor prefs, autosave, toasts, tabs, quick open, find in files, output tools
+
+### Fixed
+
+- **theme:** Use Adwaita Sans and a real UI font stack instead of system-ui
 
 ### Documentation
 
@@ -22,4 +28,5 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - Scaffold SPAWN with Rust process layer, theme system, and command registry
 - Add module contracts as stubs for parallel Phase 1 work
 - Generate changelog
+- Regenerate changelog
 
