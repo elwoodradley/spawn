@@ -87,13 +87,14 @@ describe("tqdm", () => {
       etaSeconds: 4,
       source: "tqdm",
     });
-    expect(m.rate()).toBeCloseTo(12.3);
+    expect(m.rate()?.perSecond).toBeCloseTo(12.3);
+    expect(m.rate()?.unit).toBe("it");
   });
 
   it("inverts s/it and reads a bar without a total", () => {
     const { m } = model();
     m.feed("3it [00:06,  2.00s/it]\r");
-    expect(m.rate()).toBeCloseTo(0.5);
+    expect(m.rate()?.perSecond).toBeCloseTo(0.5);
     expect(m.progress()).toBeNull();
   });
 
@@ -127,7 +128,33 @@ describe("epochs and rate", () => {
     m.feed("step 50\n");
     tick(1000);
     m.feed("step 100\n");
-    expect(m.rate()).toBeCloseTo(50);
+    expect(m.rate()).toEqual({ perSecond: 50, unit: "it" });
+  });
+
+  it("estimates epochs per second from epoch lines and plots by epoch", () => {
+    const { m, tick } = model();
+    m.feed("epoch   1 | loss: 0.4664 | val_acc: 0.700\n");
+    tick(500);
+    m.feed("epoch   2 | loss: 0.4000 | val_acc: 0.750\n");
+    tick(500);
+    m.feed("epoch   3 | loss: 0.3500 | val_acc: 0.800\n");
+    expect(m.rate()).toEqual({ perSecond: 2, unit: "epoch" });
+    expect(m.xUnit()).toBe("epoch");
+    expect(m.series.find((s) => s.name === "loss")?.points.map((p) => p.step)).toEqual([1, 2, 3]);
+    expect(m.series.find((s) => s.name === "val_acc")?.points.map((p) => p.step)).toEqual([
+      1, 2, 3,
+    ]);
+  });
+
+  it("falls back to metric lines per second when nothing is counted", () => {
+    const { m, tick } = model();
+    m.feed("loss: 0.5\n");
+    tick(250);
+    m.feed("loss: 0.4\n");
+    tick(250);
+    m.feed("loss: 0.3\n");
+    expect(m.rate()).toEqual({ perSecond: 4, unit: "sample" });
+    expect(m.xUnit()).toBe("sample");
   });
 });
 

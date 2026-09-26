@@ -31,6 +31,15 @@ export interface Progress {
   source: "tqdm" | "epoch";
 }
 
+/** Iterations per second and what an iteration is, for the run header. */
+export interface Rate {
+  perSecond: number;
+  unit: "it" | "epoch" | "sample";
+}
+
+/** What the x axis of a series counts. */
+export type XUnit = "step" | "epoch" | "sample";
+
 export interface UserPattern {
   name: string;
   regex: string;
@@ -104,7 +113,8 @@ export class MetricsModel {
   readonly series: Series[];
   private readonly setSeries;
   private readonly progressSignal = createSignal<Progress | null>(null);
-  private readonly rateSignal = createSignal<number | null>(null);
+  private readonly rateSignal = createSignal<Rate | null>(null);
+  private readonly xUnitSignal = createSignal<XUnit>("sample");
   private readonly epochSignal = createSignal<{ current: number; total: number | null } | null>(
     null,
   );
@@ -115,9 +125,13 @@ export class MetricsModel {
   private compiled: Compiled[] = [];
   private buffer = "";
   private lastStep: number | null = null;
-  /** (time, step) samples for a rate estimate when tqdm is absent. */
+  private lastEpoch: number | null = null;
+  /** (time, count) samples for a rate estimate when tqdm is absent. */
   private stepSamples: Array<[number, number]> = [];
-  private tqdmRate: number | null = null;
+  private epochSamples: Array<[number, number]> = [];
+  private recordSamples: Array<[number, number]> = [];
+  private recordCount = 0;
+  private tqdmRate: Rate | null = null;
 
   constructor(options: MetricsOptions = {}) {
     const [series, setSeries] = createStore<Series[]>([]);
@@ -137,6 +151,9 @@ export class MetricsModel {
   }
   get epoch() {
     return this.epochSignal[0];
+  }
+  get xUnit() {
+    return this.xUnitSignal[0];
   }
   get patternErrors() {
     return this.errorsSignal[0];
@@ -161,12 +178,17 @@ export class MetricsModel {
   reset(): void {
     this.buffer = "";
     this.lastStep = null;
+    this.lastEpoch = null;
     this.stepSamples = [];
+    this.epochSamples = [];
+    this.recordSamples = [];
+    this.recordCount = 0;
     this.tqdmRate = null;
     this.setSeries([]);
     this.progressSignal[1](null);
     this.rateSignal[1](null);
     this.epochSignal[1](null);
+    this.xUnitSignal[1]("sample");
   }
 
   feed(text: string): void {
@@ -213,6 +235,10 @@ export class MetricsModel {
   }
 
   private record(values: Map<string, number>, explicitStep: number | null): void {
+    this.recordCount += 1;
+    this.recordSamples.push([this.now(), this.recordCount]);
+    if (this.recordSamples.length > 20) this.recordSamples.shift();
+    this.updateRate();
     this.setSeries(
       produce((list) => {
         for (const [name, value] of values) {
@@ -222,11 +248,7 @@ export class MetricsModel {
             s = { name, points: [] };
             list.push(s);
           }
-          const step =
-            explicitStep ??
-            (this.lastStep !== null && !s.points.some((p) => p.step === this.lastStep)
-              ? this.lastStep
-              : s.points.length);
+          const step = explicitStep ?? this.impliedX(s);
           s.points.push({ step, value });
           if (s.points.length > this.maxPoints) {
             const last = s.points[s.points.length - 1];
@@ -244,7 +266,7 @@ export class MetricsModel {
       const current = Number(bar[2]);
       const total = Number(bar[3]);
       this.tqdmRate = rateOf(bar[6], bar[7]);
-      this.rateSignal[1](this.tqdmRate);
+      if (this.tqdmRate) this.rateSignal[1](this.tqdmRate);
       this.progressSignal[1]({
         current,
         total,
@@ -257,7 +279,7 @@ export class MetricsModel {
     const open = TQDM_OPEN.exec(line);
     if (open?.[2] !== undefined) {
       this.tqdmRate = rateOf(open[2], open[3]);
-      this.rateSignal[1](this.tqdmRate);
+      if (this.tqdmRate) this.rateSignal[1](this.tqdmRate);
     }
   }
 
@@ -267,6 +289,12 @@ export class MetricsModel {
       const current = Number(epoch[1]);
       const total = epoch[2] !== undefined ? Number(epoch[2]) : null;
       this.epochSignal[1]({ current, total });
+      if (this.lastEpoch !== current) {
+        this.lastEpoch = current;
+        this.epochSamples.push([this.now(), current]);
+        if (this.epochSamples.length > 20) this.epochSamples.shift();
+      }
+      if (this.xUnit() === "sample") this.xUnitSignal[1]("epoch");
       if (total !== null && total > 0 && this.progress()?.source !== "tqdm") {
         this.progressSignal[1]({
           current,
@@ -280,25 +308,50 @@ export class MetricsModel {
     const step = STEP.exec(line);
     if (step?.[1] !== undefined) {
       const n = Number(step[1]);
-      this.lastStep = n;
-      this.stepSamples.push([this.now(), n]);
-      if (this.stepSamples.length > 20) this.stepSamples.shift();
-      if (this.tqdmRate === null) this.rateSignal[1](this.stepRate());
+      if (this.lastStep !== n) {
+        this.lastStep = n;
+        this.stepSamples.push([this.now(), n]);
+        if (this.stepSamples.length > 20) this.stepSamples.shift();
+      }
+      this.xUnitSignal[1]("step");
     }
+    this.updateRate();
   }
 
-  private stepRate(): number | null {
-    const first = this.stepSamples[0];
-    const last = this.stepSamples[this.stepSamples.length - 1];
-    if (!first || !last || first === last) return null;
-    const dt = (last[0] - first[0]) / 1000;
-    const dstep = last[1] - first[1];
-    return dt > 0 && dstep > 0 ? dstep / dt : null;
+  /**
+   * The x value for a metric that came without an explicit step: the last
+   * step or epoch seen, unless this series already has a point there (several
+   * lines per step), else the sample index.
+   */
+  private impliedX(s: Series): number {
+    const counter = this.lastStep ?? this.lastEpoch;
+    if (counter !== null && !s.points.some((p) => p.step === counter)) return counter;
+    return s.points.length;
+  }
+
+  /** tqdm beats step counters, which beat epochs, which beat sample cadence. */
+  private updateRate(): void {
+    if (this.tqdmRate !== null) return;
+    const rate =
+      rateFrom(this.stepSamples, "it") ??
+      rateFrom(this.epochSamples, "epoch") ??
+      rateFrom(this.recordSamples, "sample");
+    this.rateSignal[1](rate);
   }
 }
 
-function rateOf(value: string, unit: string | undefined): number | null {
+/** Δcount / Δtime over a window of (ms, count) samples. */
+function rateFrom(samples: Array<[number, number]>, unit: Rate["unit"]): Rate | null {
+  const first = samples[0];
+  const last = samples[samples.length - 1];
+  if (!first || !last || first === last) return null;
+  const dt = (last[0] - first[0]) / 1000;
+  const dcount = last[1] - first[1];
+  return dt > 0 && dcount > 0 ? { perSecond: dcount / dt, unit } : null;
+}
+
+function rateOf(value: string, unit: string | undefined): Rate | null {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return null;
-  return unit === "s/it" ? 1 / n : n;
+  return { perSecond: unit === "s/it" ? 1 / n : n, unit: "it" };
 }

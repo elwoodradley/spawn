@@ -79,7 +79,7 @@ export default function RunPanel() {
       >
         <div class="sp-run__charts">
           <For each={metrics.series}>
-            {(series, i) => <LossChart series={series} index={i()} />}
+            {(series, i) => <LossChart series={series} index={i()} xUnit={metrics.xUnit()} />}
           </For>
         </div>
       </Show>

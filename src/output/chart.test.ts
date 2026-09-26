@@ -7,7 +7,9 @@ import {
   formatValue,
   linearScale,
   nearestIndex,
+  integerTicks,
   niceTicks,
+  valueTicks,
 } from "./chart";
 
 describe("niceTicks", () => {
@@ -43,8 +45,11 @@ describe("format helpers", () => {
     expect(formatDuration(125)).toBe("2m 05s");
     expect(formatDuration(3723)).toBe("1h 02m");
     expect(formatDuration(null)).toBe("–");
-    expect(formatRate(12.34)).toBe("12.3 it/s");
-    expect(formatRate(0.5)).toBe("2.0 s/it");
+    expect(formatRate({ perSecond: 12.34, unit: "it" })).toBe("12.3 it/s");
+    expect(formatRate({ perSecond: 0.5, unit: "it" })).toBe("2.0 s/it");
+    expect(formatRate({ perSecond: 4.2, unit: "epoch" })).toBe("4.2 ep/s");
+    expect(formatRate({ perSecond: 0.25, unit: "epoch" })).toBe("4.0 s/ep");
+    expect(formatRate(null)).toBe("–");
     expect(formatBytes(3.2 * 2 ** 30)).toBe("3.2");
     expect(formatBytes(24 * 2 ** 30)).toBe("24");
   });
@@ -62,5 +67,31 @@ describe("scales", () => {
     expect(nearestIndex([0, 10, 20], 16)).toBe(2);
     expect(nearestIndex([0, 10, 20], -5)).toBe(0);
     expect(nearestIndex([], 1)).toBe(-1);
+  });
+});
+
+describe("integerTicks", () => {
+  it("includes both ends and only whole numbers between", () => {
+    expect(integerTicks(1, 60, 4)).toEqual([1, 20, 40, 60]);
+    expect(integerTicks(0, 3, 4)).toEqual([0, 1, 2, 3]);
+    expect(integerTicks(5, 5)).toEqual([5]);
+  });
+});
+
+describe("valueTicks", () => {
+  it("labels the true min and max and keeps inner ticks clear of them", () => {
+    const ticks = valueTicks(0.2899, 0.4664, 3);
+    expect(ticks[0]).toBe(0.2899);
+    expect(ticks[ticks.length - 1]).toBe(0.4664);
+    for (const t of ticks.slice(1, -1)) {
+      expect(t).toBeGreaterThan(0.2899 + 0.0212);
+      expect(t).toBeLessThan(0.4664 - 0.0212);
+    }
+  });
+
+  it("covers a range whose data exceeds the nice ticks", () => {
+    const ticks = valueTicks(0.71, 0.93, 3);
+    expect(ticks).toContain(0.93);
+    expect(ticks).toContain(0.71);
   });
 });

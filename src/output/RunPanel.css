@@ -128,9 +128,12 @@
   color: var(--sp-color-fg-muted);
   font-variant-numeric: tabular-nums;
 }
-.sp-chart__svg {
+.sp-chart__body {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+}
+.sp-chart__svg {
   display: block;
   font-family: var(--sp-font-ui);
   font-size: calc(var(--sp-font-size-ui) * 0.8);
@@ -141,6 +144,17 @@
 }
 .sp-chart__tick {
   fill: var(--sp-color-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.sp-chart__tick.is-end {
+  fill: var(--sp-plot-fg);
+}
+.sp-chart__axis {
+  stroke: var(--sp-color-fg-faint);
+  stroke-width: 1;
+}
+.sp-chart__axis-name {
+  fill: var(--sp-color-fg-faint);
 }
 .sp-chart__line {
   fill: none;

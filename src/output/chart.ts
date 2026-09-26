@@ -1,4 +1,5 @@
 /** Pure helpers for the run panel charts: scales, ticks, number formatting. */
+import type { Rate } from "../spawn/metrics";
 
 /** Round tick positions covering [min, max] with about `count` steps. */
 export function niceTicks(min: number, max: number, count = 4): number[] {
@@ -51,11 +52,39 @@ export function formatDuration(seconds: number | null): string {
   return `${rest}s`;
 }
 
-export function formatRate(rate: number | null): string {
-  if (rate === null || !Number.isFinite(rate)) return "–";
-  if (rate >= 100) return `${rate.toFixed(0)} it/s`;
-  if (rate >= 1) return `${rate.toFixed(1)} it/s`;
-  return `${(1 / rate).toFixed(1)} s/it`;
+const RATE_UNIT = { it: "it", epoch: "ep", sample: "pt" } as const;
+
+/** `12.3 it/s`, `0.8 ep/s`, or the inverse `2.5 s/ep` when slower than one per second. */
+export function formatRate(rate: Rate | null): string {
+  if (rate === null || !Number.isFinite(rate.perSecond) || rate.perSecond <= 0) return "–";
+  const unit = RATE_UNIT[rate.unit];
+  const r = rate.perSecond;
+  if (r >= 100) return `${r.toFixed(0)} ${unit}/s`;
+  if (r >= 1) return `${r.toFixed(1)} ${unit}/s`;
+  return `${(1 / r).toFixed(1)} s/${unit}`;
+}
+
+/** Ticks for an integer axis (steps, epochs): whole numbers only, ends included. */
+export function integerTicks(min: number, max: number, count = 5): number[] {
+  const lo = Math.floor(min);
+  const hi = Math.ceil(max);
+  if (hi <= lo) return [lo];
+  const ticks = niceTicks(lo, hi, count).filter((t) => Number.isInteger(t) && t > lo && t < hi);
+  return [lo, ...ticks, hi];
+}
+
+/**
+ * Value-axis labels that cover the data: the true minimum and maximum at the
+ * ends plus nice ticks in between, dropping any tick that would crowd an end.
+ */
+export function valueTicks(min: number, max: number, count = 3): number[] {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
+  if (min === max) return [min];
+  const span = max - min;
+  const inner = niceTicks(min, max, count).filter(
+    (t) => t - min > span * 0.12 && max - t > span * 0.12,
+  );
+  return [min, ...inner, max];
 }
 
 export function formatBytes(bytes: number): string {
