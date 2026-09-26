@@ -51,6 +51,32 @@ export async function toggleDirectory(path: string): Promise<void> {
   if (needsLoad) await loadDirectory(path);
 }
 
+/** Fold every directory except the root. */
+export function collapseAll(): void {
+  setTree(
+    produce((draft) => {
+      const walk = (node: TreeNode) => {
+        for (const child of node.children ?? []) {
+          child.expanded = false;
+          walk(child);
+        }
+      };
+      if (draft.root) walk(draft.root);
+    }),
+  );
+}
+
+/** Make sure a directory is expanded and freshly listed. */
+export async function expandDirectory(path: string): Promise<void> {
+  setTree(
+    produce((draft) => {
+      const node = findNode(draft.root, path);
+      if (node?.isDirectory) node.expanded = true;
+    }),
+  );
+  await loadDirectory(path);
+}
+
 export async function refreshTree(): Promise<void> {
   await Promise.all(loadedDirectories(tree.root).map(loadDirectory));
 }

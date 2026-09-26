@@ -6,6 +6,19 @@ export async function pickFolder(defaultPath?: string): Promise<string | null> {
   return typeof picked === "string" ? picked : null;
 }
 
+export async function pickFile(defaultPath?: string): Promise<string | null> {
+  const picked = await open({
+    directory: false,
+    multiple: false,
+    defaultPath,
+    filters: [
+      { name: "Python", extensions: ["py", "pyi"] },
+      { name: "All files", extensions: ["*"] },
+    ],
+  });
+  return typeof picked === "string" ? picked : null;
+}
+
 export async function pickSavePath(defaultPath?: string): Promise<string | null> {
   return save({ defaultPath, filters: [{ name: "Python", extensions: ["py"] }] });
 }

@@ -54,3 +54,26 @@
   font-size: calc(var(--sp-font-size-ui) * 0.85);
   color: var(--sp-color-success);
 }
+
+.sp-statusbar__button.is-warning {
+  color: var(--sp-color-warning);
+}
+
+.sp-statusbar__probing {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+}
+.sp-statusbar__spinner {
+  width: var(--sp-space-md);
+  height: var(--sp-space-md);
+  border: 2px solid var(--sp-color-fg-faint);
+  border-top-color: var(--sp-color-accent);
+  border-radius: 50%;
+  animation: sp-statusbar-spin 0.9s linear infinite;
+}
+@keyframes sp-statusbar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

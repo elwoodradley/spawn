@@ -61,3 +61,58 @@
 .sp-tree-empty p {
   margin: 0;
 }
+
+.sp-tree-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+}
+
+.sp-tree-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-tree-tools {
+  display: inline-flex;
+  gap: var(--sp-space-xs);
+  opacity: 0.7;
+}
+
+.sp-tree:hover .sp-tree-tools,
+.sp-tree-tools:focus-within {
+  opacity: 1;
+}
+
+.sp-tree-tool {
+  display: inline-flex;
+  padding: var(--sp-space-xs);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-fg-muted);
+}
+
+.sp-tree-tool:hover {
+  background: var(--sp-color-bg-hover);
+  color: var(--sp-color-fg);
+}
+
+.sp-tree-rows {
+  min-height: 40%;
+}
+
+.sp-tree-row.is-editing {
+  background: var(--sp-color-bg-active);
+}
+
+.sp-tree-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 var(--sp-space-xs);
+  background: var(--sp-color-bg);
+  color: var(--sp-color-fg);
+  border: 1px solid var(--sp-color-accent);
+  border-radius: var(--sp-radius-sm);
+  outline: none;
+  user-select: text;
+}

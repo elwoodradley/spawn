@@ -8,8 +8,12 @@
 import { sep } from "@tauri-apps/api/path";
 import {
   exists as tauriExists,
+  mkdir,
   readDir,
   readTextFile,
+  remove,
+  rename,
+  stat,
   watch as tauriWatch,
   writeTextFile,
   type WatchEvent,
@@ -48,6 +52,31 @@ export function writeText(path: string, contents: string): Promise<void> {
 
 export function pathExists(path: string): Promise<boolean> {
   return tauriExists(path);
+}
+
+export async function isDirectory(path: string): Promise<boolean> {
+  return (await stat(path)).isDirectory;
+}
+
+/** Create an empty file. Refuses to truncate one that already exists. */
+export async function createFile(path: string): Promise<void> {
+  if (await tauriExists(path)) throw new Error(`${baseName(path)} already exists`);
+  await writeTextFile(path, "");
+}
+
+export async function makeDir(path: string): Promise<void> {
+  if (await tauriExists(path)) throw new Error(`${baseName(path)} already exists`);
+  await mkdir(path);
+}
+
+export async function renamePath(from: string, to: string): Promise<void> {
+  if (await tauriExists(to)) throw new Error(`${baseName(to)} already exists`);
+  await rename(from, to);
+}
+
+/** Delete a file or a whole directory tree. */
+export function removePath(path: string): Promise<void> {
+  return remove(path, { recursive: true });
 }
 
 export type Unwatch = () => void;

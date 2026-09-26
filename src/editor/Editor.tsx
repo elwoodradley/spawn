@@ -10,6 +10,7 @@ import { activeFilePath } from "../app/state";
 import { currentTheme } from "../theme/store";
 import { applyEditorTheme, createView } from "./createEditor";
 import { getDocument, revealRequest, setCursorPosition } from "./documents";
+import { setActiveView } from "./view";
 import "./Editor.css";
 
 export default function Editor() {
@@ -19,7 +20,11 @@ export default function Editor() {
   onMount(() => {
     if (!container) return;
     view = createView(container, currentTheme().appearance);
-    onCleanup(() => view?.destroy());
+    setActiveView(view);
+    onCleanup(() => {
+      setActiveView(null);
+      view?.destroy();
+    });
   });
 
   let previous: string | null = null;

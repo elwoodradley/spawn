@@ -1,6 +1,7 @@
 /**
  * Status bar: the environment awareness strip. Brood and spawn state on the
- * left; cursor, interpreter, uv, and theme on the right.
+ * left; cursor, ML stack, device, memory, interpreter, uv, and theme on the
+ * right. Everything here is always visible, never buried in a popup.
  */
 import { Show } from "solid-js";
 
@@ -10,16 +11,62 @@ import { cursorPosition } from "../editor/documents";
 import Metamorphosis from "../env/Metamorphosis";
 import {
   interpreterInfo,
+  memory,
+  mlError,
+  mlInfo,
+  mlProbing,
+  refreshMlInfo,
   selectedCandidate,
   selectedInterpreter,
   SOURCE_LABELS,
   toggleMetamorphosis,
   uvAvailable,
 } from "../env/store";
-import { baseName } from "../ipc";
+import { baseName, type MlInfo } from "../ipc";
+import { formatBytes } from "../output/chart";
 import { elapsedMs, outcome, spawnStatus } from "../spawn/controller";
 import { currentTheme } from "../theme/store";
 import "./StatusBar.css";
+
+/** `2.9.0+cu126` -> `2.9` */
+export function shortVersion(version: string): string {
+  const [core] = version.split("+");
+  return (core ?? version).split(".").slice(0, 2).join(".");
+}
+
+export function shortDeviceName(name: string): string {
+  return name
+    .replace(/^NVIDIA\s+/i, "")
+    .replace(/^GeForce\s+/i, "")
+    .trim();
+}
+
+export function torchLabel(info: MlInfo): string {
+  if (!info.torch) return "";
+  const parts = [`torch ${shortVersion(info.torch)}`];
+  if (info.device) parts.push(info.device);
+  if (info.device === "cuda") {
+    if (info.deviceName) parts.push(shortDeviceName(info.deviceName));
+    if (info.gpuMemUsed !== null && info.gpuMemTotal !== null) {
+      parts.push(`${formatBytes(info.gpuMemUsed)}/${formatBytes(info.gpuMemTotal)} GB`);
+    }
+  }
+  return parts.join(" · ");
+}
+
+function mlTitle(info: MlInfo): string {
+  const lines = [
+    `numpy ${info.numpy ?? "not installed"}`,
+    `pandas ${info.pandas ?? "not installed"}`,
+    `torch ${info.torch ?? "not installed"}`,
+    `jax ${info.jax ?? "not installed"}`,
+  ];
+  if (info.torch) {
+    lines.push(`device ${info.device ?? "?"}${info.deviceName ? ` (${info.deviceName})` : ""}`);
+    if (info.cuda) lines.push(`cuda ${info.cuda}`);
+  }
+  return `${lines.join("\n")}\nClick to re-probe`;
+}
 
 export default function StatusBar() {
   const spawnLabel = () => {
@@ -66,6 +113,14 @@ export default function StatusBar() {
             </span>
           )}
         </Show>
+        <MlItems />
+        <Show when={memory()}>
+          {(mem) => (
+            <span class="sp-statusbar__item" title="System memory used / total">
+              mem {formatBytes(mem().used)}/{formatBytes(mem().total)} GB
+            </span>
+          )}
+        </Show>
         <button
           class="sp-statusbar__item sp-statusbar__button"
           title={selectedInterpreter() ?? "Choose an interpreter"}
@@ -90,5 +145,56 @@ export default function StatusBar() {
       </div>
       <Metamorphosis />
     </footer>
+  );
+}
+
+function MlItems() {
+  return (
+    <>
+      <Show when={mlProbing()}>
+        <span
+          class="sp-statusbar__item sp-statusbar__probing"
+          title="Asking the interpreter about its ML packages"
+        >
+          <span class="sp-statusbar__spinner" /> probing
+        </span>
+      </Show>
+      <Show when={!mlProbing() && mlError()}>
+        {(err) => (
+          <button
+            class="sp-statusbar__item sp-statusbar__button is-warning"
+            title={`${err()}\nClick to retry`}
+            onClick={() => void refreshMlInfo()}
+          >
+            ml ?
+          </button>
+        )}
+      </Show>
+      <Show when={!mlProbing() && mlInfo()}>
+        {(info) => (
+          <>
+            <Show when={info().numpy}>
+              {(v) => (
+                <span class="sp-statusbar__item" title={mlTitle(info())}>
+                  numpy {shortVersion(v())}
+                </span>
+              )}
+            </Show>
+            <button
+              class="sp-statusbar__item sp-statusbar__button"
+              title={mlTitle(info())}
+              onClick={() => void refreshMlInfo()}
+            >
+              <Show
+                when={info().torch}
+                fallback={info().jax ? `jax ${shortVersion(info().jax ?? "")}` : "no torch"}
+              >
+                {torchLabel(info())}
+              </Show>
+            </button>
+          </>
+        )}
+      </Show>
+    </>
   );
 }

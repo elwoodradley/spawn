@@ -1,0 +1,112 @@
+.sp-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-space-xl);
+  padding: var(--sp-space-xl);
+  color: var(--sp-color-fg-muted);
+  overflow: auto;
+}
+
+.sp-welcome__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-space-md);
+  text-align: center;
+}
+
+.sp-welcome h1 {
+  margin: 0;
+  font-size: calc(var(--sp-font-size-ui) * 2.4);
+  letter-spacing: 0.2em;
+  color: var(--sp-color-accent);
+}
+
+.sp-welcome p {
+  margin: 0;
+}
+
+.sp-welcome-hint {
+  color: var(--sp-color-fg-faint);
+  max-width: 44ch;
+}
+
+.sp-welcome__actions {
+  display: flex;
+  gap: var(--sp-space-md);
+}
+
+.sp-button {
+  padding: var(--sp-space-sm) var(--sp-space-lg);
+  background: var(--sp-color-accent);
+  color: var(--sp-color-accent-fg);
+  border-radius: var(--sp-radius-md);
+  font-weight: bold;
+}
+
+.sp-button:hover {
+  filter: brightness(1.1);
+}
+
+.sp-button.is-secondary {
+  background: var(--sp-color-bg-elevated);
+  color: var(--sp-color-fg);
+  border: 1px solid var(--sp-color-border);
+}
+
+.sp-welcome__lists {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-space-xl);
+  justify-content: center;
+  width: min(760px, 100%);
+}
+
+.sp-welcome__recent {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.sp-welcome__recent h2 {
+  margin: 0 0 var(--sp-space-sm);
+  font-size: var(--sp-font-size-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sp-color-fg-faint);
+}
+
+.sp-welcome__recent ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sp-welcome__link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: var(--sp-space-xs) var(--sp-space-sm);
+  border-radius: var(--sp-radius-sm);
+  text-align: left;
+}
+
+.sp-welcome__link:hover {
+  background: var(--sp-color-bg-hover);
+}
+
+.sp-welcome__name {
+  color: var(--sp-color-fg);
+}
+
+.sp-welcome__dir {
+  color: var(--sp-color-fg-faint);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  white-space: nowrap;
+}

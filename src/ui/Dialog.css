@@ -1,0 +1,102 @@
+.sp-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--sp-color-bg) 55%, transparent);
+}
+
+.sp-dialog {
+  width: min(440px, 92vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--sp-color-bg-elevated);
+  color: var(--sp-color-fg);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-lg);
+  box-shadow: 0 16px 48px var(--sp-color-bg-panel);
+  user-select: text;
+}
+
+.sp-dialog.is-wide {
+  width: min(680px, 92vw);
+}
+
+.sp-dialog__title {
+  padding: var(--sp-space-lg) var(--sp-space-xl) var(--sp-space-sm);
+  font-weight: bold;
+}
+
+.sp-dialog__body {
+  padding: var(--sp-space-sm) var(--sp-space-xl);
+  overflow: auto;
+  line-height: var(--sp-line-height);
+}
+
+.sp-dialog__body p {
+  margin: 0 0 var(--sp-space-md);
+}
+
+.sp-dialog__body code {
+  background: var(--sp-color-bg-panel);
+  padding: 0 var(--sp-space-xs);
+  border-radius: var(--sp-radius-sm);
+}
+
+.sp-dialog__body table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sp-dialog__body td {
+  padding: var(--sp-space-xs) var(--sp-space-sm);
+  border-bottom: 1px solid var(--sp-color-border);
+}
+
+.sp-dialog__body td:last-child {
+  text-align: right;
+  color: var(--sp-color-fg-muted);
+  white-space: nowrap;
+}
+
+.sp-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-space-sm);
+  padding: var(--sp-space-md) var(--sp-space-xl) var(--sp-space-lg);
+}
+
+.sp-dialog__button {
+  padding: var(--sp-space-sm) var(--sp-space-lg);
+  border-radius: var(--sp-radius-md);
+  border: 1px solid var(--sp-color-border);
+  background: var(--sp-color-bg-panel);
+  color: var(--sp-color-fg);
+}
+
+.sp-dialog__button:hover {
+  background: var(--sp-color-bg-hover);
+}
+
+.sp-dialog__button.is-primary {
+  background: var(--sp-color-accent);
+  color: var(--sp-color-accent-fg);
+  border-color: transparent;
+  font-weight: bold;
+}
+
+.sp-dialog-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-space-xs) var(--sp-space-lg);
+  color: var(--sp-color-fg-muted);
+}
+
+.sp-dialog-kv dd {
+  margin: 0;
+  color: var(--sp-color-fg);
+  word-break: break-all;
+}

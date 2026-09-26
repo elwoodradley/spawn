@@ -87,6 +87,17 @@ export function documentText(path: string): string | null {
   return docs.get(path)?.state.doc.toString() ?? null;
 }
 
+/** Move a registry entry to a new path after a rename on disk. */
+export function renameDocument(from: string, to: string): void {
+  const entry = docs.get(from);
+  if (!entry) return;
+  docs.delete(from);
+  docs.set(to, entry);
+  const dirty = dirtyPaths().has(from);
+  setDirty(from, false);
+  setDirty(to, dirty);
+}
+
 export function closeDocument(path: string): void {
   docs.delete(path);
   setDirty(path, false);

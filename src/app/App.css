@@ -38,41 +38,19 @@
   background: var(--sp-color-bg-panel);
 }
 
-.sp-welcome {
-  flex: 1;
+.sp-drop-overlay {
+  position: fixed;
+  inset: var(--sp-space-lg);
+  z-index: 130;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-space-md);
-  color: var(--sp-color-fg-muted);
-}
-
-.sp-welcome h1 {
-  margin: 0;
-  font-size: calc(var(--sp-font-size-ui) * 2.4);
-  letter-spacing: 0.2em;
+  border: 2px dashed var(--sp-color-accent);
+  border-radius: var(--sp-radius-lg);
+  background: color-mix(in srgb, var(--sp-color-bg) 70%, transparent);
   color: var(--sp-color-accent);
-}
-
-.sp-welcome p {
-  margin: 0;
-}
-
-.sp-welcome-hint {
-  color: var(--sp-color-fg-faint);
-}
-
-.sp-button {
-  padding: var(--sp-space-sm) var(--sp-space-lg);
-  background: var(--sp-color-accent);
-  color: var(--sp-color-accent-fg);
-  border-radius: var(--sp-radius-md);
   font-weight: bold;
-}
-
-.sp-button:hover {
-  filter: brightness(1.1);
+  pointer-events: none;
 }
 
 #sp-print {

@@ -1,4 +1,4 @@
-/** The window: sidebar, tabs + editor, output panel, status bar. */
+/** The window: menu bar, sidebar, tabs + editor, output panel, status bar. */
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   createEffect,
@@ -19,12 +19,16 @@ import OutputPanel from "../output/OutputPanel";
 import { registerSpawnCommands } from "../spawn/commands";
 import { initTheme } from "../theme/store";
 import CommandPalette from "../ui/CommandPalette";
+import ContextMenuHost from "../ui/ContextMenu";
+import DialogHost from "../ui/Dialog";
+import MenuBar from "../ui/MenuBar";
 import Splitter from "../ui/Splitter";
 import StatusBar from "../ui/StatusBar";
 import Tabs from "../ui/Tabs";
 import { PRINT_HOST_ID, registerAppCommands } from "./appCommands";
+import { appMenus } from "./appMenus";
 import { autosaveClutch, restoreClutch } from "./clutch";
-import { runCommand } from "./commands";
+import { registerEditCommands } from "./editCommands";
 import { installKeybindings } from "./keybindings";
 import {
   clampOutput,
@@ -36,7 +40,10 @@ import {
   sidebarVisible,
   sidebarWidth,
 } from "./layout";
+import { loadRecent } from "./recent";
 import { activeFilePath, brood } from "./state";
+import Welcome from "./Welcome";
+import { dropHover, installCloseGuard, installDragDrop } from "./window";
 import "./App.css";
 
 function windowTitle(path: string | null, root: string | null, dirty: boolean): string {
@@ -52,20 +59,26 @@ export default function App() {
   let main: HTMLDivElement | undefined;
 
   registerAppCommands();
+  onCleanup(registerEditCommands());
   startBroodTree();
 
   onMount(() => {
     const disposeSpawn = registerSpawnCommands();
     const uninstall = installKeybindings();
+    const unlisteners: Array<() => void> = [];
+    void installCloseGuard().then((fn) => unlisteners.push(fn));
+    void installDragDrop().then((fn) => unlisteners.push(fn));
     onCleanup(() => {
       disposeSpawn();
       uninstall();
+      unlisteners.forEach((fn) => fn());
     });
     // After the awaits the reactive owner is gone, so re-enter it explicitly
     // or the autosave effect would never be disposed with the component.
     const owner = getOwner();
     void (async () => {
       await initTheme();
+      await loadRecent();
       await restoreClutch();
       runWithOwner(owner, autosaveClutch);
       setReady(true);
@@ -85,7 +98,8 @@ export default function App() {
   });
 
   return (
-    <div class="sp-app" classList={{ "is-ready": ready() }}>
+    <div class="sp-app" classList={{ "is-ready": ready(), "is-drop-target": dropHover() }}>
+      <MenuBar menus={appMenus} />
       <div class="sp-main" ref={(el) => (main = el)}>
         <Show when={sidebarVisible()}>
           <aside class="sp-sidebar sp-chrome sp-no-print" style={{ width: `${sidebarWidth()}px` }}>
@@ -103,21 +117,7 @@ export default function App() {
           </div>
         </Show>
         <div class="sp-center">
-          <Show
-            when={brood() || activeFilePath()}
-            fallback={
-              <div class="sp-welcome sp-chrome sp-no-print">
-                <h1>SPAWN</h1>
-                <p>A Python IDE for machine learning work.</p>
-                <button class="sp-button" onClick={() => void runCommand("brood.open")}>
-                  Open a brood
-                </button>
-                <p class="sp-welcome-hint">
-                  A brood is a folder. Everything you spawn runs from it.
-                </p>
-              </div>
-            }
-          >
+          <Show when={brood() || activeFilePath()} fallback={<Welcome />}>
             <div class="sp-chrome sp-no-print">
               <Tabs />
             </div>
@@ -150,7 +150,14 @@ export default function App() {
       </div>
       <div class="sp-chrome sp-no-print">
         <CommandPalette />
+        <ContextMenuHost />
+        <DialogHost />
       </div>
+      <Show when={dropHover()}>
+        <div class="sp-drop-overlay sp-no-print" aria-hidden="true">
+          Drop a folder to open it as a brood, or files to open them
+        </div>
+      </Show>
       <pre id={PRINT_HOST_ID} class="sp-print-only" />
     </div>
   );
