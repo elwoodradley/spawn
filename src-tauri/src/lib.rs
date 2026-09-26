@@ -4,6 +4,7 @@
 
 mod env;
 mod error;
+mod pool;
 mod proc;
 
 use std::sync::Arc;
@@ -28,11 +29,15 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_notification::init())
         .manage(Arc::new(proc::ProcRegistry::default()))
+        .manage(Arc::new(pool::PoolRegistry::default()))
         .invoke_handler(tauri::generate_handler![
             proc::proc_spawn,
             proc::proc_write,
             proc::proc_close_stdin,
             proc::proc_kill,
+            pool::pool_start,
+            pool::pool_send,
+            pool::pool_interrupt,
             env::env_discover,
             env::env_probe,
             env::env_uv_path,

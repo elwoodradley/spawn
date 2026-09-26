@@ -35,6 +35,7 @@ pub struct SpawnRequest {
 
 /// Handles the registry keeps for a live child.
 struct Handle {
+    pid: Option<u32>,
     stdin: Arc<Mutex<Option<tokio::process::ChildStdin>>>,
     kill: Option<oneshot::Sender<()>>,
 }
@@ -62,6 +63,11 @@ impl ProcRegistry {
         lock_or_recover(&self.procs).remove(&id)
     }
 
+    /// OS pid of a live child, for signalling.
+    pub fn pid(&self, id: u32) -> Option<u32> {
+        lock_or_recover(&self.procs).get(&id).and_then(|h| h.pid)
+    }
+
     fn stdin(&self, id: u32) -> Result<Arc<Mutex<Option<tokio::process::ChildStdin>>>> {
         lock_or_recover(&self.procs)
             .get(&id)
@@ -79,31 +85,42 @@ fn lock_or_recover<T>(m: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     }
 }
 
-#[tauri::command]
-pub async fn proc_spawn(
-    registry: State<'_, Arc<ProcRegistry>>,
-    request: SpawnRequest,
+/// Start a child, register it, and pump its output to `on_event`. Shared by
+/// plain spawns and the pool, which adds a socket on top.
+pub fn launch(
+    registry: &Arc<ProcRegistry>,
+    request: &SpawnRequest,
     on_event: Channel<ProcEvent>,
 ) -> Result<u32> {
     let id = registry.allocate_id();
     let (kill_tx, kill_rx) = oneshot::channel();
-    let spawned = child::spawn(&request)?;
+    let spawned = child::spawn(request)?;
 
     registry.insert(
         id,
         Handle {
+            pid: spawned.pid(),
             stdin: Arc::clone(&spawned.stdin),
             kill: Some(kill_tx),
         },
     );
 
-    let registry_for_task = Arc::clone(&registry);
+    let registry_for_task = Arc::clone(registry);
     tokio::spawn(async move {
         child::run(spawned, kill_rx, on_event).await;
         registry_for_task.remove(id);
     });
 
     Ok(id)
+}
+
+#[tauri::command]
+pub async fn proc_spawn(
+    registry: State<'_, Arc<ProcRegistry>>,
+    request: SpawnRequest,
+    on_event: Channel<ProcEvent>,
+) -> Result<u32> {
+    launch(&registry, &request, on_event)
 }
 
 #[tauri::command]

@@ -42,6 +42,12 @@ pub struct Spawned {
     pub stdin: Arc<Mutex<Option<ChildStdin>>>,
 }
 
+impl Spawned {
+    pub fn pid(&self) -> Option<u32> {
+        self.child.id()
+    }
+}
+
 /// Read size per pipe read. Large enough that a chatty training loop does not
 /// cost a syscall per line, small enough that output still feels live.
 const READ_CHUNK: usize = 16 * 1024;
