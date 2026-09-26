@@ -28,17 +28,24 @@ import os
 import queue
 import signal
 import socket
+import struct
 import sys
 import threading
 import time
 import traceback
 import types
+import zlib
 
 MAX_TEXT = 10_000
 MAX_PREVIEW = 32
 MAX_TABLE_ROWS = 200
 MAX_VARIABLES = 500
 STATS_SAMPLE = 1_000_000
+MAX_MATRIX = 60
+MAX_THUMBS = 64
+THUMB_PX = 96
+MAX_CELL_SAMPLES = 200
+MAX_RECORDS = 100_000
 
 # ── transport ───────────────────────────────────────────────────────────────
 
@@ -115,6 +122,8 @@ class Displays:
     def __init__(self) -> None:
         self.tables: dict[str, object] = {}
         self.table_order: list[str] = []
+        self.matrices: dict[str, tuple] = {}
+        self.namespace: dict = {}
         self.next_ref = 0
         self.plot_theme: dict | None = None
         self.mpl_configured = False
@@ -213,19 +222,36 @@ class Displays:
                 return payload
             if mod.startswith("pandas"):
                 if hasattr(value, "columns") and hasattr(value, "dtypes"):
+                    labels = crosstab_labels(value)
+                    if labels is not None and is_confusion(value.to_numpy()):
+                        return self.matrix(value.to_numpy(), labels)
                     return self.table_pandas(value)
                 if hasattr(value, "to_frame"):
                     return self.table_pandas(value.to_frame())
             if mod.startswith("polars") and hasattr(value, "columns") and hasattr(value, "schema"):
                 return self.table_polars(value)
+            library = None
             if mod.startswith("numpy") and hasattr(value, "shape") and hasattr(value, "dtype"):
                 if getattr(value, "ndim", 0) == 0:
                     return text_payload(repr(value))
-                return self.array(value, "numpy")
-            if mod.startswith("torch") and hasattr(value, "shape") and hasattr(value, "dtype"):
-                return self.array(value, "torch")
-            if mod.startswith("jax") and hasattr(value, "shape") and hasattr(value, "dtype"):
-                return self.array(value, "jax")
+                library = "numpy"
+            elif mod.startswith("torch") and hasattr(value, "shape") and hasattr(value, "dtype"):
+                library = "torch"
+            elif mod.startswith("jax") and hasattr(value, "shape") and hasattr(value, "dtype"):
+                library = "jax"
+            if library is not None:
+                shaped = self.by_shape(value, library)
+                if shaped is not None:
+                    return shaped
+                return self.array(value, library)
+            if isinstance(value, dict) and value:
+                table = self.table_from_mapping(value)
+                if table is not None:
+                    return table
+            if isinstance(value, list) and value and len(value) <= MAX_RECORDS:
+                table = self.table_from_records(value)
+                if table is not None:
+                    return table
             html = getattr(value, "_repr_html_", None)
             if callable(html):
                 markup = html()
@@ -344,10 +370,199 @@ class Displays:
         if table is None:
             return []
         count = max(1, min(count, 1000))
+        if isinstance(table, RowsTable):
+            return table.rows[start : start + count]
         if (type(table).__module__ or "").startswith("polars"):
             return self.polars_rows(table, start, count)
         rows, _ = self.pandas_rows(table, start, count)
         return rows
+
+    # plain-Python tables ----------------------------------------------------
+
+    def table_from_mapping(self, value: dict) -> dict | None:
+        """dict-of-dicts (sklearn's classification_report) or dict of scalars."""
+        items = list(value.items())
+        if all(isinstance(v, dict) for _, v in items):
+            columns: list = []
+            for _, inner in items:
+                for k in inner:
+                    if k not in columns:
+                        columns.append(k)
+            if not columns or not all(is_scalar(x) for _, inner in items for x in inner.values()):
+                return None
+            rows = [[jsonable(inner.get(c)) for c in columns] for _, inner in items]
+            return self.rows_table([str(k) for k, _ in items], [str(c) for c in columns], rows)
+        if all(is_scalar(v) for _, v in items):
+            rows = [[jsonable(k), jsonable(v)] for k, v in items]
+            return self.rows_table(list(range(len(rows))), ["key", "value"], rows)
+        return None
+
+    def table_from_records(self, value: list) -> dict | None:
+        """A list of dicts sharing keys, i.e. records."""
+        if not all(isinstance(r, dict) for r in value):
+            return None
+        columns: list = []
+        for r in value:
+            for k in r:
+                if k not in columns:
+                    columns.append(k)
+        if not columns or not all(is_scalar(x) for r in value for x in r.values()):
+            return None
+        rows = [[jsonable(r.get(c)) for c in columns] for r in value]
+        return self.rows_table(list(range(len(rows))), [str(c) for c in columns], rows)
+
+    def rows_table(self, index: list, columns: list, rows: list) -> dict:
+        ref = self.remember(RowsTable(rows))
+        cols = []
+        for i, name in enumerate(columns):
+            col = [r[i] for r in rows]
+            nums = [v for v in col if isinstance(v, (int, float)) and not isinstance(v, bool)]
+            nulls = sum(1 for v in col if v is None)
+            kinds = {type(v).__name__ for v in col if v is not None}
+            dtype = kinds.pop() if len(kinds) == 1 else ("mixed" if kinds else "null")
+            stats = None
+            if nums and len(nums) == len(col) - nulls:
+                mean = sum(nums) / len(nums)
+                var = sum((x - mean) ** 2 for x in nums) / len(nums)
+                stats = {"min": min(nums), "max": max(nums), "mean": mean, "std": math.sqrt(var)}
+            cols.append({"name": name, "dtype": dtype, "nulls": nulls, "stats": stats})
+        return {
+            "kind": "table",
+            "ref": ref,
+            "source": "other",
+            "shape": [len(rows), len(columns)],
+            "columns": cols,
+            "index": [jsonable(i) for i in index[:MAX_TABLE_ROWS]],
+            "rows": rows[:MAX_TABLE_ROWS],
+            "rowStart": 0,
+        }
+
+    # shape recognition ------------------------------------------------------
+
+    def by_shape(self, value, library: str) -> dict | None:
+        """Render by what the shape says the value is, or None to fall back."""
+        arr = to_numpy(value, library)
+        if arr is None:
+            return None
+        if is_confusion(arr):
+            return self.matrix(arr, None)
+        layout = image_layout(arr.shape)
+        if layout is not None:
+            return self.images(arr, layout, library)
+        return None
+
+    def matrix(self, arr, labels) -> dict:
+        import numpy as np
+
+        m = np.rint(arr).astype("int64")
+        n = int(m.shape[0])
+        row_totals = m.sum(axis=1)
+        col_totals = m.sum(axis=0)
+        per_class = []
+        for i in range(n):
+            tp = int(m[i, i])
+            precision = tp / int(col_totals[i]) if col_totals[i] > 0 else None
+            recall = tp / int(row_totals[i]) if row_totals[i] > 0 else None
+            f1 = (
+                2 * precision * recall / (precision + recall)
+                if precision is not None and recall is not None and (precision + recall) > 0
+                else None
+            )
+            per_class.append(
+                {"precision": precision, "recall": recall, "f1": f1, "support": int(row_totals[i])}
+            )
+        ref = self.remember(RowsTable([]))
+        pair = self.find_samples(m)
+        if pair is not None:
+            self.matrices[ref] = pair
+        return {
+            "kind": "matrix",
+            "role": "confusion",
+            "ref": ref,
+            "labels": [str(x) for x in labels] if labels is not None else None,
+            "values": m.tolist(),
+            "rowTotals": [int(x) for x in row_totals],
+            "colTotals": [int(x) for x in col_totals],
+            "perClass": per_class,
+            "samples": pair is not None,
+        }
+
+    def find_samples(self, m):
+        """Look for y_true/y_pred in the namespace whose confusion matrix is m."""
+        import numpy as np
+
+        n = int(m.shape[0])
+        candidates = []
+        for name, value in list(self.namespace.items()):
+            if name.startswith("_"):
+                continue
+            arr = label_vector(value)
+            if arr is None:
+                continue
+            candidates.append(arr)
+            if len(candidates) >= 20:
+                break
+        for a in candidates:
+            for b in candidates:
+                if a is b or a.shape != b.shape:
+                    continue
+                if a.min() < 0 or b.min() < 0 or a.max() >= n or b.max() >= n:
+                    continue
+                cm = np.bincount(a * n + b, minlength=n * n).reshape(n, n)
+                if np.array_equal(cm, m):
+                    return (a, b)
+        return None
+
+    def matrix_cells(self, ref: str, row: int, col: int) -> list:
+        import numpy as np
+
+        pair = self.matrices.get(ref)
+        if pair is None:
+            return []
+        a, b = pair
+        idx = np.nonzero((a == row) & (b == col))[0]
+        return [int(i) for i in idx[:MAX_CELL_SAMPLES]]
+
+    def images(self, arr, layout: str, library: str) -> dict:
+        import numpy as np
+
+        shape = [int(s) for s in arr.shape]
+        dtype = str(arr.dtype)
+        if layout == "NCHW":
+            batch = np.transpose(arr, (0, 2, 3, 1))
+        elif layout == "NHWC":
+            batch = arr
+        elif layout == "CHW":
+            batch = np.transpose(arr, (1, 2, 0))[None]
+        elif layout == "HWC":
+            batch = arr[None]
+        else:  # NHW
+            batch = arr[..., None]
+        count = int(batch.shape[0])
+        finite_vals = batch[np.isfinite(batch)] if batch.dtype.kind == "f" else batch
+        value_range = None
+        if finite_vals.size:
+            value_range = [finite(finite_vals.min()), finite(finite_vals.max())]
+        thumbs = []
+        normalized = False
+        stride = max(1, math.ceil(max(batch.shape[1], batch.shape[2]) / THUMB_PX))
+        for i in range(min(count, MAX_THUMBS)):
+            img = batch[i, ::stride, ::stride, :]
+            pixels, was_normalized = to_uint8(img)
+            normalized = normalized or was_normalized
+            thumbs.append(base64.b64encode(png_bytes(pixels)).decode("ascii"))
+        return {
+            "kind": "images",
+            "library": library,
+            "count": count,
+            "shape": shape,
+            "layout": layout,
+            "dtype": dtype.replace("torch.", ""),
+            "thumbs": thumbs,
+            "thumbSize": [int(math.ceil(batch.shape[2] / stride)), int(math.ceil(batch.shape[1] / stride))],
+            "valueRange": value_range,
+            "normalized": normalized,
+        }
 
     # arrays ------------------------------------------------------------------
 
@@ -445,6 +660,148 @@ class Displays:
             return [], None
 
 
+class RowsTable:
+    """Rows already turned into JSON cells; paged like a DataFrame."""
+
+    def __init__(self, rows: list) -> None:
+        self.rows = rows
+
+
+def is_scalar(x) -> bool:
+    if x is None or isinstance(x, (bool, int, float, str)):
+        return True
+    return callable(getattr(x, "item", None)) and not hasattr(x, "shape") or (
+        hasattr(x, "shape") and getattr(x, "ndim", 1) == 0
+    )
+
+
+def to_numpy(value, library: str):
+    try:
+        if library == "torch":
+            t = value.detach()
+            if t.is_sparse:
+                t = t.to_dense()
+            t = t.cpu()
+            try:
+                return t.numpy()
+            except Exception:
+                return t.float().numpy()
+        if library == "jax":
+            import numpy as np
+
+            return np.asarray(value)
+        return value
+    except Exception:
+        return None
+
+
+def is_confusion(arr) -> bool:
+    """Square, 2..60 wide, non-negative whole numbers: a confusion matrix."""
+    import numpy as np
+
+    if getattr(arr, "ndim", 0) != 2 or arr.shape[0] != arr.shape[1]:
+        return False
+    if not 2 <= arr.shape[0] <= MAX_MATRIX:
+        return False
+    if arr.dtype.kind in "iu":
+        return bool((arr >= 0).all())
+    if arr.dtype.kind == "f":
+        return bool(np.isfinite(arr).all() and (arr >= 0).all() and (arr == np.rint(arr)).all())
+    return False
+
+
+def crosstab_labels(df):
+    """Index and columns that are the same labels, as a pd.crosstab makes."""
+    try:
+        rows = [str(x) for x in df.index]
+        cols = [str(x) for x in df.columns]
+    except Exception:
+        return None
+    return rows if rows == cols else None
+
+
+def label_vector(value):
+    """A 1D vector of class ids, as numpy int64, or None."""
+    import numpy as np
+
+    try:
+        mod = type(value).__module__ or ""
+        if isinstance(value, (list, tuple)):
+            if not value or len(value) > STATS_SAMPLE or not all(isinstance(v, int) and not isinstance(v, bool) for v in value):
+                return None
+            return np.asarray(value, dtype="int64")
+        if mod.startswith("torch"):
+            value = value.detach().cpu().numpy()
+        elif mod.startswith("pandas") and hasattr(value, "to_numpy") and not hasattr(value, "columns"):
+            value = value.to_numpy()
+        if not hasattr(value, "ndim") or value.ndim != 1 or value.size == 0 or value.size > STATS_SAMPLE:
+            return None
+        if value.dtype.kind not in "iub":
+            return None
+        return value.astype("int64")
+    except Exception:
+        return None
+
+
+def image_layout(shape) -> str | None:
+    """Which image layout a shape is, if any; H and W must be at least 4."""
+    dims = [int(s) for s in shape]
+    if len(dims) == 4:
+        n, a, b, c = dims
+        if n >= 1 and a in (1, 3, 4) and b >= 4 and c >= 4:
+            return "NCHW"
+        if n >= 1 and c in (1, 3, 4) and a >= 4 and b >= 4:
+            return "NHWC"
+    if len(dims) == 3:
+        a, b, c = dims
+        if a in (1, 3, 4) and b >= 4 and c >= 4:
+            return "CHW"
+        if c in (1, 3, 4) and a >= 4 and b >= 4:
+            return "HWC"
+        if a >= 1 and b >= 4 and c >= 4:
+            return "NHW"
+    return None
+
+
+def to_uint8(img):
+    """HxWxC → uint8 pixels; returns (pixels, normalized)."""
+    import numpy as np
+
+    if img.dtype == np.uint8:
+        return img, False
+    f = img.astype("float64")
+    finite_mask = np.isfinite(f)
+    f = np.where(finite_mask, f, 0.0)
+    lo = float(f.min()) if f.size else 0.0
+    hi = float(f.max()) if f.size else 0.0
+    if img.dtype.kind == "f" and lo >= 0.0 and hi <= 1.0:
+        return (f * 255.0).round().astype("uint8"), False
+    if lo >= 0.0 and hi <= 255.0:
+        return f.round().astype("uint8"), False
+    span = hi - lo
+    scaled = (f - lo) / span * 255.0 if span > 0 else np.zeros_like(f)
+    return scaled.round().astype("uint8"), True
+
+
+def png_bytes(pixels) -> bytes:
+    """Encode HxWxC uint8 (C in 1, 3, 4) as PNG with only the stdlib."""
+    h, w, c = pixels.shape
+    color_type = {1: 0, 3: 2, 4: 6}[c]
+    raw = b"".join(b"\x00" + pixels[y].tobytes() for y in range(h))
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        crc = zlib.crc32(tag + data) & 0xFFFFFFFF
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", crc)
+
+    header = struct.pack(">IIBBBBB", w, h, 8, color_type, 0, 0, 0)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", header)
+        + chunk(b"IDAT", zlib.compress(raw, 6))
+        + chunk(b"IEND", b"")
+    )
+
+
 def text_payload(text: str) -> dict:
     if len(text) > MAX_TEXT:
         text = text[:MAX_TEXT] + f"\n… [{len(text) - MAX_TEXT} more characters]"
@@ -466,6 +823,7 @@ class Pool:
         self.link = link
         self.displays = Displays()
         self.namespace: dict = {"__name__": "__main__", "__builtins__": self.builtins()}
+        self.displays.namespace = self.namespace
         self.current_id: int | None = None
         self.changed: set[str] = set()
         self.main_thread = threading.get_ident()
@@ -572,11 +930,17 @@ class Pool:
         self.changed = set(self.namespace) - keys_before
 
     def error_payload(self, err: BaseException) -> dict:
-        tb = err.__traceback__
-        # Drop our own frames (this file) from the top of the traceback.
-        while tb is not None and tb.tb_frame.f_code.co_filename == __file__:
-            tb = tb.tb_next
-        text = "".join(traceback.format_exception(type(err), err, tb))
+        # Leave the pool's own frames (this file) out of what the user sees.
+        entries = [
+            entry
+            for entry in traceback.extract_tb(err.__traceback__)
+            if entry.filename != __file__
+        ]
+        text = "".join(
+            ["Traceback (most recent call last):\n"]
+            + traceback.format_list(entries)
+            + traceback.format_exception_only(type(err), err)
+        )
         return {
             "kind": "error",
             "type": type(err).__name__,
@@ -704,6 +1068,9 @@ def main() -> None:
             elif op == "table_rows":
                 rows = pool.displays.table_rows(req.get("ref", ""), int(req.get("rowStart", 0)), int(req.get("count", 100)))
                 link.send({"id": rid, "event": "result", "data": rows})
+            elif op == "matrix_cells":
+                cells = pool.displays.matrix_cells(req.get("ref", ""), int(req.get("row", 0)), int(req.get("col", 0)))
+                link.send({"id": rid, "event": "result", "data": cells})
             elif op == "configure":
                 pool.displays.plot_theme = req.get("plot")
                 pool.displays.configure_matplotlib()

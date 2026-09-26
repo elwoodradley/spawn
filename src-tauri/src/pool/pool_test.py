@@ -10,6 +10,7 @@ for the rich checks; they are skipped otherwise.
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import secrets
@@ -77,6 +78,9 @@ def main(python: str) -> int:
     err = ev[0]["payload"]
     expect(err["kind"] == "error" and err["type"] == "ZeroDivisionError", "errors become payloads")
     expect('line 12' in err["traceback"], "traceback lines are offset by startLine")
+    expect("pool.py" not in err["traceback"], "pool internals stay out of tracebacks")
+    ev = request("exec", code="import definitely_not_a_module", file="t.py", startLine=1, scope="cell")
+    expect("spawn_import" not in ev[0]["payload"]["traceback"], "the import hook frame is hidden too")
 
     ev = request("inspect", expression="x")
     expect(ev[-1]["data"] == {"kind": "text", "text": "2"}, "inspect a name")
@@ -117,6 +121,53 @@ def main(python: str) -> int:
         ev = request("exec", code="fig, ax = plt.subplots(); ax.plot([1]); fig", file="t.py", startLine=1, scope="cell")
         figs = [e for e in ev if e.get("event") == "display" and e["payload"]["kind"] == "figure"]
         expect(len(figs) == 1, "a bare figure renders once, not twice")
+        code = (
+            "y_true = np.array([0,0,1,1,2,2,2,1,0,2])\n"
+            "y_pred = np.array([0,1,1,1,2,0,2,1,0,2])\n"
+            "cm = np.array([[2,1,0],[0,3,0],[1,0,3]])\n"
+            "cm"
+        )
+        ev = request("exec", code=code, file="t.py", startLine=1, scope="cell")
+        mat = ev[0]["payload"]
+        expect(mat["kind"] == "matrix" and mat["values"] == [[2, 1, 0], [0, 3, 0], [1, 0, 3]], "confusion matrix payload")
+        expect(mat["rowTotals"] == [3, 3, 4] and mat["colTotals"] == [3, 4, 3], "matrix totals")
+        expect(abs(mat["perClass"][1]["precision"] - 0.75) < 1e-9 and mat["perClass"][1]["recall"] == 1.0, "per-class precision/recall")
+        expect(mat["samples"] is True, "y_true/y_pred found in the namespace")
+        ev = request("matrix_cells", ref=mat["ref"], row=2, col=0)
+        expect(ev[-1]["data"] == [5], "matrix_cells returns the sample indices for a cell")
+        ev = request("matrix_cells", ref=mat["ref"], row=0, col=1)
+        expect(ev[-1]["data"] == [1], "off-diagonal cell indices")
+
+        ev = request("exec", code="ct = pd.crosstab(pd.Series(y_true, name='true'), pd.Series(y_pred, name='pred'))\nct", file="t.py", startLine=1, scope="cell")
+        expect(ev[0]["payload"]["kind"] == "matrix" and ev[0]["payload"]["labels"] == ["0", "1", "2"], "a crosstab DataFrame is a labelled matrix")
+
+        ev = request("exec", code="imgs = np.random.default_rng(0).normal(size=(8, 3, 16, 16)).astype('float32')\nimgs", file="t.py", startLine=1, scope="cell")
+        im = ev[0]["payload"]
+        expect(im["kind"] == "images" and im["count"] == 8 and len(im["thumbs"]) == 8 and im["layout"] == "NCHW", "NCHW float batch → image grid")
+        expect(im["normalized"] is True and im["thumbSize"] == [16, 16], "floats outside 0..255 are normalised")
+        expect(base64.b64decode(im["thumbs"][0])[:8] == b"\x89PNG\r\n\x1a\n", "thumbs are PNG")
+
+        ev = request("exec", code="gray = (np.random.default_rng(1).random((5, 16, 16)) * 255).astype('uint8')\ngray", file="t.py", startLine=1, scope="cell")
+        im = ev[0]["payload"]
+        expect(im["kind"] == "images" and im["count"] == 5 and im["layout"] == "NHW" and im["normalized"] is False, "(N, H, W) uint8 → grayscale grid")
+
+        ev = request("exec", code="np.zeros((32, 128))", file="t.py", startLine=1, scope="cell")
+        expect(ev[0]["payload"]["kind"] == "array", "a plain 2D float array stays an array card")
+
+        report = "{'cat': {'precision': 0.8, 'recall': 0.5, 'f1-score': 0.615, 'support': 10}, 'dog': {'precision': 0.6, 'recall': 0.9, 'f1-score': 0.72, 'support': 12}, 'accuracy': {'precision': 0.7, 'recall': 0.7, 'f1-score': 0.7, 'support': 22}}"
+        ev = request("exec", code=f"rep = {report}\nrep", file="t.py", startLine=1, scope="cell")
+        tab = ev[0]["payload"]
+        expect(tab["kind"] == "table" and tab["source"] == "other" and tab["index"] == ["cat", "dog", "accuracy"], "classification report dict → table")
+        expect([c["name"] for c in tab["columns"]] == ["precision", "recall", "f1-score", "support"], "report columns")
+        ev = request("table_rows", ref=tab["ref"], rowStart=1, count=5)
+        expect(len(ev[-1]["data"]) == 2 and ev[-1]["data"][0][0] == 0.6, "dict table paging")
+
+        ev = request("exec", code="{'lr': 0.01, 'epochs': 10, 'name': 'run-a'}", file="t.py", startLine=1, scope="cell")
+        expect(ev[0]["payload"]["kind"] == "table" and ev[0]["payload"]["columns"][0]["name"] == "key", "flat dict → key/value table")
+        ev = request("exec", code="[{'a': 1, 'b': 2.5}, {'a': 2, 'b': None}]", file="t.py", startLine=1, scope="cell")
+        expect(ev[0]["payload"]["kind"] == "table" and ev[0]["payload"]["columns"][1]["nulls"] == 1, "records → table with null counts")
+        ev = request("exec", code="{'nested': {'deep': {'x': 1}}}", file="t.py", startLine=1, scope="cell")
+        expect(ev[0]["payload"]["kind"] == "text", "a dict with non-scalar leaves stays text")
     else:
         print("skip rich checks (numpy/pandas/matplotlib missing)")
 

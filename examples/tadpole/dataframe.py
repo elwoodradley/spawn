@@ -1,7 +1,8 @@
 """Build a small DataFrame and print it, if pandas is available.
 
-Today this prints the repr. Phase 2 renders DataFrames from the pool as a
-real scrollable table with dtypes, shape, nulls and stats.
+Under F5 this prints the repr. Spawn it into the pool (Ctrl+Shift+F5) and
+the bare `df` at the end opens a real scrollable table with dtypes, shape,
+nulls and stats.
 """
 
 import random
@@ -30,3 +31,5 @@ print(df.shape)
 print(df.dtypes)
 print(df.describe())
 print(df.tail())
+
+df  # bare value: the pool renders it as a table
