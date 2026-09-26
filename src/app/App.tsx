@@ -38,6 +38,8 @@ import { autosaveClutch, restoreClutch } from "./clutch";
 import { registerEditCommands } from "./editCommands";
 import { installKeybindings } from "./keybindings";
 import {
+  OUTPUT_DEFAULT,
+  SIDEBAR_DEFAULT,
   clampOutput,
   clampSidebar,
   outputHeight,
@@ -131,11 +133,13 @@ export default function App() {
           <div class="sp-chrome sp-no-print">
             <Splitter
               direction="vertical"
+              label="Resize the brood sidebar"
               onDrag={(delta) =>
                 setSidebarWidth(
                   clampSidebar(sidebarWidth() + delta, (main?.clientWidth ?? 1200) * 0.6),
                 )
               }
+              onReset={() => setSidebarWidth(SIDEBAR_DEFAULT)}
             />
           </div>
         </Show>
@@ -151,11 +155,13 @@ export default function App() {
               <div class="sp-chrome sp-no-print">
                 <Splitter
                   direction="horizontal"
+                  label="Resize the output panel"
                   onDrag={(delta) =>
                     setOutputHeight(
                       clampOutput(outputHeight() - delta, (main?.clientHeight ?? 800) * 0.8),
                     )
                   }
+                  onReset={() => setOutputHeight(OUTPUT_DEFAULT)}
                 />
               </div>
               <div

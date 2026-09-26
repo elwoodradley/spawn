@@ -63,10 +63,11 @@ Everything is a command: reachable from the menus, the command palette
 | Ctrl+= / Ctrl+-       | Zoom in / out; Ctrl+0 resets                          |
 | Ctrl+Tab              | Cycle tabs (most recent first); Ctrl+1..9 jump        |
 | Ctrl+B / Ctrl+J       | Toggle the brood sidebar / the output panel           |
+| Ctrl+Alt+↑ / ↓        | Output panel taller / shorter; Ctrl+Shift+J maximizes |
 | Alt+Z                 | Word wrap                                             |
 | F1                    | Every shortcut                                        |
 
-Also: drag a folder or files onto the window, drag tabs to reorder, right-click
+Also: drag the line between editor and output (or beside the sidebar) to resize, double-click it to reset; drag a folder or files onto the window, drag tabs to reorder, right-click
 files and tabs and the output panel, autosave (off, after a delay, or on focus
 change), find inside the output, save the output to a file, timestamps per line,
 desktop notification when a spawn finishes while you are elsewhere, and the

@@ -1,25 +1,88 @@
+/*
+ * A splitter draws a 1px line but catches the pointer on a 7px band, so it
+ * can actually be grabbed. The band overlaps its neighbours by 3px on each
+ * side instead of taking layout space. Hover thickens the line and shows a
+ * grip so the handle is discoverable.
+ */
 .sp-splitter {
+  position: relative;
   flex: none;
-  background: var(--sp-color-border);
-  transition: background 120ms;
-  z-index: 1;
+  z-index: 2;
+  touch-action: none;
 }
 
-.sp-splitter:hover,
-.sp-splitter:active {
+.sp-splitter::before {
+  content: "";
+  position: absolute;
+  background: var(--sp-color-border);
+  transition:
+    background 120ms,
+    transform 120ms;
+}
+
+.sp-splitter::after {
+  content: "";
+  position: absolute;
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-color-fg-faint);
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.sp-splitter:hover::before,
+.sp-splitter.is-dragging::before {
   background: var(--sp-color-accent);
+}
+.sp-splitter:hover::after,
+.sp-splitter.is-dragging::after {
+  opacity: 1;
+  background: var(--sp-color-accent-fg);
 }
 
 .sp-splitter-vertical {
-  width: 1px;
+  width: 7px;
+  margin: 0 -3px;
   cursor: col-resize;
-  /* A wider hit area than the drawn line. */
-  box-shadow: 0 0 0 3px transparent;
-  outline: 3px solid transparent;
+}
+.sp-splitter-vertical::before {
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 1px;
+}
+.sp-splitter-vertical:hover::before,
+.sp-splitter-vertical.is-dragging::before {
+  left: 2px;
+  width: 3px;
+}
+.sp-splitter-vertical::after {
+  left: 2px;
+  top: 50%;
+  width: 3px;
+  height: 28px;
+  margin-top: -14px;
 }
 
 .sp-splitter-horizontal {
-  height: 1px;
+  height: 7px;
+  margin: -3px 0;
   cursor: row-resize;
-  outline: 3px solid transparent;
+}
+.sp-splitter-horizontal::before {
+  left: 0;
+  right: 0;
+  top: 3px;
+  height: 1px;
+}
+.sp-splitter-horizontal:hover::before,
+.sp-splitter-horizontal.is-dragging::before {
+  top: 2px;
+  height: 3px;
+}
+.sp-splitter-horizontal::after {
+  top: 2px;
+  left: 50%;
+  height: 3px;
+  width: 28px;
+  margin-left: -14px;
 }

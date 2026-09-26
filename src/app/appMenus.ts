@@ -121,6 +121,9 @@ export function appMenus(): Menu[] {
       items: [
         cmd("view.toggleSidebar"),
         cmd("view.toggleOutput"),
+        cmd("view.outputTaller"),
+        cmd("view.outputShorter"),
+        cmd("view.outputMaximize"),
         cmd("view.toggleWordWrap", {
           label: "Word wrap",
           checked: () => settings().editor.wordWrap,
