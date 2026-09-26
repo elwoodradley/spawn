@@ -260,6 +260,10 @@ export function richSummary(payload: DisplayPayload): string {
       return `[table ${payload.shape[0]}×${payload.shape[1]} ${payload.columns.map((c) => c.name).join(", ")}]`;
     case "array":
       return `[${payload.library} array shape (${payload.shape.join(", ")}) ${payload.dtype}]`;
+    case "matrix":
+      return `[confusion matrix ${payload.values.length}×${payload.values.length}]`;
+    case "images":
+      return `[${payload.count} images (${payload.shape.join(", ")}) ${payload.dtype}]`;
     case "html":
       return "[html]";
     case "error":

@@ -6,6 +6,8 @@ import ArrayBlock from "./ArrayBlock";
 import ErrorBlock from "./ErrorBlock";
 import FigureBlock from "./FigureBlock";
 import HtmlBlock from "./HtmlBlock";
+import ImagesBlock from "./ImagesBlock";
+import MatrixBlock from "./MatrixBlock";
 import "./rich.css";
 import TableBlock from "./TableBlock";
 
@@ -23,6 +25,12 @@ export default function RichBlock(props: { payload: DisplayPayload }) {
       </Match>
       <Match when={props.payload.kind === "array" && props.payload}>
         {(p) => <ArrayBlock payload={p()} />}
+      </Match>
+      <Match when={props.payload.kind === "matrix" && props.payload}>
+        {(p) => <MatrixBlock payload={p()} />}
+      </Match>
+      <Match when={props.payload.kind === "images" && props.payload}>
+        {(p) => <ImagesBlock payload={p()} />}
       </Match>
       <Match when={props.payload.kind === "html" && props.payload}>
         {(p) => <HtmlBlock payload={p()} />}

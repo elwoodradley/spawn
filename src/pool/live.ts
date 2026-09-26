@@ -6,7 +6,7 @@
  * are matched by id from the JSON lines Rust forwards. Display events go out
  * through `emitPoolEvent` so the output model renders them in order.
  */
-import { createEffect, createRoot, on } from "solid-js";
+import { createEffect, createRoot, createSignal, on } from "solid-js";
 
 import { brood } from "../app/state";
 import { selectedInterpreter } from "../env/store";
@@ -42,6 +42,9 @@ interface Message {
 
 let procId: number | null = null;
 let nextId = 0;
+/** Bumped every time an exec finishes, so caches keyed on pool state can expire. */
+const [execGeneration, setExecGeneration] = createSignal(0);
+export { execGeneration };
 const pending = new Map<number, Pending>();
 let readyResolvers: Array<() => void> = [];
 
@@ -98,6 +101,7 @@ function onMessage(line: string): void {
       const p = pending.get(msg.id);
       pending.delete(msg.id);
       setPoolStatus("idle");
+      setExecGeneration((g) => g + 1);
       p?.resolveDone?.({ exec: msg.id, ok: msg.ok ?? false, durationMs: msg.durationMs ?? 0 });
       break;
     }
@@ -206,6 +210,12 @@ const live: PoolClient = {
     if (procId === null) return [];
     const data = await send("table_rows", { ref, rowStart, count });
     return Array.isArray(data) ? (data as Cell[][]) : [];
+  },
+
+  async matrixCells(ref: string, row: number, col: number): Promise<number[]> {
+    if (procId === null) return [];
+    const data = await send("matrix_cells", { ref, row, col });
+    return Array.isArray(data) ? (data as number[]) : [];
   },
 
   async interrupt(): Promise<void> {

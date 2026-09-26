@@ -56,6 +56,43 @@ export type DisplayPayload =
       /** Which axes the preview slices, for the label. */
       previewAxes: [number, number] | null;
     }
+  /**
+   * A square non-negative integer matrix: a confusion matrix. Rows are the
+   * true class, columns the predicted one. `samples` says the pool found the
+   * label vectors it came from, so `matrixCells` can list the samples per cell.
+   */
+  | {
+      kind: "matrix";
+      role: "confusion";
+      ref: string;
+      labels: string[] | null;
+      values: number[][];
+      rowTotals: number[];
+      colTotals: number[];
+      perClass: {
+        precision: number | null;
+        recall: number | null;
+        f1: number | null;
+        support: number;
+      }[];
+      samples: boolean;
+    }
+  /** A batch of images recognised from its shape, as small PNG thumbnails. */
+  | {
+      kind: "images";
+      library: "numpy" | "torch" | "jax" | "other";
+      count: number;
+      shape: number[];
+      layout: "NCHW" | "NHWC" | "CHW" | "HWC" | "NHW";
+      dtype: string;
+      /** Base64 PNGs, at most 64. */
+      thumbs: string[];
+      /** [width, height] of each thumbnail in pixels. */
+      thumbSize: [number, number];
+      valueRange: [number, number] | null;
+      /** True when values were rescaled per image to fit 0..255. */
+      normalized: boolean;
+    }
   /** Trusted HTML from a library's `_repr_html_`, rendered sandboxed. */
   | { kind: "html"; html: string }
   /** A traceback from the pool; frames link like croaks in the console. */
@@ -110,6 +147,8 @@ export interface PoolClient {
   variables(): Promise<VariableInfo[]>;
   /** More rows of a table previously shown. */
   tableRows(ref: string, rowStart: number, count: number): Promise<Cell[][]>;
+  /** Sample indices that landed in one confusion-matrix cell (true row, predicted col). */
+  matrixCells(ref: string, row: number, col: number): Promise<number[]>;
   interrupt(): Promise<void>;
   restart(): Promise<void>;
   shutdown(): Promise<void>;

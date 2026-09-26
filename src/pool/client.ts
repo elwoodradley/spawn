@@ -37,6 +37,7 @@ const stub: PoolClient = {
   inspect: (_expression: string): Promise<DisplayPayload | null> => Promise.resolve(null),
   variables: (): Promise<VariableInfo[]> => Promise.resolve([]),
   tableRows: () => Promise.resolve([]),
+  matrixCells: () => Promise.resolve([]),
   interrupt: () => Promise.resolve(),
   restart: () => Promise.resolve(),
   shutdown: () => Promise.resolve(),
