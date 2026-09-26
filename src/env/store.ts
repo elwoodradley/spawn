@@ -13,6 +13,8 @@ import { brood } from "../app/state";
 import {
   discoverInterpreters,
   getSetting,
+  pathExists,
+  pickFile,
   probeInterpreter,
   probeMl,
   setSetting,
@@ -63,6 +65,7 @@ export const SOURCE_LABELS: Record<CandidateSource, string> = {
   broodVenv: ".venv",
   uv: "uv",
   path: "PATH",
+  custom: "chosen",
 };
 
 /** The candidate record for the current selection, if it is one. */
@@ -76,16 +79,32 @@ export async function refreshInterpreters(root: string | null): Promise<void> {
   setEnvError(null);
   try {
     const [found, uv] = await Promise.all([discoverInterpreters(root), uvPath()]);
-    setCandidates(found);
     setUvAvailable(uv);
     const saved = await getSetting<string | null>(settingKey(root), null);
-    const pick = saved && found.some((c) => c.path === saved) ? saved : (found[0]?.path ?? null);
+    // A remembered interpreter SPAWN would not discover (browsed to by the
+    // user) stays available as long as it still exists.
+    const list = [...found];
+    if (saved && !list.some((c) => c.path === saved) && (await pathExists(saved))) {
+      list.push({ path: saved, source: "custom" });
+    }
+    setCandidates(list);
+    const pick = saved && list.some((c) => c.path === saved) ? saved : (list[0]?.path ?? null);
     await selectInterpreter(pick, false);
   } catch (err) {
     setEnvError(describe(err));
   } finally {
     setRefreshing(false);
   }
+}
+
+/** Let the user point at any interpreter, e.g. a venv outside the brood. */
+export async function browseInterpreter(): Promise<void> {
+  const picked = await pickFile();
+  if (!picked) return;
+  if (!candidates().some((c) => c.path === picked)) {
+    setCandidates([...candidates(), { path: picked, source: "custom" }]);
+  }
+  await selectInterpreter(picked);
 }
 
 /** Pick an interpreter; probes it for version info. */

@@ -309,6 +309,13 @@ an opaque origin, so it cannot reach the Tauri bridge. Hover and pane
 inspection evaluate dotted names only, never expressions, so looking at a
 value cannot run code.
 
+**Size note.** `pool.py` is the one file in the repo allowed past the ~300
+line guideline: it must stay a single stdlib-only script so it can be
+embedded and shipped as-is, and splitting it would mean shipping and
+importing a package from the cache dir. It is organised in sections
+(transport, JSON safety, displays, detectors, namespace, main loop) and
+covered end to end by `pool_test.py`.
+
 **Testing without SPAWN.** `python src-tauri/src/pool/pool_test.py <python>`
 hosts the kernel from a tiny socket server and checks echo, persistence,
 tracebacks, inspect, tables, figures, arrays, both interrupt paths and clean

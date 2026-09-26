@@ -5,9 +5,9 @@
 import { For, Show } from "solid-js";
 
 import { brood } from "../app/state";
-import { baseName } from "../ipc";
 import "./Metamorphosis.css";
 import {
+  browseInterpreter,
   candidates,
   envError,
   interpreterInfo,
@@ -65,6 +65,16 @@ export default function Metamorphosis() {
             )}
           </For>
         </ul>
+        <button
+          class="sp-meta__browse"
+          title="Choose any Python, for example a venv outside this brood"
+          onClick={() => {
+            void browseInterpreter();
+            setMetamorphosisOpen(false);
+          }}
+        >
+          Browse for a Python…
+        </button>
         <Show when={envError()}>{(err) => <p class="sp-meta__croak">{err()}</p>}</Show>
       </div>
     </Show>
@@ -77,5 +87,3 @@ function shorten(path: string): string {
   if (parts.length <= 3) return path;
   return `…/${parts.slice(-3).join("/")}`;
 }
-
-export { baseName as interpreterName };

@@ -1,7 +1,8 @@
 /** Interpreter discovery IPC. Policy about which one to use lives in `env/`. */
 import { invoke } from "@tauri-apps/api/core";
 
-export type CandidateSource = "broodVenv" | "uv" | "path";
+/** `custom` is a path the user browsed to; SPAWN never discovers those. */
+export type CandidateSource = "broodVenv" | "uv" | "path" | "custom";
 
 export interface Candidate {
   path: string;

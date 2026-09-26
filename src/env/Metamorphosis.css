@@ -97,3 +97,16 @@
 .sp-meta__croak {
   color: var(--sp-color-croak);
 }
+
+.sp-meta__browse {
+  width: 100%;
+  margin-top: var(--sp-space-sm);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  text-align: left;
+  color: var(--sp-color-fg-muted);
+  border-top: 1px solid var(--sp-color-border);
+}
+.sp-meta__browse:hover {
+  color: var(--sp-color-fg);
+  background: var(--sp-color-bg-hover);
+}
