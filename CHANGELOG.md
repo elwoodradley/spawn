@@ -17,6 +17,11 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - **pool:** Display protocol and stub client for the persistent kernel
 - **pool:** Persistent kernel with stdlib-only script, authenticated local socket, interrupt
 - **pool:** Cells, spawn-into-pool commands, rich output blocks, variables pane
+- **pool:** Confusion matrix, image grid and dict/records table renderers in the kernel
+- **pool:** Matrix and image-grid blocks with clickable cells and sample lists
+- **spawn:** Train vs val overlay with shaded gap, run history and overlays
+- **editor:** Hover a name to inspect it in the pool
+- **env:** Browse for any interpreter and remember it per brood
 
 ### Fixed
 
@@ -33,6 +38,7 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - Scaffold SPAWN with Rust process layer, theme system, and command registry
 - Add module contracts as stubs for parallel Phase 1 work
 - Generate changelog
+- Regenerate changelog
 - Regenerate changelog
 - Regenerate changelog
 - Regenerate changelog
