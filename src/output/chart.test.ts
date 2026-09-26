@@ -10,8 +10,13 @@ import {
   integerTicks,
   linearScale,
   linePath,
+  fitRange,
+  logTicks,
   nearestIndex,
   niceTicks,
+  repelLabels,
+  robustRange,
+  spacedTicks,
   valueTicks,
 } from "./chart";
 
@@ -159,5 +164,80 @@ describe("alignSeries and gapPath", () => {
         y,
       ),
     ).toBe("M0.0 100.0 L100.0 0.0");
+  });
+});
+
+describe("robustRange", () => {
+  it("ignores a single spike so the rest of the curve keeps its room", () => {
+    const values = [6.78, 1.07, 0.9, 0.6, 0.3, 0.12, 0.08, 0.05, 0.06, 0.09, 0.2, 0.4];
+    const r = robustRange(values);
+    expect(r.clipped).toBe(true);
+    expect(r.max).toBeLessThan(3);
+    expect(r.min).toBeLessThanOrEqual(0.05);
+  });
+
+  it("keeps the full range when nothing sticks out", () => {
+    const r = robustRange([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]);
+    expect(r.clipped).toBe(false);
+    expect(r.min).toBeLessThanOrEqual(0.1);
+    expect(r.max).toBeGreaterThanOrEqual(0.8);
+  });
+
+  it("does not pad a non-negative metric below zero", () => {
+    expect(robustRange([0.02, 0.1, 0.3, 0.5, 0.7, 0.9]).min).toBe(0);
+    expect(robustRange([-0.5, 0.1, 0.3, 0.5, 0.7, 0.9]).min).toBeLessThan(-0.5);
+  });
+
+  it("never clips with fewer than six points", () => {
+    expect(robustRange([100, 1, 1, 1]).clipped).toBe(false);
+  });
+});
+
+describe("repelLabels", () => {
+  it("pushes overlapping labels apart and keeps them inside the plot", () => {
+    const out = repelLabels([150, 152, 20], 12, 10, 160);
+    const sorted = [...out].sort((a, b) => a - b);
+    expect(sorted[1]! - sorted[0]!).toBeGreaterThanOrEqual(12);
+    expect(sorted[2]! - sorted[1]!).toBeGreaterThanOrEqual(12);
+    expect(Math.max(...out)).toBeLessThanOrEqual(160);
+    expect(out[2]).toBeCloseTo(20);
+  });
+});
+
+describe("spacedTicks and logTicks", () => {
+  it("drops inner ticks that would crowd on screen", () => {
+    const toPx = (v: number) => v * 10;
+    expect(spacedTicks([0, 0.5, 1, 1.2, 10], toPx, 14)).toEqual([0, 10]);
+    expect(spacedTicks([0, 5, 10], toPx, 14)).toEqual([0, 5, 10]);
+  });
+
+  it("gives decades between the ends", () => {
+    expect(logTicks(0.05, 6.78)).toEqual([0.05, 0.1, 1, 6.78]);
+    expect(logTicks(0, 1)).toEqual([]);
+  });
+});
+
+describe("fitRange", () => {
+  const ramp = [0.7, 0.8, 0.85, 0.95, 0.951, 0.953, 0.952, 0.955, 0.954, 0.953, 0.953, 0.953];
+  const spike = [6.78, 1.07, 0.9, 0.6, 0.3, 0.12, 0.08, 0.05, 0.06, 0.09, 0.2, 0.4];
+
+  it("clips an isolated spike", () => {
+    const r = fitRange([spike]);
+    expect(r.clipped).toBe(true);
+    expect(r.max).toBeLessThan(2);
+  });
+
+  it("keeps a contiguous early ramp in view", () => {
+    const r = fitRange([ramp]);
+    expect(r.clipped).toBe(false);
+    expect(r.min).toBeLessThanOrEqual(0.7);
+  });
+
+  it("judges each line on its own neighbours", () => {
+    const loss = [1.2, 1.0, 0.8, 0.6, 0.5, 0.4, 0.35, 0.3, 0.28, 0.26, 0.25, 0.24];
+    const r = fitRange([loss, spike]);
+    expect(r.clipped).toBe(true);
+    expect(r.max).toBeLessThan(2);
+    expect(r.min).toBeLessThanOrEqual(0.05);
   });
 });

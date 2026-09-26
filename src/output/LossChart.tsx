@@ -17,14 +17,31 @@ import type { Series, XUnit } from "../spawn/metrics";
 import { groupLines, type ChartGroup } from "../spawn/pairs";
 import type { RunRecord } from "../spawn/runHistory";
 import {
+  clampedScale,
+  fitRange,
   formatValue,
   gapPath,
   integerTicks,
   linearScale,
   linePath,
+  logScale,
+  logTicks,
   nearestIndex,
+  repelLabels,
+  robustRange,
+  spacedTicks,
   valueTicks,
 } from "./chart";
+
+/**
+ * How the value axis is fitted. `auto` ignores a few outliers (a first-epoch
+ * spike must not flatten the rest of the curve); `full` shows everything;
+ * `log` needs strictly positive values and falls back to `auto` otherwise.
+ */
+export type RangeMode = "auto" | "full" | "log";
+const RANGE_MODES: RangeMode[] = ["auto", "full", "log"];
+/** Minimum vertical distance between end labels and between axis ticks. */
+const LABEL_GAP = 13;
 import ChartLegend from "./ChartLegend";
 
 const PAD = { top: 16, right: 16, bottom: 26, left: 52 };
@@ -52,6 +69,7 @@ export default function LossChart(props: {
   let host: HTMLDivElement | undefined;
   const [size, setSize] = createSignal({ w: 320, h: 160 });
   const [hover, setHover] = createSignal<number | null>(null);
+  const [rangeMode, setRangeMode] = createSignal<RangeMode>("auto");
 
   onMount(() => {
     if (!host) return;
@@ -97,14 +115,18 @@ export default function LossChart(props: {
     const ys = all.flatMap((l) => l.points.map((p) => p.value)).filter(Number.isFinite);
     const xMin = xs.length ? Math.min(...xs) : 0;
     const xMax = Math.max(xs.length ? Math.max(...xs) : 1, xMin + 1);
-    let yMin = ys.length ? Math.min(...ys) : 0;
-    let yMax = ys.length ? Math.max(...ys) : 1;
-    if (yMin === yMax) {
-      const pad = yMin === 0 ? 1 : Math.abs(yMin) * 0.1;
-      yMin -= pad;
-      yMax += pad;
+    const positive = ys.length > 0 && ys.every((v) => v > 0);
+    const mode = rangeMode() === "log" && !positive ? "auto" : rangeMode();
+    let range = fitRange(all.map((l) => l.points.map((p) => p.value)));
+    if (mode === "full") range = robustRange(ys, 0.08, Number.POSITIVE_INFINITY);
+    if (mode === "log") {
+      const lo = Math.min(...ys);
+      const hi = Math.max(...ys);
+      range = { min: lo / 1.15, max: hi * 1.15, clipped: false };
     }
-    const yTicks = valueTicks(yMin, yMax, 3);
+    const yMin = range.min;
+    const yMax = range.max;
+    const offScale = ys.filter((v) => v < yMin || v > yMax).length;
     const labelW =
       Math.max(
         0,
@@ -112,7 +134,21 @@ export default function LossChart(props: {
       ) * CHAR_W;
     const right = PAD.right + labelW + 10;
     const x = linearScale([xMin, xMax], [PAD.left, w - right]);
-    const y = linearScale([yMin, yMax], [h - PAD.bottom, PAD.top]);
+    const yRaw =
+      mode === "log"
+        ? logScale([yMin, yMax], [h - PAD.bottom, PAD.top])
+        : linearScale([yMin, yMax], [h - PAD.bottom, PAD.top]);
+    const y = clampedScale(yRaw);
+    const rawTicks = mode === "log" ? logTicks(yMin, yMax) : valueTicks(yMin, yMax, 3);
+    const yTicks = spacedTicks(rawTicks, y, LABEL_GAP);
+    // End labels: one per live line, nudged apart when lines converge.
+    const ends = live().map((s) => s.points[s.points.length - 1]);
+    const labelYs = repelLabels(
+      ends.map((p) => (p ? y(p.value) : PAD.top)),
+      LABEL_GAP,
+      PAD.top + 6,
+      h - PAD.bottom - 6,
+    );
     const xTicks = integerTicks(xMin, xMax, Math.max(2, Math.floor((w - PAD.left - right) / 70)));
     const gap =
       props.group.train && props.group.val
@@ -120,7 +156,7 @@ export default function LossChart(props: {
         : "";
     // Hover snaps to the x values of the first live line.
     const hoverXs = live()[0]?.points.map((p) => p.step) ?? [];
-    return { x, y, xTicks, yTicks, gap, hoverXs, w, h, right };
+    return { x, y, xTicks, yTicks, gap, hoverXs, w, h, right, labelYs, offScale, mode, yMin, yMax };
   });
 
   const onMove = (event: MouseEvent) => {
@@ -158,6 +194,34 @@ export default function LossChart(props: {
     <figure class="sp-chart">
       <figcaption class="sp-chart__title">
         <span class="sp-chart__name">{props.group.metric}</span>
+        <Show when={layout().offScale > 0}>
+          <span
+            class="sp-chart__note"
+            title="Points outside the fitted range are drawn at the edge"
+          >
+            {layout().offScale} off-scale
+          </span>
+        </Show>
+        <span class="sp-chart__range" role="group" aria-label="Value axis range">
+          <For each={RANGE_MODES}>
+            {(m) => (
+              <button
+                class="sp-chart__range-btn"
+                classList={{ "is-active": rangeMode() === m }}
+                title={
+                  m === "auto"
+                    ? "Fit the axis to the bulk of the data; outliers sit at the edge"
+                    : m === "full"
+                      ? "Fit the axis to every point"
+                      : "Logarithmic axis (positive values only)"
+                }
+                onClick={() => setRangeMode(m)}
+              >
+                {m}
+              </button>
+            )}
+          </For>
+        </span>
       </figcaption>
       <ChartLegend
         group={props.group}
@@ -250,27 +314,46 @@ export default function LossChart(props: {
           </For>
           <For each={live()}>
             {(s, i) => (
-              <Show when={s.points[s.points.length - 1]}>
-                {(p) => (
-                  <g>
-                    <circle
-                      class="sp-chart__end"
-                      cx={layout().x(p().step)}
-                      cy={layout().y(p().value)}
-                      r="4"
+              <g>
+                <For
+                  each={s.points.filter((p) => p.value < layout().yMin || p.value > layout().yMax)}
+                >
+                  {(p) => (
+                    <path
+                      class="sp-chart__offscale"
+                      d={offScaleMarker(
+                        layout().x(p.step),
+                        layout().y(p.value),
+                        p.value > layout().yMax,
+                      )}
                       style={{ fill: colourOf(i()) }}
-                    />
-                    <text
-                      class="sp-chart__label"
-                      x={layout().x(p().step) + 8}
-                      y={layout().y(p().value)}
-                      dominant-baseline="middle"
                     >
-                      {formatValue(p().value)}
-                    </text>
-                  </g>
-                )}
-              </Show>
+                      <title>{`${xLabel()} ${p.step} · ${formatValue(p.value)} (off-scale)`}</title>
+                    </path>
+                  )}
+                </For>
+                <Show when={s.points[s.points.length - 1]}>
+                  {(p) => (
+                    <g>
+                      <circle
+                        class="sp-chart__end"
+                        cx={layout().x(p().step)}
+                        cy={layout().y(p().value)}
+                        r="4"
+                        style={{ fill: colourOf(i()) }}
+                      />
+                      <text
+                        class="sp-chart__label"
+                        x={layout().x(p().step) + 8}
+                        y={layout().labelYs[i()] ?? layout().y(p().value)}
+                        dominant-baseline="middle"
+                      >
+                        {formatValue(p().value)}
+                      </text>
+                    </g>
+                  )}
+                </Show>
+              </g>
             )}
           </For>
           <Show when={hoverStep() !== null}>
@@ -326,4 +409,10 @@ function seriesCount(): number {
   const raw = getComputedStyle(document.documentElement).getPropertyValue("--sp-plot-series-count");
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? n : 6;
+}
+
+/** A small triangle pointing out of the plot where an off-scale point sits. */
+function offScaleMarker(x: number, y: number, above: boolean): string {
+  const d = above ? -1 : 1;
+  return `M${x - 4} ${y - d * 1} L${x + 4} ${y - d * 1} L${x} ${y + d * 5} Z`;
 }

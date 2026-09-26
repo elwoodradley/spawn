@@ -8,8 +8,9 @@ import { createMemo, createSignal, For, Show } from "solid-js";
 import { settings } from "../app/settings";
 import { elapsedMs, metrics, spawnCommand, spawnStatus } from "../spawn/controller";
 import { groupSeries } from "../spawn/pairs";
+import { promote } from "../spawn/promote";
 import { removeRun, runLabel, runs } from "../spawn/runHistory";
-import { formatDuration, formatRate } from "./chart";
+import { formatDuration, formatRate, formatValue } from "./chart";
 import LossChart, { type OverlayRun } from "./LossChart";
 import "./RunPanel.css";
 
@@ -26,7 +27,8 @@ export default function RunPanel() {
   };
   const percent = () => Math.round((progress()?.fraction ?? 0) * 100);
 
-  const groups = createMemo(() => groupSeries(metrics.series));
+  const promoted = createMemo(() => promote(metrics.series));
+  const groups = createMemo(() => groupSeries(promoted().charted));
 
   /** Runs the user switched off in a legend; everything else overlays. */
   const [hidden, setHidden] = createSignal<ReadonlySet<number>>(new Set());
@@ -132,6 +134,23 @@ export default function RunPanel() {
           </div>
         }
       >
+        <Show when={promoted().scalars.length > 0}>
+          <div
+            class="sp-run__scalars"
+            title="Values printed once or twice; three points make a chart"
+          >
+            <For each={promoted().scalars}>
+              {(s) => (
+                <span class="mono">
+                  <span class="sp-run__scalar-name">{s.name}</span>
+                  <span class="sp-run__scalar-value">
+                    {formatValue(s.points[s.points.length - 1]?.value ?? 0)}
+                  </span>
+                </span>
+              )}
+            </For>
+          </div>
+        </Show>
         <div class="sp-run__charts">
           <For each={groups()}>
             {(group) => (
