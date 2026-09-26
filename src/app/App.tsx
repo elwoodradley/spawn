@@ -18,6 +18,7 @@ import { baseName } from "../ipc";
 import OutputPanel from "../output/OutputPanel";
 import { registerSpawnCommands } from "../spawn/commands";
 import { initTheme } from "../theme/store";
+import { loadSettings } from "./settings";
 import CommandPalette from "../ui/CommandPalette";
 import ContextMenuHost from "../ui/ContextMenu";
 import DialogHost from "../ui/Dialog";
@@ -77,6 +78,7 @@ export default function App() {
     // or the autosave effect would never be disposed with the component.
     const owner = getOwner();
     void (async () => {
+      await loadSettings();
       await initTheme();
       await loadRecent();
       await restoreClutch();
