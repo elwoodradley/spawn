@@ -37,17 +37,21 @@ src/                         TypeScript, SolidJS
               keybindings, clutch (session persistence)
   editor/     CodeMirror setup, document registry, dirty tracking, save
   brood/      folder tree model, file open, watcher
-  spawn/      spawn controller, output model, croak (traceback) parser
-  output/     the output panel component (Phase 2 adds plots, tables here)
+  spawn/      spawn controller, output model, croak (traceback) parser,
+              metrics parser for the run panel (loss curves, tqdm, epochs)
+  output/     output console, run panel with live charts (Phase 2 adds
+              inline plots and tables here)
   env/        metamorphosis: interpreter discovery policy and selection
-  ui/         dumb components: tabs, tree, splitter, status bar, palette
+  ui/         menu bar, context menu, dialogs, tabs, splitter, status bar,
+              palette
   styles/     base.css; reads --sp-* tokens only
 themes/       shipped theme files (data, validated by tests)
 src-tauri/src/
   lib.rs      builder, plugins, handler list, Linux render workaround
   error.rs    one Error type, serialised as a message string
   proc/       spawn a child, stream output over a Channel, stdin, kill
-  env/        find interpreters, probe one for version and prefix
+  env/        find interpreters, probe one for version and prefix; ml.rs
+              probes numpy/pandas/torch/jax + device, reads system memory
 src-tauri/capabilities/   what the webview may call (see Security)
 ```
 
@@ -261,7 +265,7 @@ is no untrusted code inside the sandbox to abuse those permissions.
 output and stdin, theming. Usable for coursework.
 
 **Phase 2**: the pool (persistent kernel), spawn a selection or `# %%` cell,
-inline plots, DataFrame viewer, tensor inspector, run panel, environment
+inline plots, DataFrame viewer, tensor inspector, environment
 details in the chrome.
 
 **Phase 3**: pyright over LSP. `@codemirror/lsp-client` (an official
