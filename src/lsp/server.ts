@@ -126,7 +126,7 @@ async function start(root: string): Promise<void> {
             void start(root);
           }
         },
-        onCroak: (message) => log(`croak: ${message}`),
+        onCroak: (message) => log(`error: ${message}`),
       },
     );
     process = proc;
