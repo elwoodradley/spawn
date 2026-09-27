@@ -90,7 +90,7 @@ export function parseCroak(text: string): Croak | null {
   return { frames, type: end.type, message: end.message };
 }
 
-/** Frames that point at real files, innermost last, for "jump to croak". */
+/** Frames that point at real files, innermost last, for "jump to error". */
 export function fileFrames(croak: Croak): CroakFrame[] {
   return croak.frames.filter((f) => !f.file.startsWith("<"));
 }

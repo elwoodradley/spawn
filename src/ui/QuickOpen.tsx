@@ -86,7 +86,7 @@ export default function QuickOpen() {
             <input
               ref={(el) => (input = el)}
               type="text"
-              placeholder={brood() ? "Go to file in the brood" : "Open a brood first"}
+              placeholder={brood() ? "Go to file in the project" : "Open a project first"}
               spellcheck={false}
               value={query()}
               onInput={(e) => {
@@ -117,7 +117,7 @@ export default function QuickOpen() {
             </For>
             <Show when={!loading() && results().length === 0}>
               <li class="sp-palette-empty">
-                {brood() ? "No matching file." : "Open a brood to search its files."}
+                {brood() ? "No matching file." : "Open a project to search its files."}
               </li>
             </Show>
           </ul>

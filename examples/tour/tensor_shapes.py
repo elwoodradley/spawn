@@ -1,7 +1,7 @@
-"""The most common ML bug: a shape mismatch. Spawn it to see the croak.
+"""The most common ML bug: a shape mismatch. Run it to see the error.
 
 SPAWN turns the traceback into links; click a frame to jump to the line.
-Phase 2 adds hovering a tensor to see its shape before it goes wrong.
+Hover a name in the editor while the Interactive Console is idle to see its shape before it goes wrong.
 """
 
 try:

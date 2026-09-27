@@ -1,6 +1,6 @@
 """A small training loop in pure Python, so it runs on any interpreter.
 
-Spawn it and open the Run tab: SPAWN parses the `loss:` and `acc:` values it
+Run it and open the Metrics tab: SPAWN parses the `loss:` and `acc:` values it
 prints into live curves, and the tqdm-style bar on stderr into a progress
 bar with an iteration rate. No numpy or torch needed.
 """
@@ -33,7 +33,7 @@ def clock(seconds: float) -> str:
 
 
 def bar(done: int, total: int, elapsed: float) -> str:
-    """The exact tqdm layout, so the Run tab reads progress, rate and ETA."""
+    """The exact tqdm layout, so the Metrics tab reads progress, rate and ETA."""
     frac = done / total
     filled = int(frac * 24)
     rate = done / elapsed if elapsed > 0 else 0.0

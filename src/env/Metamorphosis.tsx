@@ -28,9 +28,14 @@ export default function Metamorphosis() {
   return (
     <Show when={metamorphosisOpen()}>
       <div class="sp-meta__backdrop" onClick={() => setMetamorphosisOpen(false)} />
-      <div class="sp-meta" role="dialog" aria-label="Metamorphosis" onKeyDown={onKeyDown}>
+      <div
+        class="sp-meta"
+        role="dialog"
+        aria-label="Select Python Interpreter"
+        onKeyDown={onKeyDown}
+      >
         <header class="sp-meta__header">
-          <span class="sp-meta__title">Metamorphosis</span>
+          <span class="sp-meta__title">Select Python Interpreter</span>
           <button
             class="sp-meta__refresh"
             disabled={refreshing()}
@@ -40,7 +45,9 @@ export default function Metamorphosis() {
           </button>
         </header>
         <Show when={candidates().length === 0}>
-          <p class="sp-meta__empty">No Python found. Install uv or create a .venv in the brood.</p>
+          <p class="sp-meta__empty">
+            No Python found. Install uv or create a .venv in the project.
+          </p>
         </Show>
         <ul class="sp-meta__list">
           <For each={candidates()}>
@@ -67,7 +74,7 @@ export default function Metamorphosis() {
         </ul>
         <button
           class="sp-meta__browse"
-          title="Choose any Python, for example a venv outside this brood"
+          title="Choose any Python, for example a venv outside this project"
           onClick={() => {
             void browseInterpreter();
             setMetamorphosisOpen(false);

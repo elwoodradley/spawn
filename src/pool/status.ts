@@ -1,21 +1,21 @@
-/** How the pool's state reads in the chrome. */
+/** How the Interactive Console's state reads in the chrome. */
 import { poolStatus } from "./client";
 import type { PoolStatus } from "./protocol";
 
 const LABELS: Record<PoolStatus, string> = {
-  cold: "pool: cold",
-  starting: "pool: starting",
-  idle: "pool: idle",
-  busy: "pool: busy",
-  croaked: "pool: croaked",
+  cold: "console: cold",
+  starting: "console: starting",
+  idle: "console: idle",
+  busy: "console: busy",
+  croaked: "console: error",
 };
 
 const TITLES: Record<PoolStatus, string> = {
-  cold: "No kernel running. Spawn a cell to start one.",
-  starting: "The kernel is starting.",
-  idle: "The kernel is ready. Click to show variables.",
-  busy: "The kernel is running code. Interrupt with Ctrl+Shift+.",
-  croaked: "The kernel died. Click to restart it.",
+  cold: "Interactive Console not running. Run a cell to start it.",
+  starting: "The Interactive Console is starting.",
+  idle: "The Interactive Console is ready. Click to show variables.",
+  busy: "The Interactive Console is running code. Interrupt with Ctrl+Shift+.",
+  croaked: "The Interactive Console stopped unexpectedly. Click to restart it.",
 };
 
 export function poolLabel(status: PoolStatus = poolStatus()): string {

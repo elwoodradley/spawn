@@ -64,7 +64,7 @@ let timer: ReturnType<typeof setInterval> | null = null;
 
 export async function spawnFile(path: string): Promise<void> {
   if (spawnStatus() === "running") {
-    output.system("A spawn is already running. Stop it first.");
+    output.system("A run is already in progress. Stop it first.");
     return;
   }
   if (settings().spawn.saveBeforeSpawn) await saveAllDirty();
@@ -72,7 +72,7 @@ export async function spawnFile(path: string): Promise<void> {
 
   const program = selectedInterpreter();
   if (!program) {
-    output.append("croak", "No Python interpreter selected. Open metamorphosis to pick one.\n");
+    output.append("croak", "No Python interpreter selected. Choose one from the status bar.\n");
     return;
   }
 
@@ -82,7 +82,7 @@ export async function spawnFile(path: string): Promise<void> {
   setExitCode(null);
   setOutcome("none");
   metrics.reset();
-  output.system(`spawn ${baseName(path)} · ${program} · in ${cwd}`);
+  output.system(`run ${baseName(path)} · ${program} · in ${cwd}`);
 
   stoppedByUser = false;
   setSpawnStatus("running");
@@ -95,7 +95,7 @@ export async function spawnFile(path: string): Promise<void> {
     );
     requestStdinFocus();
   } catch (err) {
-    finish(null, null, `could not spawn ${program}: ${describe(err)}`);
+    finish(null, null, `could not start ${program}: ${describe(err)}`);
   }
 }
 
@@ -222,7 +222,7 @@ function snapshotRun(): void {
 function notifyIfAway(code: number | null, seconds: string): void {
   if (!settings().spawn.notifyWhenDone || document.hasFocus()) return;
   const ran = spawnCommand();
-  const file = ran ? baseName(ran.args[ran.args.length - 1] ?? "") : "spawn";
+  const file = ran ? baseName(ran.args[ran.args.length - 1] ?? "") : "run";
   const how =
     outcome() === "ok"
       ? `exit 0`
@@ -231,8 +231,8 @@ function notifyIfAway(code: number | null, seconds: string): void {
         : code === null
           ? "killed"
           : `exit ${code}`;
-  const verb = outcome() === "croak" ? "croaked" : "finished";
-  void notify("SPAWN", `spawn ${verb}: ${file} · ${how} · ${seconds}s`);
+  const verb = outcome() === "croak" ? "failed" : "finished";
+  void notify("SPAWN", `run ${verb}: ${file} · ${how} · ${seconds}s`);
 }
 
 function startTimer(): void {

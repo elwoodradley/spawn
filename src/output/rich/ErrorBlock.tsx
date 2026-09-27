@@ -1,5 +1,5 @@
 /**
- * A croak from the pool: the traceback with clickable frames, the exception
+ * An error from the Interactive Console: the traceback with clickable frames, the exception
  * line emphasised.
  */
 import { For } from "solid-js";

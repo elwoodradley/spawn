@@ -128,7 +128,7 @@ export default function RunPanel() {
             <p>No metrics yet.</p>
             <p class="sp-run__hint">
               Print <code>loss: 0.234</code>, <code>epoch 3/10</code>, or use tqdm and they show up
-              here as the spawn runs. <code>val_loss</code> lands on the same chart as{" "}
+              here while the program runs. <code>val_loss</code> lands on the same chart as{" "}
               <code>loss</code>. Add your own patterns in Settings.
             </p>
           </div>

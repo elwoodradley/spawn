@@ -35,7 +35,7 @@ function RecentList(props: {
 }
 
 const TIPS: ReadonlyArray<[string, string]> = [
-  ["Spawn the current file", "F5"],
+  ["Run the current file", "F5"],
   ["Command palette", "Mod-Shift-P"],
   ["Open a file", "Mod-O"],
   ["Send input to a running program", "Mod-I"],
@@ -68,19 +68,19 @@ export default function Welcome() {
         <p>A Python IDE for machine learning work.</p>
         <div class="sp-welcome__actions">
           <button class="sp-button" onClick={() => void runCommand("brood.open")}>
-            Open a brood
+            Open a project
           </button>
           <button class="sp-button is-secondary" onClick={() => void runCommand("file.open")}>
             Open a file
           </button>
         </div>
         <p class="sp-welcome-hint">
-          A brood is a folder. Everything you spawn runs from it. You can also drop a folder or file
-          onto this window.
+          A project is a folder. Files run from it. You can also drop a folder or file onto this
+          window.
         </p>
       </div>
       <div class="sp-welcome__lists">
-        <RecentList title="Recent broods" items={recentBroods()} onPick={openBrood} />
+        <RecentList title="Recent projects" items={recentBroods()} onPick={openBrood} />
         <RecentList
           title="Recent files"
           items={recentFiles()}

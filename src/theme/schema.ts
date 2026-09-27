@@ -71,13 +71,32 @@ export const Colors = z.object({
   matchingBracket: color,
   success: color,
   warning: color,
-  /** Errors and tracebacks. */
+  /**
+   * Errors and tracebacks. Theme files write this as `error`; the internal
+   * key (and the CSS variable `--sp-color-croak`) keep the historical name.
+   */
   croak: color,
   info: color,
   /** Child-process stderr that is not a traceback (tqdm lives here). */
   stderr: color,
 });
 export type Colors = z.infer<typeof Colors>;
+
+/**
+ * What a theme file may contain for `colors`: `error` is the canonical name
+ * for the error colour, `croak` is accepted as a deprecated alias so older
+ * user themes keep loading. Normalised to the internal `croak` key.
+ */
+export const ColorsInput = Colors.omit({ croak: true })
+  .extend({ error: color.optional(), croak: color.optional() })
+  .transform(({ error, croak, ...rest }, ctx) => {
+    const value = error ?? croak;
+    if (value === undefined) {
+      ctx.addIssue({ code: "custom", path: ["error"], message: "Required" });
+      return z.NEVER;
+    }
+    return { ...rest, croak: value };
+  });
 
 export const Fonts = z.object({
   ui: z.string().min(1),
@@ -128,7 +147,7 @@ export const ThemeFile = z.object({
   name: z.string().min(1),
   appearance: z.enum(["dark", "light"]),
   author: z.string().optional(),
-  colors: Colors,
+  colors: ColorsInput,
   fonts: Fonts,
   spacing: Spacing.prefault({}),
   radius: Radius.prefault({}),

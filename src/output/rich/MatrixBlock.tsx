@@ -2,7 +2,7 @@
  * A confusion matrix: rows are the true class, columns the predicted one.
  * Cells carry a single-hue ramp from the plot background to the first series
  * colour, the diagonal is outlined, margins show totals, and a per-class
- * table sits beneath. When the pool found the label vectors, clicking a cell
+ * table sits beneath. When the console found the label vectors, clicking a cell
  * lists which samples landed there, ready to paste as an index list.
  */
 import { createMemo, createSignal, For, Show } from "solid-js";

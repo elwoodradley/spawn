@@ -42,21 +42,21 @@ export function registerSpawnCommands(): () => void {
   const dispose = registerCommands([
     {
       id: "spawn.run",
-      title: "Spawn: run the current file",
+      title: "Run File",
       keys: "F5",
       enabled: () => isPython(activeFilePath()) && spawnStatus() === "idle",
       run: runActive,
     },
     {
       id: "spawn.runAlt",
-      title: "Spawn: run the current file (alternate key)",
+      title: "Run File (alternate key)",
       keys: "Mod-Enter",
       enabled: () => isPython(activeFilePath()) && spawnStatus() === "idle",
       run: runActive,
     },
     {
       id: "spawn.stop",
-      title: "Spawn: stop",
+      title: "Stop",
       keys: "Shift-F5",
       enabled: () => spawnStatus() === "running",
       run: stopSpawn,
@@ -74,12 +74,12 @@ export function registerSpawnCommands(): () => void {
     },
     {
       id: "metamorphosis.open",
-      title: "Metamorphosis: choose an interpreter",
+      title: "Select Python Interpreter",
       run: () => toggleMetamorphosis(),
     },
     {
       id: "metamorphosis.refresh",
-      title: "Metamorphosis: rediscover interpreters",
+      title: "Refresh interpreters",
       run: () => refreshInterpreters(brood()),
     },
     {

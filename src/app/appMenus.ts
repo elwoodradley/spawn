@@ -56,7 +56,7 @@ export function appMenus(): Menu[] {
       items: [
         cmd("file.new"),
         cmd("file.open", { label: "Open file…" }),
-        cmd("brood.open", { label: "Open brood…" }),
+        cmd("brood.open", { label: "Open project…" }),
         { kind: "submenu", label: "Open recent", items: recentEntries() },
         cmd("brood.quickOpen", { label: "Go to file…" }),
         separator,
@@ -86,7 +86,7 @@ export function appMenus(): Menu[] {
       ],
     },
     {
-      label: "Spawn",
+      label: "Run",
       items: [
         cmd("spawn.run"),
         cmd("spawn.stop"),
@@ -102,7 +102,7 @@ export function appMenus(): Menu[] {
       ],
     },
     {
-      label: "Pool",
+      label: "Console",
       items: [
         cmd("pool.spawnCell"),
         cmd("pool.spawnCellStay"),
@@ -111,9 +111,9 @@ export function appMenus(): Menu[] {
         cmd("pool.spawnFile"),
         separator,
         cmd("pool.interrupt", { label: "Interrupt" }),
-        cmd("pool.restart", { label: "Restart pool" }),
+        cmd("pool.restart", { label: "Restart Interactive Console" }),
         separator,
-        cmd("pool.toggleVariables", { label: "Variables pane" }),
+        cmd("pool.toggleVariables", { label: "Variables" }),
       ],
     },
     {

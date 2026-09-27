@@ -1,6 +1,6 @@
 """Build a small DataFrame and print it, if pandas is available.
 
-Under F5 this prints the repr. Spawn it into the pool (Ctrl+Shift+F5) and
+Under F5 this prints the repr. Run it in the Interactive Console (Ctrl+Shift+F5) and
 the bare `df` at the end opens a real scrollable table with dtypes, shape,
 nulls and stats.
 """
@@ -12,7 +12,7 @@ try:
     import pandas as pd
 except ImportError:
     print("pandas is not installed in this interpreter.")
-    print("From the brood folder, in a terminal:  uv add pandas")
+    print("From the project folder, in a terminal:  uv add pandas")
     sys.exit(0)
 
 random.seed(1)
@@ -32,4 +32,4 @@ print(df.dtypes)
 print(df.describe())
 print(df.tail())
 
-df  # bare value: the pool renders it as a table
+df  # bare value: the Interactive Console renders it as a table

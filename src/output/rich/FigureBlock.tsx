@@ -1,5 +1,5 @@
 /**
- * A rendered figure from the pool. PNG via a data URL, SVG inline. Fits the
+ * A rendered figure from the Interactive Console. PNG via a data URL, SVG inline. Fits the
  * panel width; click toggles natural size. Right-click copies or saves it.
  */
 import { createSignal, Show } from "solid-js";
@@ -47,7 +47,7 @@ export default function FigureBlock(props: { payload: Figure }) {
       <Show
         when={props.payload.format === "png"}
         fallback={
-          // Trusted: SVG produced by the user's own matplotlib in the pool.
+          // Trusted: SVG produced by the user's own matplotlib in the Interactive Console.
           <div class="sp-rich__svg" innerHTML={props.payload.data} />
         }
       >

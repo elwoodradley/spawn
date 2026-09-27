@@ -1,5 +1,5 @@
 /**
- * The Pool tab of the sidebar: every variable in the pool with a one-line
+ * The Variables tab of the sidebar: every variable in the Interactive Console with a one-line
  * summary. Click one to inspect it into the console as a rich block.
  */
 import { createMemo, For, Show } from "solid-js";
@@ -45,11 +45,11 @@ export default function VariablesPane() {
   const cold = () => poolStatus() === "cold";
 
   return (
-    <section class="sp-vars" aria-label="Pool variables">
+    <section class="sp-vars" aria-label="Variables">
       <header class="sp-vars__header">
-        <span class="sp-vars__title">POOL</span>
+        <span class="sp-vars__title">VARIABLES</span>
         <span class="sp-vars__status" classList={{ [`is-${poolStatus()}`]: true }}>
-          {poolStatus()}
+          {poolStatus() === "croaked" ? "error" : poolStatus()}
         </span>
         <span class="sp-vars__spacer" />
         <button
@@ -62,7 +62,7 @@ export default function VariablesPane() {
         </button>
         <button
           class="sp-vars__btn"
-          title="Clear the pool (restart the kernel)"
+          title="Restart console (all variables are lost)"
           disabled={cold()}
           onClick={() => void restart()}
         >
@@ -87,9 +87,9 @@ export default function VariablesPane() {
         fallback={
           <p class="sp-vars__empty">
             {cold()
-              ? "The pool is cold. Spawn a cell or selection into it to start."
+              ? "The Interactive Console is not running. Run a cell or selection to start it."
               : variables.list.length === 0
-                ? "Nothing in the pool yet."
+                ? "No variables yet."
                 : "No variable matches."}
           </p>
         }

@@ -53,6 +53,23 @@ describe("parseTheme", () => {
     }
   });
 
+  it("reads the error colour from `error`, or from the deprecated `croak` alias", () => {
+    // A theme *file* writes `error`; the parsed theme keeps the internal `croak` key.
+    const { croak, ...rest } = pond.colors;
+    const file = { ...pond, colors: { ...rest, error: croak } };
+    const viaError = parseTheme(file);
+    expect(viaError.ok).toBe(true);
+    if (viaError.ok) expect(viaError.theme.colors.croak).toBe(croak);
+
+    const viaAlias = parseTheme({ ...pond, colors: { ...rest, croak } });
+    expect(viaAlias.ok).toBe(true);
+    if (viaAlias.ok) expect(viaAlias.theme.colors.croak).toBe(croak);
+
+    const missing = parseTheme({ ...pond, colors: rest });
+    expect(missing.ok).toBe(false);
+    if (!missing.ok) expect(missing.error).toContain("colors.error");
+  });
+
   it("rejects an unknown syntax key", () => {
     const bad = structuredClone(pond) as { syntax: Record<string, unknown> };
     bad.syntax.frog = { color: "#0f0" };

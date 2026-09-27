@@ -1,4 +1,4 @@
-/** What happens around a spawn. */
+/** What happens around a run. */
 import { settings, updateSettings } from "../../app/settings";
 import { Field, NumberInput, Toggle } from "./Field";
 
@@ -9,25 +9,25 @@ export default function SpawnPane() {
 
   return (
     <div class="sp-settings-pane">
-      <h2>Spawn</h2>
+      <h2>Run</h2>
       <Toggle
-        label="Save all files before spawning"
+        label="Save all files before running"
         hint="So the file on disk is the one you see."
         checked={spawn().saveBeforeSpawn}
         onChange={(v) => set({ saveBeforeSpawn: v })}
       />
       <Toggle
-        label="Clear the output on each spawn"
+        label="Clear the output on each run"
         checked={spawn().clearOutputOnSpawn}
         onChange={(v) => set({ clearOutputOnSpawn: v })}
       />
       <Toggle
-        label="Switch to the Run tab when metrics appear"
+        label="Switch to the Metrics tab when metrics appear"
         checked={spawn().autoShowRunTab}
         onChange={(v) => set({ autoShowRunTab: v })}
       />
       <Toggle
-        label="Notify when a spawn finishes while SPAWN is in the background"
+        label="Notify when a run finishes while SPAWN is in the background"
         checked={spawn().notifyWhenDone}
         onChange={(v) => set({ notifyWhenDone: v })}
       />

@@ -19,7 +19,7 @@ export type SettingsSection = "appearance" | "editor" | "spawn" | "patterns" | "
 const SECTIONS: ReadonlyArray<{ id: SettingsSection; label: string }> = [
   { id: "appearance", label: "Appearance" },
   { id: "editor", label: "Editor" },
-  { id: "spawn", label: "Spawn" },
+  { id: "spawn", label: "Run" },
   { id: "patterns", label: "Run patterns" },
   { id: "shortcuts", label: "Shortcuts" },
 ];

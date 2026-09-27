@@ -1,6 +1,6 @@
 /**
  * Cell chrome in the editor: marker lines get a full-width tint, a gutter
- * mark and a "spawn" button at their end; the cell the cursor is in gets a
+ * mark and a "run" button at their end; the cell the cursor is in gets a
  * faint left border. Plus the editor-level keys that spawn cells, bound at
  * high precedence because CodeMirror otherwise owns Shift-Enter.
  */
@@ -40,8 +40,8 @@ class SpawnButton extends WidgetType {
     const button = document.createElement("button");
     button.className = "sp-cell-spawn";
     button.type = "button";
-    button.title = "Spawn this cell into the pool (Shift+Enter)";
-    button.textContent = "▶ spawn";
+    button.title = "Run this cell in the Interactive Console (Shift+Enter)";
+    button.textContent = "▶ run";
     button.addEventListener("mousedown", (event) => event.preventDefault());
     button.addEventListener("click", (event) => {
       event.preventDefault();

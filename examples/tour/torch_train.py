@@ -1,7 +1,7 @@
 """Train a tiny MLP with PyTorch, if it is installed in this interpreter.
 
 Watch the status bar: SPAWN shows the torch version and which device it will
-use. The Run tab plots the loss as it prints. Without torch this explains how
+use. The Metrics tab plots the loss as it prints. Without torch this explains how
 to add it and exits cleanly.
 """
 
@@ -12,8 +12,8 @@ try:
     import torch
 except ImportError:
     print("torch is not installed in this interpreter.")
-    print("From the brood folder, in a terminal:  uv add torch")
-    print("Then pick the brood's .venv in metamorphosis (status bar).")
+    print("From the project folder, in a terminal:  uv add torch")
+    print("Then pick the project's .venv via Select Python Interpreter (status bar).")
     sys.exit(0)
 
 device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"

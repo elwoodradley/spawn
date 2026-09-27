@@ -1,6 +1,7 @@
 /**
- * The left sidebar: a small tab strip over the brood tree and the pool's
- * variables pane. Which tab is showing is part of the clutch.
+ * The left sidebar: a small tab strip over the project tree and the
+ * Interactive Console's variables pane. Which tab is showing is part of the
+ * saved session.
  */
 import { Show } from "solid-js";
 
@@ -10,8 +11,8 @@ import VariablesPane from "../pool/VariablesPane";
 import "./Sidebar.css";
 
 const TABS: Array<{ id: SidebarTab; label: string; title: string }> = [
-  { id: "brood", label: "Brood", title: "Files in the open brood" },
-  { id: "pool", label: "Pool", title: "Variables living in the pool (Ctrl+Shift+V)" },
+  { id: "brood", label: "Project", title: "Files in the open project" },
+  { id: "pool", label: "Variables", title: "Variables in the Interactive Console (Ctrl+Shift+V)" },
 ];
 
 export default function Sidebar() {

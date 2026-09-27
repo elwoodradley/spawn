@@ -57,21 +57,23 @@ check, cargo test. Individual pieces: `npm run lint`, `npm test`,
 The docs use plain commands. No bash heredocs anywhere, because the maintainer
 lives in fish.
 
-## Vocabulary
+## Terminology
 
-Use these words in the UI, code, docs and commit messages.
+User-facing text uses standard Python and IDE terms, the ones a student meets
+in course material, documentation and other editors: **Project** (the folder
+SPAWN has open), **Session** (what is restored on launch), **Python
+Interpreter** / **Select Python Interpreter**, **Interactive Console** (the
+persistent kernel), **Run** / **Run File** / **Run Cell** / **Run Selection**,
+**Error** / **Traceback**, **Variables** pane, **Metrics** tab. Do not invent
+names for things that already have one. The app itself is called SPAWN; its
+personality comes from design, not vocabulary.
 
-| Term          | Means                                                             |
-| ------------- | ----------------------------------------------------------------- |
-| spawn         | a single run of a file or selection (verb and noun)               |
-| pool          | the persistent Python kernel that holds state between spawns      |
-| clutch        | a saved session: open files, pool state, layout, scroll positions |
-| brood         | a project or workspace (a folder SPAWN has opened)                |
-| metamorphosis | the environment/interpreter switcher                              |
-| croak         | an error or traceback                                             |
-
-Do not over-extend it. If a concept has no natural toad word, use the plain
-one. "Settings" is settings, "tab" is tab, "theme" is theme.
+Some internal identifiers still carry older names from before this rule:
+`src/brood/` (project tree), `src/pool/` (Interactive Console), `src/spawn/`
+(run controller), `clutch.ts` (session), `croak.ts` (traceback parsing),
+command ids such as `brood.open`, and the CSS variable `--sp-color-croak`.
+Leave them until a deliberate migration; never let them leak into UI strings.
+New code uses conventional names.
 
 ## Conventions
 
@@ -83,12 +85,15 @@ generated from them by git-cliff, so the subject line is user-facing text.
 Types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `chore`, `ci`,
 `build`, `style`.
 
-Scopes: `spawn`, `pool`, `brood`, `clutch`, `theme`, `editor`, `output`,
-`env`, `rust`, `ci`, `docs`.
+Scopes: `run`, `console`, `project`, `session`, `editor`, `output`, `env`,
+`lsp`, `tests`, `git`, `viewer`, `theme`, `rust`, `ci`, `docs`. Older scopes
+(`spawn`, `pool`, `brood`, `clutch`) remain valid for history and for code
+that still lives in those modules.
 
 ```
 feat(output): link traceback frames to file and line
 fix(rust): keep incomplete UTF-8 tail between pipe reads
+feat(console): render polars DataFrames as tables
 ```
 
 Never hand-edit `CHANGELOG.md`. Run `npm run changelog` (needs

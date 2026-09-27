@@ -1,7 +1,7 @@
 /**
  * A real table for a DataFrame page: sticky header with dtype and null
  * count (stats on hover), an index column, windowed rows so 100k rows cost
- * nothing, more rows fetched from the pool as you scroll, and client-side
+ * nothing, more rows fetched from the Interactive Console as you scroll, and client-side
  * sort over what is loaded.
  */
 import { createMemo, createSignal, For, Show } from "solid-js";

@@ -1,4 +1,4 @@
-"""Shape-aware rendering in the pool. Spawn each cell with Shift+Enter.
+"""Shape-aware rendering in the Interactive Console. Run each cell with Shift+Enter.
 
 SPAWN looks at the shape and type of a bare value and shows the right thing
 without any plot code. Needs numpy in the interpreter; nothing else.

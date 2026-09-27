@@ -135,7 +135,7 @@ export default function App() {
           <div class="sp-chrome sp-no-print">
             <Splitter
               direction="vertical"
-              label="Resize the brood sidebar"
+              label="Resize the sidebar"
               onDrag={(delta) =>
                 setSidebarWidth(
                   clampSidebar(sidebarWidth() + delta, (main?.clientWidth ?? 1200) * 0.6),
@@ -195,7 +195,7 @@ export default function App() {
       </div>
       <Show when={dropHover()}>
         <div class="sp-drop-overlay sp-no-print" aria-hidden="true">
-          Drop a folder to open it as a brood, or files to open them
+          Drop a folder to open it as a project, or files to open them
         </div>
       </Show>
       <pre id={PRINT_HOST_ID} class="sp-print-only" />

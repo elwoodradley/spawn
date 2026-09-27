@@ -14,9 +14,7 @@ export async function copyOutput(): Promise<void> {
 
 export async function saveOutput(): Promise<void> {
   const ran = spawnCommand();
-  const stem = ran
-    ? baseName(ran.args[ran.args.length - 1] ?? "spawn").replace(/\.py$/, "")
-    : "spawn";
+  const stem = ran ? baseName(ran.args[ran.args.length - 1] ?? "run").replace(/\.py$/, "") : "run";
   const path = await pickSavePath(`${stem}-output.txt`);
   if (!path) return;
   try {

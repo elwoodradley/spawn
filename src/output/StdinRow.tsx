@@ -43,7 +43,7 @@ export default function StdinRow() {
         autocomplete="off"
         disabled={!running()}
         placeholder={
-          running() ? "stdin · Enter to send, Ctrl+D for EOF" : "spawn something to send it input"
+          running() ? "stdin · Enter to send, Ctrl+D for EOF" : "run something to send it input"
         }
         value={value()}
         onInput={(event) => setValue(event.currentTarget.value)}

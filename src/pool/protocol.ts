@@ -1,5 +1,5 @@
 /**
- * What the pool (the persistent kernel) can say to the frontend, and what the
+ * What the Interactive Console (the persistent kernel, internally "pool") can say to the frontend, and what the
  * frontend can ask. This is SPAWN's own display schema, independent of how
  * the kernel is transported: every rich renderer consumes these payloads and
  * nothing else, so the kernel implementation can change underneath.
@@ -58,7 +58,7 @@ export type DisplayPayload =
     }
   /**
    * A square non-negative integer matrix: a confusion matrix. Rows are the
-   * true class, columns the predicted one. `samples` says the pool found the
+   * true class, columns the predicted one. `samples` says the console found the
    * label vectors it came from, so `matrixCells` can list the samples per cell.
    */
   | {
@@ -95,10 +95,10 @@ export type DisplayPayload =
     }
   /** Trusted HTML from a library's `_repr_html_`, rendered sandboxed. */
   | { kind: "html"; html: string }
-  /** A traceback from the pool; frames link like croaks in the console. */
+  /** A traceback from the Interactive Console; frames link like errors in the output. */
   | { kind: "error"; type: string; message: string; traceback: string };
 
-/** Something a spawn into the pool produced, in order. */
+/** Something a run in the Interactive Console produced, in order. */
 export interface PoolEvent {
   /** Which exec produced it. */
   exec: number;
@@ -111,7 +111,7 @@ export interface ExecRequest {
   file: string | null;
   /** 1-based first line of `code` within `file`, for traceback line numbers. */
   startLine: number;
-  /** What the user spawned: the console labels the block with it. */
+  /** What the user ran: the output labels the block with it. */
   scope: "cell" | "selection" | "file" | "expression";
 }
 

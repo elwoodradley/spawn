@@ -35,18 +35,18 @@ interface Piece {
   scope: ExecRequest["scope"];
 }
 
-/** Send one piece of the active file to the pool, with console bookkeeping. */
+/** Send one piece of the active file to the Interactive Console, with output bookkeeping. */
 async function spawnPiece(piece: Piece): Promise<boolean> {
   const file = activeFilePath();
   if (piece.code.trim().length === 0) {
-    toast("Nothing to spawn: the cell is empty", { kind: "info" });
+    toast("Nothing to run: the cell is empty", { kind: "info" });
     return false;
   }
   if (settings().spawn.saveBeforeSpawn) await saveAllDirty();
   setOutputVisible(true);
   showOutputTab("output");
   const where = file ? `${baseName(file)}:${piece.startLine}–${piece.endLine}` : "scratch";
-  output.system(`spawn ${piece.scope} · ${where}`);
+  output.system(`run ${piece.scope} · ${where}`);
   const result = await pool().exec({
     code: piece.code,
     file,
@@ -147,60 +147,60 @@ export function registerPoolCommands(): () => void {
   const dispose = registerCommands([
     {
       id: "pool.spawnCell",
-      title: "Spawn cell into pool and advance",
+      title: "Run Cell",
       keys: "Shift-Enter",
       enabled: hasEditor,
       run: () => spawnCell(true),
     },
     {
       id: "pool.spawnCellStay",
-      title: "Spawn cell into pool",
+      title: "Run Cell (stay)",
       keys: "Mod-Shift-Enter",
       enabled: hasEditor,
       run: () => spawnCell(false),
     },
     {
       id: "pool.spawnSelection",
-      title: "Spawn selection or line into pool",
+      title: "Run Selection",
       keys: "Alt-Enter",
       enabled: hasEditor,
       run: spawnSelection,
     },
     {
       id: "pool.spawnAbove",
-      title: "Spawn cells above and current into pool",
+      title: "Run All Cells Above",
       enabled: hasEditor,
       run: spawnAbove,
     },
     {
       id: "pool.spawnFile",
-      title: "Spawn whole file into pool",
+      title: "Run File in Interactive Console",
       keys: "Mod-Shift-F5",
       enabled: hasEditor,
       run: spawnWholeFile,
     },
     {
       id: "pool.interrupt",
-      title: "Interrupt the pool",
+      title: "Interrupt Interactive Console",
       keys: "Mod-Shift-.",
       enabled: poolWarm,
       run: async () => {
         await pool().interrupt();
-        output.system("pool interrupted");
+        output.system("console interrupted");
       },
     },
     {
       id: "pool.restart",
-      title: "Restart the pool",
+      title: "Restart Interactive Console",
       run: async () => {
         await pool().restart();
-        output.system("pool restarted: all variables are gone");
+        output.system("console restarted: all variables are gone");
         await refreshVariables();
       },
     },
     {
       id: "pool.toggleVariables",
-      title: "Toggle the pool variables pane",
+      title: "Toggle Variables",
       keys: "Mod-Shift-V",
       run: toggleVariables,
     },

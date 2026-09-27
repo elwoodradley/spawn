@@ -1,6 +1,6 @@
-"""A run that overfits, with the traps a real log has. Spawn it (F5).
+"""A run that overfits, with the traps a real log has. Run it (F5).
 
-The Run tab should show: `loss` and `val_loss` on one chart with the gap
+The Metrics tab should show: `loss` and `val_loss` on one chart with the gap
 shaded as val climbs after epoch 13; the epoch-1 val spike kept off-scale so
 the U stays readable; and the one-off prints (`hidden=64`, `accuracy 0.923`)
 listed as values, not charted.

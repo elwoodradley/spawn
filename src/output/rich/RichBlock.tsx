@@ -1,4 +1,4 @@
-/** Dispatch a pool payload to its renderer. Text is a plain mono line. */
+/** Dispatch an Interactive Console payload to its renderer. Text is a plain mono line. */
 import { Match, Switch } from "solid-js";
 
 import type { DisplayPayload } from "../../pool/protocol";

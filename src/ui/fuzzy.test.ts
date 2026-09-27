@@ -20,10 +20,10 @@ describe("fuzzyScore", () => {
 describe("rankCommands", () => {
   it("orders by score then title", () => {
     const ranked = rankCommands(
-      [cmd("Theme: Bog"), cmd("Open a brood"), cmd("Save"), cmd("Toggle sidebar")],
+      [cmd("Theme: Bog"), cmd("Open a project"), cmd("Save"), cmd("Toggle sidebar")],
       "o",
     );
-    expect(ranked.map((c) => c.title)).toEqual(["Open a brood", "Toggle sidebar", "Theme: Bog"]);
+    expect(ranked.map((c) => c.title)).toEqual(["Open a project", "Toggle sidebar", "Theme: Bog"]);
   });
 
   it("drops non-matches", () => {

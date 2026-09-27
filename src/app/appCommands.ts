@@ -76,7 +76,7 @@ const hasFile = () => activeFilePath() !== null;
 const shellCommands: Command[] = [
   {
     id: "brood.open",
-    title: "Open a brood",
+    title: "Open project…",
     keys: "Mod-Shift-O",
     run: async () => {
       const picked = await pickFolder(brood() ?? undefined);
@@ -94,7 +94,7 @@ const shellCommands: Command[] = [
       if (root) beginNewDir(root);
     },
   },
-  { id: "brood.refresh", title: "Refresh brood tree", enabled: hasBrood, run: refreshTree },
+  { id: "brood.refresh", title: "Refresh project tree", enabled: hasBrood, run: refreshTree },
   {
     id: "file.save",
     title: "Save file",
@@ -121,7 +121,7 @@ const shellCommands: Command[] = [
   { id: "palette.open", title: "Command palette", keys: "Mod-Shift-P", run: openPalette },
   {
     id: "view.toggleSidebar",
-    title: "Toggle brood sidebar",
+    title: "Toggle sidebar",
     keys: "Mod-B",
     run: () => setSidebarVisible(!sidebarVisible()),
   },

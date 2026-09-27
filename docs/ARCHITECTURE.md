@@ -24,7 +24,7 @@ Rust does only what a webview cannot: spawn processes, touch the filesystem
 outside the sandbox, and hold OS resources. Business logic (which interpreter
 to use, how to parse a traceback, what a theme means) is TypeScript, because
 that is where most contributors can reach it and where it can be unit-tested
-without a window. The pool (Phase 2) and the language-server transport (Phase 3) reuse the same process command with different arguments; they add no new
+without a window. The Interactive Console (Phase 2) and the language-server transport (Phase 3) reuse the same process command with different arguments; they add no new
 Rust concepts.
 
 ## Module map
@@ -33,18 +33,17 @@ Rust concepts.
 src/                         TypeScript, SolidJS
   ipc/        the ONLY place that imports @tauri-apps/*; typed wrappers
   theme/      schema -> tokens -> apply; CodeMirror theme; theme store
-  app/        state (brood, tabs, active file), command registry,
-              keybindings, clutch (session persistence)
+  app/        state (project root, tabs, active file), command registry,
+              keybindings, clutch.ts (session persistence)
   editor/     CodeMirror setup, document registry, dirty tracking, save
-  brood/      folder tree model, file open, watcher
+  brood/      project tree model, file open, watcher
   viewer/     read-only tabs for .docx handouts (mammoth → sanitized HTML)
-  pool/       protocol (display payloads), live client, cells commands,
-              variables pane
-  spawn/      spawn controller, output model, croak (traceback) parser,
-              metrics parser for the run panel (loss curves, tqdm, epochs)
-  output/     output console, run panel with live charts (Phase 2 adds
-              inline plots and tables here)
-  env/        metamorphosis: interpreter discovery policy and selection
+  pool/       Interactive Console: protocol (display payloads), live
+              client, cell commands, Variables pane
+  spawn/      run controller, output model, croak.ts (traceback parser),
+              metrics parser for the Metrics panel (loss curves, tqdm, epochs)
+  output/     output console, Metrics panel with live charts, rich blocks
+  env/        Python interpreter discovery policy and selection
   ui/         menu bar, context menu, dialogs, tabs, splitter, status bar,
               palette
   styles/     base.css; reads --sp-* tokens only
@@ -52,12 +51,27 @@ themes/       shipped theme files (data, validated by tests)
 src-tauri/src/
   lib.rs      builder, plugins, handler list, Linux render workaround
   error.rs    one Error type, serialised as a message string
-  proc/       spawn a child, stream output over a Channel, stdin, kill
-  pool/       pool.py (the kernel, stdlib only), socket host, interrupt
+  proc/       start a child, stream output over a Channel, stdin, kill
+  pool/       pool.py (the Interactive Console kernel, stdlib only), socket
+              host, interrupt
   env/        find interpreters, probe one for version and prefix; ml.rs
               probes numpy/pandas/torch/jax + device, reads system memory
 src-tauri/capabilities/   what the webview may call (see Security)
 ```
+
+### Naming
+
+User-facing text uses standard terms; several internal names predate that
+rule and stay until a deliberate migration:
+
+| Internal name                     | What the UI calls it                |
+| --------------------------------- | ----------------------------------- |
+| `spawn/`, `spawn.*` commands      | Run                                 |
+| `pool/`, `pool.py`, `pool.*`      | Interactive Console                 |
+| `brood/`, `brood.*` commands      | Project                             |
+| `clutch.ts`, the `clutch` setting | Session                             |
+| `croak.ts`, `--sp-color-croak`    | traceback parsing, the error colour |
+| `env/Metamorphosis.tsx`           | Select Python Interpreter           |
 
 ### The dependency rule
 
@@ -107,11 +121,11 @@ behind the IDE.
 
 ### `env`: which Python
 
-`env_discover(brood)` returns candidates most-specific first: `<brood>/.venv`,
+`env_discover(project)` returns candidates most-specific first: `<project>/.venv`,
 then whatever `uv python find` says in that folder, then `python3` and
 `python` on PATH. `env_probe(python)` runs a one-line script that prints
 executable, version, prefix and platform as JSON. `env_uv_path()` says whether
-uv is installed. Policy (which one to select, persistence per brood) is in
+uv is installed. Policy (which one to select, persistence per project) is in
 `src/env`.
 
 ### `lib.rs`
@@ -166,13 +180,14 @@ Compartment. Nothing re-renders.
 
 ### `app`
 
-`state.ts` holds the brood root, the open tabs and the active file, and
+`state.ts` holds the project root, the open tabs and the active file, and
 exposes `openFile(path, line?)` which the output panel uses for traceback
 links. `commands.ts` is the registry: every user action has a stable id, a
 palette title, an optional chord and a `run`. `keybindings.ts` parses chords
 (`Mod-S`, `Shift-F5`) and dispatches window keydown events to commands,
-skipping events the editor already handled. `clutch.ts` persists the last
-brood, open tabs, active file and layout so the next launch restores them.
+skipping events the editor already handled. `clutch.ts` persists the session:
+the last project, open tabs, active file and layout, so the next launch
+restores them.
 
 ### `editor`
 
@@ -181,26 +196,27 @@ last-saved text for dirty tracking, and exposes `saveAllDirty()`,
 `isDirty(path)` and a `cursorPosition` signal. The editor component mounts a
 single `EditorView` and swaps states when the active tab changes.
 
-### `brood`
+### `brood` (the project tree)
 
 A lazily-expanded tree model over `listDir`, refreshed from the plugin-fs
 recursive watcher, and the tree component.
 
-### `spawn`, `output`, `env`
+### `spawn` (Run), `output`, `env`
 
 `spawn/controller.ts` exposes `spawnStatus()`, `spawnFile(path)` and
-`stopSpawn()`. `spawn/output.ts` is the pure output model. `spawn/croak.ts`
-parses Python tracebacks into frames. `output/OutputPanel.tsx` renders them.
-`env/store.ts` exposes `selectedInterpreter()` and `refreshInterpreters(brood)`.
+`stopSpawn()`: the Run controller. `spawn/output.ts` is the pure output model.
+`spawn/croak.ts` parses Python tracebacks into frames. `output/OutputPanel.tsx`
+renders them. `env/store.ts` exposes `selectedInterpreter()` and
+`refreshInterpreters(project)`.
 
-## A spawn, end to end
+## A run, end to end
 
-1. The user presses F5 or the spawn button. Both call
+1. The user presses F5 or the Run button. Both call
    `runCommand("spawn.run")`.
 2. The command calls `spawnFile(activeFilePath())`.
 3. The controller calls `saveAllDirty()` so the file on disk matches the
    editor, resolves `selectedInterpreter()`, and builds the request:
-   program = interpreter, args = `["-u", path]`, cwd = brood root (or the
+   program = interpreter, args = `["-u", path]`, cwd = project root (or the
    file's folder), env includes `PYTHONUNBUFFERED=1` and
    `PYTHONIOENCODING=utf-8`.
 4. `spawnProcess` creates a `Channel`, invokes `proc_spawn`, and returns a
@@ -212,7 +228,7 @@ parses Python tracebacks into frames. `output/OutputPanel.tsx` renders them.
    (tqdm redraws a line in place), strips ANSI colour sequences, keeps a
    bounded ring of lines, and batches updates per animation frame so a
    thousand lines a second does not lock the UI.
-7. The panel renders lines by stream (stdout, stderr, stdin echo, croak).
+7. The panel renders lines by stream (stdout, stderr, stdin echo, error).
    Traceback frames become links that call `openFile(path, line)`.
 8. On `Exit` the header shows the code and elapsed time; the status returns
    to idle. Stop calls `handle.kill()`.
@@ -236,7 +252,7 @@ Rust side, in the relevant module:
 
 ```rust
 #[tauri::command]
-pub async fn brood_stat(path: String) -> Result<Stat> { ... }
+pub async fn project_stat(path: String) -> Result<Stat> { ... }
 ```
 
 Add it to `tauri::generate_handler![...]` in `lib.rs`. If it uses a plugin
@@ -246,8 +262,8 @@ that needs a permission, add the permission to
 TypeScript side, in `src/ipc/<concern>.ts`:
 
 ```ts
-export function broodStat(path: string): Promise<Stat> {
-  return invoke<Stat>("brood_stat", { path });
+export function projectStat(path: string): Promise<Stat> {
+  return invoke<Stat>("project_stat", { path });
 }
 ```
 
@@ -263,15 +279,15 @@ scope (`**`) because an IDE opens whatever folder the user picks. The boundary
 that matters is different: the webview never loads remote content, so there
 is no untrusted code inside the sandbox to abuse those permissions.
 
-## The pool
+## The Interactive Console (`pool/`)
 
-The pool is SPAWN's persistent kernel: one Python process per brood that
-keeps state between spawns, so a dataset loaded once stays loaded while you
-iterate on the model. It is deliberately not Jupyter.
+The Interactive Console is SPAWN's persistent kernel: one Python process per
+project that keeps state between runs, so a dataset loaded once stays loaded
+while you iterate on the model. It is deliberately not Jupyter.
 
 **Kernel.** `src-tauri/src/pool/pool.py` is a single stdlib-only script,
 embedded in the binary with `include_str!` and written to the app cache dir
-at first use. It runs under whatever interpreter metamorphosis selected, so a
+at first use. It runs under the selected Python interpreter, so a
 bare `.venv` works with nothing installed. It executes code in one namespace
 on its main thread, echoes a bare trailing expression the way IPython does
 (triple-quoted docstrings excepted), and turns values into the payloads in
@@ -286,7 +302,7 @@ and tracebacks with line numbers offset to the real file.
 generates a random token, and launches the kernel with both in its
 environment. It accepts exactly one connection and drops it unless the first
 line is the token; then the listener closes. Requests and events are JSON
-lines. The kernel's own stdout and stderr are the same pipes a plain spawn
+lines. The kernel's own stdout and stderr are the same pipes a plain run
 uses, so prints stream to the console like before. Rust never interprets the
 protocol; it is a pipe with an id.
 
@@ -324,14 +340,14 @@ shutdown.
 
 ## Roadmap and honest risks
 
-**Phase 1** (now): window, brood tree, tabs, editor, spawn with streamed
+**Phase 1** (done): window, project tree, tabs, editor, Run with streamed
 output and stdin, theming. Usable for coursework.
 
-**Phase 2** (in progress): the pool, cells and selections, inline plots,
-DataFrame viewer and array cards are in. Still to come: array hover in the
-editor, and the shape-aware renderers (confusion matrix, image grids, module
-trees, scatter, attention, histograms, classification reports) on top of the
-pool, plus train-vs-val overlay and run comparison in the run panel.
+**Phase 2** (in progress): the Interactive Console, cells and selections,
+inline plots, DataFrame viewer, array cards, editor hover, confusion matrix,
+image grids, dict tables, train-vs-val overlay and run comparison in the
+Metrics panel are in. Still to come on top of the console: module trees,
+scatter, attention, histograms. See `docs/ROADMAP.md` for Phases 3 to 6.
 
 **Phase 3**: pyright over LSP. `@codemirror/lsp-client` (an official
 CodeMirror package) owns document sync, position mapping and request
@@ -350,11 +366,11 @@ Risks to keep in view:
   must not lock the panel. The output model is bounded and batched from day
   one; keep it that way.
 - **The tensor hover sees live state only.** It evaluates the hovered name in
-  the pool, so it works for variables that have already run, never for code
+  the Interactive Console, so it works for variables that have already run, never for code
   that has not executed. The UI must make that obvious.
 - **Plotly is heavy.** Its JavaScript bundle is several megabytes. Bundling it
   breaks the small-binary goal; loading it from the user's Python environment
   at runtime is the likely answer. Decide in Phase 2.
 - **Console reliability.** Users of other tools report kernels that "stop
-  working until restart". The pool needs an explicit restart and a visible
+  working until restart". The console needs an explicit restart and a visible
   health indicator, not just a hope.

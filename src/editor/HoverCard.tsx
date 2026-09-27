@@ -1,7 +1,7 @@
 /**
  * The compact card a hover shows. Deliberately not the rich blocks from the
  * output panel: a tooltip must answer "what is this" at a glance and get out
- * of the way. The Pool pane is where a value expands.
+ * of the way. The Variables pane is where a value expands.
  */
 import { For, Match, onMount, Show, Switch } from "solid-js";
 
@@ -34,7 +34,7 @@ export function HoverCard(props: { name: string; payload: DisplayPayload }) {
           <div class="sp-hover__muted">html repr</div>
         </Match>
       </Switch>
-      <div class="sp-hover__hint">click it in the Pool pane to expand</div>
+      <div class="sp-hover__hint">open it in Variables to expand</div>
     </div>
   );
 }

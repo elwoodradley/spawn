@@ -126,7 +126,7 @@ export function registerTabCommands(): () => void {
     { id: "tab.closeAll", title: "Tab: close all", enabled: hasTabs, run: closeAll },
     {
       id: "tab.reveal",
-      title: "Tab: reveal in brood tree",
+      title: "Tab: reveal in project tree",
       enabled: () => activeFilePath() !== null,
       run: () => {
         const path = activeFilePath();
@@ -198,6 +198,6 @@ export function tabMenu(path: string) {
         }
       },
     },
-    { kind: "action" as const, label: "Reveal in brood tree", run: () => revealInTree(path) },
+    { kind: "action" as const, label: "Reveal in project tree", run: () => revealInTree(path) },
   ];
 }

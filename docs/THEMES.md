@@ -44,30 +44,30 @@ fail validation are skipped and the error is reported with the field path.
 
 Any CSS colour value is accepted: hex, `rgba(...)`, `hsl(...)`, `oklch(...)`.
 
-| Key               | Used for                                                       |
-| ----------------- | -------------------------------------------------------------- |
-| `bg`              | editor background                                              |
-| `bgPanel`         | side panels, output panel, status bar                          |
-| `bgElevated`      | popups, menus, command palette                                 |
-| `bgHover`         | hovered rows and buttons                                       |
-| `bgActive`        | active tab, selected tree row                                  |
-| `fg`              | main text                                                      |
-| `fgMuted`         | secondary text                                                 |
-| `fgFaint`         | hints, disabled text                                           |
-| `border`          | separators and outlines                                        |
-| `accent`          | the one highlight colour: focus rings, active markers, buttons |
-| `accentFg`        | text drawn on top of `accent`                                  |
-| `selection`       | editor selection (use alpha)                                   |
-| `cursor`          | editor caret                                                   |
-| `lineHighlight`   | active line background (use alpha)                             |
-| `gutterFg`        | line numbers                                                   |
-| `gutterActiveFg`  | active line number                                             |
-| `matchingBracket` | bracket match background                                       |
-| `success`         | exit code 0, healthy pool                                      |
-| `warning`         | warnings                                                       |
-| `croak`           | errors and tracebacks                                          |
-| `info`            | informational text                                             |
-| `stderr`          | child stderr that is not a traceback (tqdm lives here)         |
+| Key               | Used for                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `bg`              | editor background                                                                                                              |
+| `bgPanel`         | side panels, output panel, status bar                                                                                          |
+| `bgElevated`      | popups, menus, command palette                                                                                                 |
+| `bgHover`         | hovered rows and buttons                                                                                                       |
+| `bgActive`        | active tab, selected tree row                                                                                                  |
+| `fg`              | main text                                                                                                                      |
+| `fgMuted`         | secondary text                                                                                                                 |
+| `fgFaint`         | hints, disabled text                                                                                                           |
+| `border`          | separators and outlines                                                                                                        |
+| `accent`          | the one highlight colour: focus rings, active markers, buttons                                                                 |
+| `accentFg`        | text drawn on top of `accent`                                                                                                  |
+| `selection`       | editor selection (use alpha)                                                                                                   |
+| `cursor`          | editor caret                                                                                                                   |
+| `lineHighlight`   | active line background (use alpha)                                                                                             |
+| `gutterFg`        | line numbers                                                                                                                   |
+| `gutterActiveFg`  | active line number                                                                                                             |
+| `matchingBracket` | bracket match background                                                                                                       |
+| `success`         | exit code 0, healthy Interactive Console                                                                                       |
+| `warning`         | warnings                                                                                                                       |
+| `error`           | errors and tracebacks (the CSS variable is `--sp-color-croak`; `croak` is still accepted in theme files as a deprecated alias) |
+| `info`            | informational text                                                                                                             |
+| `stderr`          | child stderr that is not a traceback (tqdm lives here)                                                                         |
 
 ### `fonts`
 
@@ -194,7 +194,7 @@ The smallest valid theme. Spacing, radius and filter take their defaults.
     "matchingBracket": "rgba(143, 209, 138, 0.3)",
     "success": "#8fd18a",
     "warning": "#e0b45c",
-    "croak": "#e46f6f",
+    "error": "#e46f6f",
     "info": "#6fb3d2",
     "stderr": "#c9b27a"
   },

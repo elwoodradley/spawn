@@ -1,4 +1,4 @@
-"""A tiny coursework-style program. Spawn it: it asks for input."""
+"""A tiny coursework-style program. Run it: it asks for input."""
 
 
 def greet(name: str) -> str:
@@ -8,9 +8,9 @@ def greet(name: str) -> str:
 def main() -> None:
     name = input("What is your name? ")
     print(greet(name))
-    count = int(input("How many croaks? "))
+    count = int(input("How many greetings? "))
     for i in range(count):
-        print(f"croak {i + 1}")
+        print(f"hello {i + 1}")
     print("done")
 
 

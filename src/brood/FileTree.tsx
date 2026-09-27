@@ -29,7 +29,7 @@ function entryMenu(node: TreeNode): MenuEntry[] {
     if (extension(node.path) === "py") {
       items.push({
         kind: "action",
-        label: "Spawn this file",
+        label: "Run File",
         run: async () => {
           await openFile(node.path);
           await runCommand("spawn.run");
@@ -60,7 +60,7 @@ function rootMenu(root: string): MenuEntry[] {
     { kind: "action", label: "New folder", run: () => beginNewDir(root) },
     { kind: "separator" },
     { kind: "action", label: "Refresh", run: refreshTree },
-    { kind: "action", label: "Copy brood path", run: () => copyPath(root) },
+    { kind: "action", label: "Copy project path", run: () => copyPath(root) },
   ];
 }
 
@@ -178,9 +178,9 @@ export default function FileTree() {
         when={brood()}
         fallback={
           <div class="sp-tree-empty">
-            <p>No brood open.</p>
+            <p>No project open.</p>
             <button class="sp-button" onClick={() => void runCommand("brood.open")}>
-              Open a brood
+              Open a project
             </button>
           </div>
         }
@@ -212,7 +212,7 @@ export default function FileTree() {
                 <ToolButton icon="collapse" title="Collapse all" onClick={collapseAll} />
                 <ToolButton
                   icon="folder-open"
-                  title="Open another brood"
+                  title="Open another project"
                   onClick={() => void runCommand("brood.open")}
                 />
               </span>

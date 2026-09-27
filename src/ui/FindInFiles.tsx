@@ -59,7 +59,7 @@ export default function FindInFiles() {
     const root = brood();
     const matcher = buildMatcher(query(), { ...opts });
     if (!root || matcher === null) {
-      setStatus(root ? "" : "Open a brood to search it.");
+      setStatus(root ? "" : "Open a project to search it.");
       return;
     }
     if ("error" in matcher) {

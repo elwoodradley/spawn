@@ -67,8 +67,8 @@ function onProc(event: ProcEvent): void {
     case "exit":
       output.system(
         event.code === 0
-          ? "pool exited"
-          : `pool died (${event.code ?? `signal ${event.signal ?? "?"}`})`,
+          ? "console exited"
+          : `console stopped unexpectedly (${event.code ?? `signal ${event.signal ?? "?"}`})`,
       );
       teardown(event.code === 0 ? "cold" : "croaked");
       break;
@@ -87,7 +87,7 @@ function onMessage(line: string): void {
   switch (msg.event) {
     case "ready":
       setPoolStatus("idle");
-      output.system(`pool ready · Python ${msg.python ?? "?"}`);
+      output.system(`console ready · Python ${msg.python ?? "?"}`);
       readyResolvers.forEach((r) => r());
       readyResolvers = [];
       void configure();
@@ -113,7 +113,7 @@ function onMessage(line: string): void {
       break;
     }
     case "croak":
-      output.append("croak", `pool: ${msg.message ?? "unknown problem"}\n`);
+      output.append("croak", `console: ${msg.message ?? "unknown problem"}\n`);
       teardown("croaked");
       break;
     case "closed":
@@ -142,15 +142,15 @@ async function ensureStarted(): Promise<boolean> {
   }
   const python = selectedInterpreter();
   if (!python) {
-    output.append("croak", "No Python interpreter selected. Open metamorphosis to pick one.\n");
+    output.append("croak", "No Python interpreter selected. Choose one from the status bar.\n");
     return false;
   }
   setPoolStatus("starting");
-  output.system(`pool starting · ${python}`);
+  output.system(`console starting · ${python}`);
   try {
     procId = await poolStart({ python, cwd: brood() }, onProc, onMessage);
   } catch (err) {
-    output.append("croak", `could not start the pool: ${describe(err)}\n`);
+    output.append("croak", `could not start the Interactive Console: ${describe(err)}\n`);
     teardown("croaked");
     return false;
   }
@@ -188,7 +188,7 @@ const live: PoolClient = {
       pending.set(id, { resolveDone: resolve });
       poolSend(procId as number, JSON.stringify({ id, op: "exec", ...request })).catch((err) => {
         pending.delete(id);
-        output.append("croak", `pool: ${describe(err)}\n`);
+        output.append("croak", `console: ${describe(err)}\n`);
         setPoolStatus("croaked");
         resolve({ exec: id, ok: false, durationMs: 0 });
       });
@@ -220,7 +220,7 @@ const live: PoolClient = {
 
   async interrupt(): Promise<void> {
     if (procId === null) return;
-    output.system("interrupting the pool…");
+    output.system("interrupting the console…");
     await poolInterrupt(procId);
   },
 
@@ -232,7 +232,7 @@ const live: PoolClient = {
   async shutdown(): Promise<void> {
     if (procId === null) return;
     const id = procId;
-    output.system("pool shutting down");
+    output.system("console shutting down");
     try {
       await poolSend(id, JSON.stringify({ op: "shutdown" }));
     } catch {

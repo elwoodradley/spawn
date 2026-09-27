@@ -45,7 +45,7 @@ export default function OutputConsole() {
     ),
   );
 
-  // A fresh spawn always starts at the bottom.
+  // A fresh run always starts at the bottom.
   createEffect(
     on(spawnStatus, (status) => {
       if (status === "running") following = true;

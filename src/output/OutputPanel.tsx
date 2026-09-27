@@ -1,7 +1,7 @@
 /**
  * The output area: one header (status, command, Spawn/Stop, Clear, more)
- * and two tabs under it. "Output" is the console with stdin; "Run" is the
- * live metrics view. The Run tab opens itself the first time a spawn prints
+ * and two tabs under it. "Output" is the console with stdin; "Metrics" is the
+ * live training-metrics view. The Metrics tab opens itself the first time a run prints
  * a metric, when the setting allows and the user has not picked a tab by
  * hand this session.
  */
@@ -87,7 +87,7 @@ export default function OutputPanel() {
 
   const commandLabel = () => {
     const ran = spawnCommand();
-    if (!ran) return "nothing spawned yet";
+    if (!ran) return "nothing run yet";
     return `${baseName(ran.program)} ${ran.args.map(baseName).join(" ")}`;
   };
 
@@ -121,7 +121,7 @@ export default function OutputPanel() {
       <header class="sp-output__header">
         <div class="sp-output__tabs" role="tablist">
           <TabButton id="output" label="Output" current={tab()} />
-          <TabButton id="run" label="Run" current={tab()} badge={metrics.series.length} />
+          <TabButton id="run" label="Metrics" current={tab()} badge={metrics.series.length} />
         </div>
         <span class="sp-output__dot" classList={{ [`is-${dotState()}`]: true }} />
         <span class="sp-output__command mono" title={commandTitle()}>
@@ -148,7 +148,7 @@ export default function OutputPanel() {
             <button
               class="sp-output__button is-primary"
               disabled={activeFilePath() === null}
-              title="Spawn the current file (F5)"
+              title="Run the current file (F5)"
               onClick={() => {
                 const path = activeFilePath();
                 if (path) void spawnFile(path);
@@ -160,7 +160,7 @@ export default function OutputPanel() {
         >
           <button
             class="sp-output__button is-stop"
-            title="Stop the spawn (Shift+F5)"
+            title="Stop the run (Shift+F5)"
             onClick={() => void stopSpawn()}
           >
             Stop

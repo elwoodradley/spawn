@@ -22,7 +22,7 @@
     "matchingBracket": "rgba(111, 179, 210, 0.35)",
     "success": "#8fc98a",
     "warning": "#e0b45c",
-    "croak": "#e46f6f",
+    "error": "#e46f6f",
     "info": "#6fb3d2",
     "stderr": "#c9b27a"
   },

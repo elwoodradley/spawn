@@ -99,7 +99,7 @@ export default function Editor() {
         <div class="sp-editor-empty sp-chrome">
           <p>No file open.</p>
           <p class="sp-editor-empty-hint">
-            Pick one from the brood, or press Mod-N for a new file.
+            Pick one from the project, or press Mod-N for a new file.
           </p>
         </div>
       </Show>
