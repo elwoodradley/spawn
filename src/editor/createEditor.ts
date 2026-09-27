@@ -22,6 +22,7 @@ import type { Theme } from "../theme/schema";
 import { cellExtensions } from "./cellDecorations";
 import { lspExtensionFor } from "../lsp/server";
 import { mergedHover } from "../lsp/hover";
+import { completionKeys } from "./completionKeys";
 import { prefsExtensions } from "./prefs";
 
 /** Holds the editor theme; reconfigured when the app theme changes. */
@@ -32,6 +33,7 @@ export const lspCompartment = new Compartment();
 export function baseExtensions(appearance: Theme["appearance"]): Extension[] {
   return [
     ...prefsExtensions(settings().editor),
+    completionKeys(),
     history(),
     foldGutter(),
     drawSelection(),
