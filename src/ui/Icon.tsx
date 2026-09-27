@@ -2,6 +2,7 @@
 import { Show } from "solid-js";
 
 const PATHS: Record<string, string> = {
+  "chevron-left": "M10 4l-4 4 4 4",
   "chevron-right": "M6 4l4 4-4 4",
   "chevron-down": "M4 6l4 4 4-4",
   file: "M4 2h5l3 3v9H4z M9 2v3h3",

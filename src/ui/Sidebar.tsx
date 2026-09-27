@@ -5,9 +5,11 @@
  */
 import { Show } from "solid-js";
 
-import { setSidebarTab, sidebarTab, type SidebarTab } from "../app/layout";
+import { setSidebarTab, setSidebarVisible, sidebarTab, type SidebarTab } from "../app/layout";
+import { chordLabel } from "../app/keybindings";
 import FileTree from "../brood/FileTree";
 import VariablesPane from "../pool/VariablesPane";
+import Icon from "./Icon";
 import "./Sidebar.css";
 
 const TABS: Array<{ id: SidebarTab; label: string; title: string }> = [
@@ -31,6 +33,15 @@ export default function Sidebar() {
             {t.label}
           </button>
         ))}
+        <span class="sp-sidebar-tabs__spacer" />
+        <button
+          class="sp-sidebar-collapse"
+          title={`Hide sidebar (${chordLabel("Mod-B")})`}
+          aria-label="Hide sidebar"
+          onClick={() => setSidebarVisible(false)}
+        >
+          <Icon name="chevron-left" size={14} />
+        </button>
       </div>
       <div class="sp-sidebar-body">
         <Show when={sidebarTab() === "brood"}>
