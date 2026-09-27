@@ -22,6 +22,7 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - **spawn:** Train vs val overlay with shaded gap, run history and overlays
 - **editor:** Hover a name to inspect it in the pool
 - **env:** Browse for any interpreter and remember it per brood
+- **viewer:** Open .docx handouts as readable tabs
 
 ### Fixed
 
@@ -40,6 +41,7 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - Scaffold SPAWN with Rust process layer, theme system, and command registry
 - Add module contracts as stubs for parallel Phase 1 work
 - Generate changelog
+- Regenerate changelog
 - Regenerate changelog
 - Regenerate changelog
 - Regenerate changelog
