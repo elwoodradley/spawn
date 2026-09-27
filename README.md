@@ -13,7 +13,7 @@ format. No AI features: you write the code, SPAWN makes what it does visible.
 Built with Tauri v2 (Rust host, web frontend), SolidJS, and CodeMirror 6.
 The binary is a few megabytes and starts instantly.
 
-**Status: early. Built and tested on one Linux machine so far; the macOS and Windows builds exist in CI but are untested by hand.** Phase 3 in progress. Editor, project tree, tabs, Run with
+**Status: early. Used by hand on Linux only so far; CI builds pass on Linux, macOS and Windows but nobody has run the macOS or Windows builds yet.** Phase 3 in progress. Editor, project tree, tabs, Run with
 streamed output and stdin, the Interactive Console with rich rendering, the
 Metrics panel, and the theme system. Not yet released.
 
