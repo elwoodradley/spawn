@@ -7,7 +7,7 @@
  * - `isDirty(path)` for tab decorations.
  * - `cursorPosition()` for the status bar, 1-based line and column.
  */
-import type { EditorState, TransactionSpec } from "@codemirror/state";
+import type { EditorState, StateEffect, TransactionSpec } from "@codemirror/state";
 import type { ViewUpdate } from "@codemirror/view";
 import { createSignal } from "solid-js";
 
@@ -28,7 +28,12 @@ export interface DocEntry {
   /** Always the latest state; the update listener keeps it fresh. */
   state: EditorState;
   savedText: string;
-  scrollTop: number;
+  /**
+   * Where the view was scrolled when this document was last shown, as the
+   * effect `EditorView.scrollSnapshot()` returns. Dispatched after the state
+   * is swapped back in, so a tab reopens exactly where it was left.
+   */
+  scroll: StateEffect<unknown> | null;
 }
 
 export interface RevealRequest {
@@ -86,7 +91,7 @@ export async function openDocument(path: string): Promise<DocEntry> {
   const entry: DocEntry = {
     state: createDocumentState(text, currentTheme().appearance, listenerFor(path), path),
     savedText: text,
-    scrollTop: 0,
+    scroll: null,
   };
   docs.set(path, entry);
   return entry;

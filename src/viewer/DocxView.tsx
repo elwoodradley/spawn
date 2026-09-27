@@ -20,8 +20,24 @@ async function load(path: string): Promise<DocxResult> {
   return docxToHtml(buffer as ArrayBuffer);
 }
 
+/** Scroll offset per document, so a handout reopens where it was left. */
+const scrollMemory = new Map<string, number>();
+
 export default function DocxView(props: { path: string }) {
   const [version, setVersion] = createSignal(0);
+  let scroller: HTMLDivElement | undefined;
+  let scrollTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const rememberScroll = () => {
+    if (scroller) scrollMemory.set(props.path, scroller.scrollTop);
+  };
+  const onScroll = () => {
+    if (scrollTimer !== null) return;
+    scrollTimer = setTimeout(() => {
+      scrollTimer = null;
+      rememberScroll();
+    }, 150);
+  };
   const [doc] = createResource(
     () => [props.path, version()] as const,
     ([path]) => load(path),
@@ -45,6 +61,19 @@ export default function DocxView(props: { path: string }) {
     }),
   );
 
+  // Once the converted document is in the DOM, jump back to where the reader
+  // was; the layout has to exist first, hence the frame delay.
+  createEffect(
+    on(doc, (d) => {
+      if (!d) return;
+      const remembered = scrollMemory.get(props.path);
+      if (remembered === undefined) return;
+      requestAnimationFrame(() => {
+        if (scroller) scroller.scrollTop = remembered;
+      });
+    }),
+  );
+
   const step = (delta: number) => setCurrent(focusMatch(matches(), current() + delta));
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -62,6 +91,8 @@ export default function DocxView(props: { path: string }) {
   window.addEventListener(DOCX_FIND_EVENT, focusFind);
   onCleanup(() => {
     window.removeEventListener(DOCX_FIND_EVENT, focusFind);
+    if (scrollTimer !== null) clearTimeout(scrollTimer);
+    rememberScroll();
     if (body) clearMarks(body);
   });
 
@@ -110,7 +141,7 @@ export default function DocxView(props: { path: string }) {
       <Show when={doc.loading && !doc.latest}>
         <p class="sp-docx__hint sp-docx__loading">Opening…</p>
       </Show>
-      <div class="sp-docx__scroll" tabIndex={0}>
+      <div class="sp-docx__scroll" tabIndex={0} ref={(el) => (scroller = el)} onScroll={onScroll}>
         <Show when={doc.latest}>
           {(d) => (
             <>

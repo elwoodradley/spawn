@@ -36,7 +36,10 @@ export default function Editor() {
       if (!view) return;
       if (previous) {
         const old = getDocument(previous);
-        if (old) old.scrollTop = view.scrollDOM.scrollTop;
+        // scrollSnapshot() captures the viewport as an effect that survives a
+        // setState swap; a raw scrollTop written after setState is discarded
+        // by CodeMirror's next measure cycle.
+        if (old) old.scroll = view.scrollSnapshot();
         if (settings().editor.autosave === "onFocusChange" && isDirty(previous)) {
           void saveDocument(previous);
         }
@@ -52,7 +55,7 @@ export default function Editor() {
       applyEditorTheme(view, currentTheme().appearance);
       applyEditorPrefs(view, settings().editor);
       applyLsp(view, path);
-      view.scrollDOM.scrollTop = entry.scrollTop;
+      if (entry.scroll) view.dispatch({ effects: entry.scroll });
       const head = entry.state.selection.main.head;
       const line = entry.state.doc.lineAt(head);
       setCursorPosition({ line: line.number, col: head - line.from + 1 });
