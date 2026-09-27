@@ -15,6 +15,7 @@ import { poolInterrupt, poolSend, poolStart, type ProcEvent } from "../ipc";
 import { output, setStdinFallback } from "../spawn/controller";
 import { currentTheme } from "../theme/store";
 import { emitPoolEvent, poolStatus, setPoolClient, setPoolStatus } from "./client";
+import { notifyExecFinished } from "./hooks";
 import type {
   Cell,
   DisplayPayload,
@@ -27,6 +28,8 @@ import type {
 interface Pending {
   resolveDone?: (result: ExecResult) => void;
   resolveResult?: (data: unknown) => void;
+  /** The exec request, so listeners learn what ran. */
+  request?: ExecRequest;
 }
 
 interface Message {
@@ -102,7 +105,9 @@ function onMessage(line: string): void {
       pending.delete(msg.id);
       setPoolStatus("idle");
       setExecGeneration((g) => g + 1);
-      p?.resolveDone?.({ exec: msg.id, ok: msg.ok ?? false, durationMs: msg.durationMs ?? 0 });
+      const result = { exec: msg.id, ok: msg.ok ?? false, durationMs: msg.durationMs ?? 0 };
+      p?.resolveDone?.(result);
+      if (p?.request) void announce(p.request, result);
       break;
     }
     case "result": {
@@ -173,6 +178,12 @@ function send(op: string, fields: Record<string, unknown>): Promise<unknown> {
   });
 }
 
+/** Tell exec listeners what a finished cell left behind. */
+async function announce(request: ExecRequest, result: ExecResult): Promise<void> {
+  const variables = procId === null ? [] : await live.variables();
+  notifyExecFinished({ request, result, variables });
+}
+
 async function configure(): Promise<void> {
   await send("configure", { plot: currentTheme().plot });
 }
@@ -185,7 +196,7 @@ const live: PoolClient = {
     const id = ++nextId;
     setPoolStatus("busy");
     return new Promise((resolve) => {
-      pending.set(id, { resolveDone: resolve });
+      pending.set(id, { resolveDone: resolve, request });
       poolSend(procId as number, JSON.stringify({ id, op: "exec", ...request })).catch((err) => {
         pending.delete(id);
         output.append("croak", `console: ${describe(err)}\n`);
