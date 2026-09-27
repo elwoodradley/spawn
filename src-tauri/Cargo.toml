@@ -2,9 +2,9 @@
 name = "spawn"
 version = "0.1.0"
 description = "SPAWN: a Python IDE for machine learning work"
-authors = ["Stone Toad"]
+authors = ["elwoodradley"]
 license = "MIT"
-repository = "https://github.com/stonetoad/spawn"
+repository = "https://github.com/elwoodradley/spawn"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

@@ -13,7 +13,7 @@ format. No AI features: you write the code, SPAWN makes what it does visible.
 Built with Tauri v2 (Rust host, web frontend), SolidJS, and CodeMirror 6.
 The binary is a few megabytes and starts instantly.
 
-**Status: Phase 2 in progress.** Editor, project tree, tabs, Run with
+**Status: early. Built and tested on one Linux machine so far; the macOS and Windows builds exist in CI but are untested by hand.** Phase 3 in progress. Editor, project tree, tabs, Run with
 streamed output and stdin, the Interactive Console with rich rendering, the
 Metrics panel, and the theme system. Not yet released.
 
@@ -100,7 +100,7 @@ You need Rust (via rustup), Node 22 or newer, and uv. Platform packages are
 listed in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```
-git clone https://github.com/stonetoad/spawn
+git clone https://github.com/elwoodradley/spawn
 cd spawn
 npm install
 npm run tauri dev

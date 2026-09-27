@@ -7,7 +7,7 @@ import { listCommands } from "./commands";
 import { chordLabel } from "./keybindings";
 import { EDITOR_HINTS } from "./editCommands";
 
-export const REPO_URL = "https://github.com/stonetoad/spawn";
+export const REPO_URL = "https://github.com/elwoodradley/spawn";
 
 const EDITOR_ROWS: Array<[string, string]> = [
   ["Undo / Redo", `${chordLabel(EDITOR_HINTS.undo)} / ${chordLabel(EDITOR_HINTS.redo)}`],
