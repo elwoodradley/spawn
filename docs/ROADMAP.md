@@ -68,15 +68,15 @@ User-facing text only; internal identifiers keep their names until a quiet
 migration (command ids such as `brood.open` stay, so saved keybindings and
 settings are untouched).
 
-| Old term        | New term                                   |
-| --------------- | ------------------------------------------ |
-| Brood           | Project                                    |
-| Clutch          | Session                                    |
-| Metamorphosis   | Python Interpreter / Select Interpreter    |
-| Croak           | Error / Traceback                          |
-| Pool            | Interactive Console                        |
-| Spawn (action)  | Run                                        |
-| Run tab (metrics) | Metrics tab (to free "Run")              |
+| Old term          | New term                                |
+| ----------------- | --------------------------------------- |
+| Brood             | Project                                 |
+| Clutch            | Session                                 |
+| Metamorphosis     | Python Interpreter / Select Interpreter |
+| Croak             | Error / Traceback                       |
+| Pool              | Interactive Console                     |
+| Spawn (action)    | Run                                     |
+| Run tab (metrics) | Metrics tab (to free "Run")             |
 
 Where: menus (`appMenus.ts`), commands' titles (`appCommands.ts`,
 `spawn/commands.ts`, `pool/commands.ts`, `tabCommands.ts`, `viewCommands.ts`),
