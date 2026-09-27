@@ -36,13 +36,13 @@ export const viewCommands: Command[] = [
   {
     id: "view.outputTaller",
     title: "Output panel taller",
-    keys: "Mod-Alt-Up",
+    keys: "Mod-Alt-J",
     run: () => resizeOutput(RESIZE_STEP),
   },
   {
     id: "view.outputShorter",
     title: "Output panel shorter",
-    keys: "Mod-Alt-Down",
+    keys: "Mod-Alt-K",
     run: () => resizeOutput(-RESIZE_STEP),
   },
   {

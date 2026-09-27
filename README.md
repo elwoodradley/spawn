@@ -63,7 +63,7 @@ Everything is a command: reachable from the menus, the command palette
 | Ctrl+= / Ctrl+-       | Zoom in / out; Ctrl+0 resets                          |
 | Ctrl+Tab              | Cycle tabs (most recent first); Ctrl+1..9 jump        |
 | Ctrl+B / Ctrl+J       | Toggle the brood sidebar / the output panel           |
-| Ctrl+Alt+↑ / ↓        | Output panel taller / shorter; Ctrl+Shift+J maximizes |
+| Ctrl+Alt+J / K        | Output panel taller / shorter; Ctrl+Shift+J maximizes |
 | Alt+Z                 | Word wrap                                             |
 | F1                    | Every shortcut                                        |
 
