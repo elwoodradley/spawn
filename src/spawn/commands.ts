@@ -44,14 +44,14 @@ export function registerSpawnCommands(): () => void {
       id: "spawn.run",
       title: "Spawn: run the current file",
       keys: "F5",
-      enabled: () => activeFilePath() !== null && spawnStatus() === "idle",
+      enabled: () => isPython(activeFilePath()) && spawnStatus() === "idle",
       run: runActive,
     },
     {
       id: "spawn.runAlt",
       title: "Spawn: run the current file (alternate key)",
       keys: "Mod-Enter",
-      enabled: () => activeFilePath() !== null && spawnStatus() === "idle",
+      enabled: () => isPython(activeFilePath()) && spawnStatus() === "idle",
       run: runActive,
     },
     {
@@ -152,4 +152,9 @@ export function registerSpawnCommands(): () => void {
     disposeRoot();
     stopMemory();
   };
+}
+
+/** Only Python files spawn; a handout in a viewer tab does not. */
+function isPython(path: string | null): boolean {
+  return path !== null && /\.pyw?$/i.test(path);
 }

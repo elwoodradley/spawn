@@ -11,6 +11,7 @@ import { createSignal, type Accessor } from "solid-js";
 
 import { closeDocument, isDirty, openDocument, renameDocument, reveal } from "../editor/documents";
 import { baseName, confirm } from "../ipc";
+import { isViewerPath } from "../viewer/docx";
 import { croakToast } from "./toast";
 import { addRecentBrood, addRecentFile, forgetRecent } from "./recent";
 
@@ -50,6 +51,15 @@ export function openBrood(path: string): void {
 }
 
 export const openFile = async (path: string, line?: number): Promise<void> => {
+  if (isViewerPath(path)) {
+    // Read-only viewer tab (a .docx handout): no editor document behind it.
+    if (!tabs().some((t) => t.path === path)) {
+      setTabs([...tabs(), { path, name: baseName(path) }]);
+    }
+    setActiveFilePath(path);
+    addRecentFile(path);
+    return;
+  }
   try {
     await openDocument(path);
   } catch (err) {

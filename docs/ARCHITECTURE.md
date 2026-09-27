@@ -37,6 +37,7 @@ src/                         TypeScript, SolidJS
               keybindings, clutch (session persistence)
   editor/     CodeMirror setup, document registry, dirty tracking, save
   brood/      folder tree model, file open, watcher
+  viewer/     read-only tabs for .docx handouts (mammoth → sanitized HTML)
   pool/       protocol (display payloads), live client, cells commands,
               variables pane
   spawn/      spawn controller, output model, croak (traceback) parser,

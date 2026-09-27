@@ -10,6 +10,7 @@ import {
   exists as tauriExists,
   mkdir,
   readDir,
+  readFile,
   readTextFile,
   remove,
   rename,
@@ -52,6 +53,10 @@ export function writeText(path: string, contents: string): Promise<void> {
 }
 
 /** Write binary contents (a saved figure, for example). */
+export function readBytes(path: string): Promise<Uint8Array> {
+  return readFile(path);
+}
+
 export function writeBytes(path: string, contents: Uint8Array): Promise<void> {
   return writeFile(path, contents);
 }

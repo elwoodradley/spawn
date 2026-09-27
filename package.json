@@ -39,6 +39,8 @@
     "@tauri-apps/plugin-store": "^2.4.5",
     "@tauri-apps/plugin-window-state": "^2.4.1",
     "codemirror": "^6.0.2",
+    "dompurify": "^3.4.16",
+    "mammoth": "^1.13.0",
     "solid-js": "^1.9.3",
     "zod": "^4.6.5"
   },

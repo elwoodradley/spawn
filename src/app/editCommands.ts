@@ -7,6 +7,8 @@ import { redo, selectAll, undo } from "@codemirror/commands";
 import { gotoLine, openSearchPanel } from "@codemirror/search";
 
 import { runEditorCommand } from "../editor/view";
+import { DOCX_FIND_EVENT } from "../viewer/DocxView";
+import { isViewerPath } from "../viewer/docx";
 import { registerCommands, type Command } from "./commands";
 import { activeFilePath } from "./state";
 
@@ -27,8 +29,15 @@ const editCommands: Command[] = [
     id: "edit.find",
     title: "Find",
     keys: "Mod-F",
-    enabled: hasEditor,
-    run: () => void runEditorCommand(openSearchPanel),
+    enabled: () => hasEditor() || isViewerPath(activeFilePath()),
+    run: () => {
+      // A handout tab has its own find box; the editor has CodeMirror's panel.
+      if (isViewerPath(activeFilePath())) {
+        window.dispatchEvent(new CustomEvent(DOCX_FIND_EVENT));
+        return;
+      }
+      void runEditorCommand(openSearchPanel);
+    },
   },
   {
     id: "edit.replace",

@@ -1,0 +1,186 @@
+.sp-docx {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--sp-color-bg);
+  color: var(--sp-color-fg);
+}
+
+.sp-docx__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  border-bottom: 1px solid var(--sp-color-border);
+  background: var(--sp-color-bg-panel);
+  font-size: calc(var(--sp-font-size-ui) * 0.9);
+}
+.sp-docx__name {
+  font-weight: 600;
+}
+.sp-docx__hint {
+  color: var(--sp-color-fg-faint);
+}
+.sp-docx__spacer {
+  flex: 1;
+}
+.sp-docx__find {
+  width: 200px;
+  padding: 2px var(--sp-space-sm);
+  background: var(--sp-color-bg-elevated);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+}
+.sp-docx__count {
+  color: var(--sp-color-fg-muted);
+}
+.sp-docx__btn {
+  padding: 0 var(--sp-space-sm);
+  color: var(--sp-color-fg-muted);
+  border-radius: var(--sp-radius-sm);
+}
+.sp-docx__btn:hover {
+  color: var(--sp-color-fg);
+  background: var(--sp-color-bg-hover);
+}
+.sp-docx__croak {
+  margin: var(--sp-space-md);
+  color: var(--sp-color-croak);
+}
+.sp-docx__loading {
+  margin: var(--sp-space-md);
+}
+
+.sp-docx__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  user-select: text;
+  cursor: text;
+}
+.sp-docx__scroll:focus-visible {
+  outline: none;
+}
+
+.sp-docx__warnings {
+  margin: var(--sp-space-md) auto 0;
+  max-width: 76ch;
+  padding: 0 var(--sp-space-xl);
+  color: var(--sp-color-fg-muted);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+}
+.sp-docx__warnings summary {
+  cursor: pointer;
+}
+
+/* Reading column: prose measure, generous leading, theme colours. */
+.sp-docx__body {
+  max-width: 76ch;
+  margin: 0 auto;
+  padding: var(--sp-space-xl) var(--sp-space-xl) calc(var(--sp-space-xl) * 3);
+  font-size: calc(var(--sp-font-size-ui) * 1.1);
+  line-height: 1.65;
+}
+.sp-docx__body h1,
+.sp-docx__body h2,
+.sp-docx__body h3,
+.sp-docx__body h4 {
+  line-height: 1.25;
+  margin: 1.4em 0 0.5em;
+  color: var(--sp-color-fg);
+}
+.sp-docx__body h1 {
+  font-size: 1.7em;
+}
+.sp-docx__body h2 {
+  font-size: 1.35em;
+}
+.sp-docx__body h3 {
+  font-size: 1.15em;
+}
+.sp-docx__body .sp-docx-title {
+  font-size: 2em;
+  margin-top: 0.4em;
+}
+.sp-docx__body .sp-docx-subtitle {
+  color: var(--sp-color-fg-muted);
+  font-size: 1.1em;
+  margin-top: -0.4em;
+}
+.sp-docx__body p {
+  margin: 0 0 0.85em;
+}
+.sp-docx__body a {
+  color: var(--sp-color-accent);
+}
+.sp-docx__body ul,
+.sp-docx__body ol {
+  padding-left: 1.6em;
+  margin: 0 0 0.85em;
+}
+.sp-docx__body li {
+  margin: 0.2em 0;
+}
+.sp-docx__body blockquote {
+  margin: 0.8em 0;
+  padding: var(--sp-space-sm) var(--sp-space-lg);
+  border-left: 3px solid var(--sp-color-accent);
+  color: var(--sp-color-fg-muted);
+  background: var(--sp-color-bg-panel);
+}
+.sp-docx__body pre,
+.sp-docx__body code {
+  font-family: var(--sp-font-mono);
+  font-size: calc(var(--sp-font-size-mono) * 0.95);
+}
+.sp-docx__body code {
+  padding: 0 0.3em;
+  background: var(--sp-color-bg-elevated);
+  border-radius: var(--sp-radius-sm);
+}
+.sp-docx__body pre {
+  margin: 0.8em 0;
+  padding: var(--sp-space-md) var(--sp-space-lg);
+  background: var(--sp-color-bg-panel);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.5;
+}
+.sp-docx__body table {
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  max-width: 100%;
+  font-size: 0.95em;
+}
+.sp-docx__body th,
+.sp-docx__body td {
+  border: 1px solid var(--sp-color-border);
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  vertical-align: top;
+  text-align: left;
+}
+.sp-docx__body th {
+  background: var(--sp-color-bg-panel);
+}
+.sp-docx__body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--sp-radius-sm);
+}
+.sp-docx__body hr {
+  border: 0;
+  border-top: 1px solid var(--sp-color-border);
+  margin: 1.2em 0;
+}
+.sp-docx__body mark.sp-docx-match {
+  background: var(--sp-color-selection);
+  color: inherit;
+  border-radius: 2px;
+}
+.sp-docx__body mark.sp-docx-match.is-current {
+  background: var(--sp-color-accent);
+  color: var(--sp-color-accent-fg);
+}

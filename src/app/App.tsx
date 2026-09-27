@@ -13,6 +13,8 @@ import {
 import { startBroodTree } from "../brood/store";
 import { isDirty, saveAllDirty } from "../editor/documents";
 import Editor from "../editor/Editor";
+import DocxView from "../viewer/DocxView";
+import { isViewerPath } from "../viewer/docx";
 import { baseName } from "../ipc";
 import OutputPanel from "../output/OutputPanel";
 import { attachPoolEvents } from "../output/rich/attach";
@@ -148,9 +150,16 @@ export default function App() {
             <div class="sp-chrome sp-no-print">
               <Tabs />
             </div>
-            <div class="sp-editor-area sp-no-print">
+            <div class="sp-editor-area sp-no-print" hidden={isViewerPath(activeFilePath())}>
               <Editor />
             </div>
+            <Show when={isViewerPath(activeFilePath()) ? activeFilePath() : null}>
+              {(path) => (
+                <div class="sp-editor-area sp-chrome">
+                  <DocxView path={path()} />
+                </div>
+              )}
+            </Show>
             <Show when={outputVisible()}>
               <div class="sp-chrome sp-no-print">
                 <Splitter

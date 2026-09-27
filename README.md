@@ -67,7 +67,7 @@ Everything is a command: reachable from the menus, the command palette
 | Alt+Z                 | Word wrap                                             |
 | F1                    | Every shortcut                                        |
 
-Also: drag the line between editor and output (or beside the sidebar) to resize, double-click it to reset; drag a folder or files onto the window, drag tabs to reorder, right-click
+Also: open a `.docx` handout in a tab and read it next to your code (headings, lists, tables, images and code blocks, with find), drag the line between editor and output (or beside the sidebar) to resize, double-click it to reset; drag a folder or files onto the window, drag tabs to reorder, right-click
 files and tabs and the output panel, autosave (off, after a delay, or on focus
 change), find inside the output, save the output to a file, timestamps per line,
 desktop notification when a spawn finishes while you are elsewhere, and the

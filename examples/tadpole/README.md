@@ -5,6 +5,7 @@ A small brood to try SPAWN with. Open this folder, pick a file, press F5.
 | File               | Shows                                                                                                          |
 | ------------------ | -------------------------------------------------------------------------------------------------------------- |
 | `main.py`          | `input()` works inside SPAWN; answer in the stdin row.                                                         |
+| `assignment.docx`  | A Word handout opens as a readable tab: click it in the tree.                                                  |
 | `renderers.py`     | Shift+Enter cells: dict → table, confusion matrix, image grids.                                                |
 | `train.py`         | Live loss and accuracy curves in the Run tab, pure Python.                                                     |
 | `overfit.py`       | loss vs val_loss on one chart with the gap shaded; a spike kept off-scale; one-off prints listed, not charted. |
