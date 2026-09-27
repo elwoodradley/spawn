@@ -1,12 +1,19 @@
 /** Interpreter discovery IPC. Policy about which one to use lives in `env/`. */
 import { invoke } from "@tauri-apps/api/core";
 
-/** `custom` is a path the user browsed to; SPAWN never discovers those. */
-export type CandidateSource = "broodVenv" | "uv" | "path" | "custom";
+/**
+ * Where an interpreter came from, best first. `system` is the operating
+ * system's own Python (Apple's /usr/bin/python3, a distro's /usr/bin/python3),
+ * which projects almost never want. `custom` is a path the user browsed to.
+ */
+export type CandidateSource =
+  "broodVenv" | "uv" | "uvManaged" | "homebrew" | "pyenv" | "path" | "system" | "custom";
 
 export interface Candidate {
   path: string;
   source: CandidateSource;
+  /** Known from the path or uv's listing; null until probed. */
+  version?: string | null;
 }
 
 export interface PythonInfo {

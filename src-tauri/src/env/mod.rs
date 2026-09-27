@@ -12,22 +12,8 @@ use crate::error::{Error, Result};
 
 pub mod ml;
 
-/// A Python interpreter SPAWN could use.
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct Candidate {
-    pub path: String,
-    /// Where the candidate came from: `broodVenv`, `uv`, or `path`.
-    pub source: CandidateSource,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum CandidateSource {
-    BroodVenv,
-    Uv,
-    Path,
-}
+pub mod discover;
+pub use discover::Candidate;
 
 /// What an interpreter says about itself. Produced by `env_probe`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -45,36 +31,11 @@ const PROBE: &str = "import sys, json; print(json.dumps({\
     'prefix': sys.prefix, \
     'platform': sys.platform}))";
 
-/// List interpreters worth offering, most specific first. Never fails: a brood
-/// with no venv and a machine with no uv still yields whatever PATH has.
+/// List interpreters worth offering, most project-specific first, the
+/// operating system's own Python last. Never fails.
 #[tauri::command]
 pub async fn env_discover(brood: Option<String>) -> Vec<Candidate> {
-    let mut found = Vec::new();
-
-    if let Some(root) = brood.as_deref()
-        && let Some(python) = venv_python(Path::new(root))
-    {
-        found.push(Candidate {
-            path: python.to_string_lossy().into_owned(),
-            source: CandidateSource::BroodVenv,
-        });
-    }
-
-    if let Some(python) = uv_find(brood.as_deref()).await {
-        push_unique(&mut found, python, CandidateSource::Uv);
-    }
-
-    for name in ["python3", "python"] {
-        if let Some(python) = find_on_path(name) {
-            push_unique(
-                &mut found,
-                python.to_string_lossy().into_owned(),
-                CandidateSource::Path,
-            );
-        }
-    }
-
-    found
+    discover::discover(brood.as_deref()).await
 }
 
 /// Ask an interpreter to describe itself.
@@ -106,41 +67,6 @@ pub fn env_which(name: String) -> Option<String> {
 #[tauri::command]
 pub fn env_uv_path() -> Option<String> {
     find_on_path("uv").map(|p| p.to_string_lossy().into_owned())
-}
-
-fn push_unique(found: &mut Vec<Candidate>, path: String, source: CandidateSource) {
-    if !found.iter().any(|c| c.path == path) {
-        found.push(Candidate { path, source });
-    }
-}
-
-/// The interpreter inside `<brood>/.venv`, if there is one.
-pub fn venv_python(brood: &Path) -> Option<PathBuf> {
-    let venv = brood.join(".venv");
-    let candidates: &[&str] = if cfg!(windows) {
-        &["Scripts/python.exe"]
-    } else {
-        &["bin/python", "bin/python3"]
-    };
-    candidates
-        .iter()
-        .map(|rel| venv.join(rel))
-        .find(|p| p.is_file())
-}
-
-async fn uv_find(cwd: Option<&str>) -> Option<String> {
-    let uv = find_on_path("uv")?;
-    let mut cmd = Command::new(uv);
-    cmd.args(["python", "find"]);
-    if let Some(dir) = cwd {
-        cmd.current_dir(dir);
-    }
-    let output = quiet(&mut cmd).output().await.ok()?;
-    if !output.status.success() {
-        return None;
-    }
-    let path = String::from_utf8_lossy(&output.stdout).trim().to_owned();
-    (!path.is_empty()).then_some(path)
 }
 
 /// Walk PATH for an executable, like `which`, without a dependency.
@@ -182,10 +108,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn venv_python_is_none_without_a_venv() {
+    fn project_venvs_is_empty_without_a_venv() {
         let dir = std::env::temp_dir().join(format!("spawn-env-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("temp dir");
-        assert_eq!(venv_python(&dir), None);
+        assert!(discover::project_venvs(&dir).is_empty());
         std::fs::remove_dir_all(&dir).expect("cleanup");
     }
 
@@ -199,7 +125,10 @@ mod tests {
         let python = bin.join("python");
         std::fs::write(&python, "#!/bin/sh\n").expect("write");
         std::fs::set_permissions(&python, std::fs::Permissions::from_mode(0o755)).expect("chmod");
-        assert_eq!(venv_python(&dir), Some(python));
+        assert_eq!(
+            discover::project_venvs(&dir),
+            vec![python.to_string_lossy().into_owned()]
+        );
         std::fs::remove_dir_all(&dir).expect("cleanup");
     }
 

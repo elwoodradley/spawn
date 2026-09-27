@@ -21,7 +21,9 @@ import { attachPoolEvents } from "../output/rich/attach";
 import { registerPoolCommands } from "../pool/commands";
 import { installLivePool } from "../pool/live";
 import { registerLspCommands } from "../lsp/commands";
+import MissingBanner from "../lsp/MissingBanner";
 import { installLanguageServer } from "../lsp/server";
+import { installProjectSettings } from "./project";
 import { output } from "../spawn/controller";
 import { registerSpawnCommands } from "../spawn/commands";
 import { initTheme } from "../theme/store";
@@ -31,6 +33,7 @@ import ContextMenuHost from "../ui/ContextMenu";
 import DialogHost from "../ui/Dialog";
 import MenuBar from "../ui/MenuBar";
 import SettingsDialog from "../ui/SettingsDialog";
+import Icon from "../ui/Icon";
 import Sidebar from "../ui/Sidebar";
 import Splitter from "../ui/Splitter";
 import StatusBar from "../ui/StatusBar";
@@ -40,7 +43,7 @@ import { PRINT_HOST_ID, registerAppCommands } from "./appCommands";
 import { appMenus } from "./appMenus";
 import { autosaveClutch, restoreClutch } from "./clutch";
 import { registerEditCommands } from "./editCommands";
-import { installKeybindings } from "./keybindings";
+import { chordLabel, installKeybindings } from "./keybindings";
 import {
   OUTPUT_DEFAULT,
   SIDEBAR_DEFAULT,
@@ -49,6 +52,7 @@ import {
   outputHeight,
   outputVisible,
   setOutputHeight,
+  setSidebarVisible,
   setSidebarWidth,
   sidebarVisible,
   sidebarWidth,
@@ -80,6 +84,7 @@ export default function App() {
   onCleanup(registerPoolCommands());
   onCleanup(installLivePool());
   onCleanup(installLanguageServer());
+  onCleanup(installProjectSettings());
   onCleanup(registerLspCommands());
   onCleanup(attachPoolEvents(output));
   startBroodTree();
@@ -132,7 +137,21 @@ export default function App() {
     <div class="sp-app" classList={{ "is-ready": ready(), "is-drop-target": dropHover() }}>
       <MenuBar menus={appMenus} />
       <div class="sp-main" ref={(el) => (main = el)}>
-        <Show when={sidebarVisible()}>
+        <Show
+          when={sidebarVisible()}
+          fallback={
+            <div class="sp-sidebar-rail sp-chrome sp-no-print">
+              <button
+                class="sp-sidebar-rail__button"
+                title={`Show sidebar (${chordLabel("Mod-B")})`}
+                aria-label="Show sidebar"
+                onClick={() => setSidebarVisible(true)}
+              >
+                <Icon name="chevron-right" size={14} />
+              </button>
+            </div>
+          }
+        >
           <aside class="sp-sidebar sp-chrome sp-no-print" style={{ width: `${sidebarWidth()}px` }}>
             <Sidebar />
           </aside>
@@ -155,6 +174,7 @@ export default function App() {
               <Tabs />
             </div>
             <div class="sp-editor-area sp-no-print" hidden={isViewerPath(activeFilePath())}>
+              <MissingBanner />
               <Editor />
             </div>
             <Show when={isViewerPath(activeFilePath()) ? activeFilePath() : null}>

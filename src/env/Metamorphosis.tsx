@@ -6,10 +6,16 @@ import { For, Show } from "solid-js";
 
 import { brood } from "../app/state";
 import "./Metamorphosis.css";
+import { pathExists } from "../ipc";
+import { createProjectVenv, creatingVenv } from "./venv";
+import { createResource } from "solid-js";
 import {
   browseInterpreter,
   candidates,
   envError,
+  interpreterWarning,
+  projectHasVenv,
+  uvAvailable,
   interpreterInfo,
   refreshInterpreters,
   refreshing,
@@ -24,6 +30,11 @@ export default function Metamorphosis() {
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Escape") setMetamorphosisOpen(false);
   };
+  const [hasPyproject] = createResource(
+    () => (metamorphosisOpen() ? brood() : null),
+    async (root) => (root ? pathExists(`${root}/pyproject.toml`) : false),
+  );
+  const offerVenv = () => brood() !== null && uvAvailable() !== null && !projectHasVenv();
 
   return (
     <Show when={metamorphosisOpen()}>
@@ -49,6 +60,30 @@ export default function Metamorphosis() {
             No Python found. Install uv or create a .venv in the project.
           </p>
         </Show>
+        <Show when={interpreterWarning()}>{(w) => <p class="sp-meta__warning">{w()}</p>}</Show>
+        <Show when={offerVenv()}>
+          <div class="sp-meta__create">
+            <span class="sp-meta__create-text">This project has no environment of its own.</span>
+            <button
+              class="sp-meta__action"
+              disabled={creatingVenv()}
+              title={`Runs: uv venv (in ${brood() ?? ""})`}
+              onClick={() => void createProjectVenv(false)}
+            >
+              {creatingVenv() ? "Working…" : "Create .venv with uv"}
+            </button>
+            <Show when={hasPyproject()}>
+              <button
+                class="sp-meta__action"
+                disabled={creatingVenv()}
+                title={`Runs: uv sync (in ${brood() ?? ""}) — creates .venv and installs the dependencies from pyproject.toml`}
+                onClick={() => void createProjectVenv(true)}
+              >
+                {creatingVenv() ? "Working…" : "uv sync (create + install dependencies)"}
+              </button>
+            </Show>
+          </div>
+        </Show>
         <ul class="sp-meta__list">
           <For each={candidates()}>
             {(candidate) => (
@@ -62,9 +97,21 @@ export default function Metamorphosis() {
                     setMetamorphosisOpen(false);
                   }}
                 >
-                  <span class="sp-meta__source">{SOURCE_LABELS[candidate.source]}</span>
+                  <span
+                    class="sp-meta__source"
+                    classList={{ "is-system": candidate.source === "system" }}
+                  >
+                    {SOURCE_LABELS[candidate.source]}
+                  </span>
                   <span class="sp-meta__path mono">{shorten(candidate.path)}</span>
-                  <Show when={candidate.path === selectedInterpreter() && interpreterInfo()}>
+                  <Show
+                    when={candidate.path === selectedInterpreter() && interpreterInfo()}
+                    fallback={
+                      <Show when={candidate.version}>
+                        {(v) => <span class="sp-meta__version">Python {v()}</span>}
+                      </Show>
+                    }
+                  >
                     {(info) => <span class="sp-meta__version">Python {info().version}</span>}
                   </Show>
                 </button>

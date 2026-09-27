@@ -10,6 +10,7 @@
 import { createSignal } from "solid-js";
 
 import { brood } from "../app/state";
+import { chooseInterpreter } from "./choose";
 import {
   discoverInterpreters,
   getSetting,
@@ -38,6 +39,8 @@ const [mlInfo, setMlInfo] = createSignal<MlInfo | null>(null);
 const [mlProbing, setMlProbing] = createSignal(false);
 const [mlError, setMlError] = createSignal<string | null>(null);
 const [memory, setMemory] = createSignal<MemoryInfo | null>(null);
+/** Set when the selection is the operating system's own Python. */
+const [interpreterWarning, setInterpreterWarning] = createSignal<string | null>(null);
 
 export {
   candidates,
@@ -55,6 +58,8 @@ export {
   mlProbing,
   mlError,
   memory,
+  interpreterWarning,
+  setEnvError,
 };
 
 function settingKey(root: string | null): string {
@@ -64,9 +69,18 @@ function settingKey(root: string | null): string {
 export const SOURCE_LABELS: Record<CandidateSource, string> = {
   broodVenv: ".venv",
   uv: "uv",
+  uvManaged: "uv-managed",
+  homebrew: "Homebrew",
+  pyenv: "pyenv",
   path: "PATH",
+  system: "system",
   custom: "chosen",
 };
+
+/** Does the open project have its own virtual environment? */
+export function projectHasVenv(): boolean {
+  return candidates().some((c) => c.source === "broodVenv");
+}
 
 /** The candidate record for the current selection, if it is one. */
 export function selectedCandidate(): Candidate | null {
@@ -88,8 +102,8 @@ export async function refreshInterpreters(root: string | null): Promise<void> {
       list.push({ path: saved, source: "custom" });
     }
     setCandidates(list);
-    const pick = saved && list.some((c) => c.path === saved) ? saved : (list[0]?.path ?? null);
-    await selectInterpreter(pick, false);
+    const choice = chooseInterpreter(list, saved);
+    await selectInterpreter(choice.path, false);
   } catch (err) {
     setEnvError(describe(err));
   } finally {
@@ -111,6 +125,8 @@ export async function browseInterpreter(): Promise<void> {
 export async function selectInterpreter(path: string | null, persist = true): Promise<void> {
   setSelectedInterpreter(path);
   setInterpreterInfo(null);
+  const picked = candidates().find((c) => c.path === path) ?? null;
+  setInterpreterWarning(picked ? chooseInterpreter([picked], path).warning : null);
   if (persist) await setSetting(settingKey(brood()), path);
   if (!path) {
     setMlInfo(null);

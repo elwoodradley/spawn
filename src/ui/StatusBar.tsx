@@ -11,6 +11,7 @@ import { cursorPosition } from "../editor/documents";
 import Metamorphosis from "../env/Metamorphosis";
 import {
   interpreterInfo,
+  interpreterWarning,
   memory,
   mlError,
   mlInfo,
@@ -158,9 +159,11 @@ export default function StatusBar() {
         </Show>
         <button
           class="sp-statusbar__item sp-statusbar__button"
-          title={`${selectedInterpreter() ?? "No interpreter selected"}\nClick to select a Python interpreter`}
+          classList={{ "is-warning": interpreterWarning() !== null }}
+          title={`${interpreterWarning() ?? selectedInterpreter() ?? "No interpreter selected"}\nClick to select a Python interpreter`}
           onClick={() => toggleMetamorphosis()}
         >
+          {interpreterWarning() ? "⚠ " : ""}
           {interpreterLabel()}
         </button>
         <Show when={uvAvailable()}>
