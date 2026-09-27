@@ -55,6 +55,17 @@ export const SettingsSchema = z.object({
       notifyWhenDone: z.boolean().default(true),
     })
     .prefault({}),
+  lsp: z
+    .object({
+      /** Language intelligence via pyright. Off means a plain editor. */
+      enabled: z.boolean().default(true),
+      diagnostics: z.enum(["essential", "standard", "strict"]).default("essential"),
+      /** Explicit path to a `pyright-langserver`; null means find one. */
+      serverPath: z.string().nullable().default(null),
+      /** The user agreed to run pyright through uv (downloads on first use). */
+      useUv: z.boolean().default(false),
+    })
+    .prefault({}),
   run: z
     .object({
       patterns: z.array(RunPattern).default([]),

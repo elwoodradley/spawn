@@ -29,7 +29,7 @@ Metrics panel, and the theme system. Not yet released.
 | DataFrame viewer      | A real scrollable table for pandas and polars: dtypes, shape, null counts, stats on hover, sortable, pages in more rows as you scroll.                                     | 2 ✓   |
 | Tensor inspector      | Evaluate a torch, numpy or jax array (or click it in the Variables pane, or hover its name) for shape, dtype, device, min/max/mean/std, NaN count and a heatmap.           | 2 ✓   |
 | Metrics panel         | Live loss and metric curves, progress, elapsed time and iteration rate parsed from stdout (tqdm, `loss: 0.234`, `epoch 3/10`, or your own regex).                          | 1     |
-| Language intelligence | pyright over LSP: completion, diagnostics, hover, go-to-definition.                                                                                                        | 3     |
+| Language intelligence | pyright over LSP: completion, problems at Essential / Standard / Strict, hover docs plus live value, signatures, go-to-definition, references, rename.                     | 3 ✓   |
 | Debugger              | DAP: breakpoints, stepping, variable inspection.                                                                                                                           | 4     |
 
 Remote/SSH, notebooks and an extension API are "later, if ever".

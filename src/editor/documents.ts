@@ -84,7 +84,7 @@ export async function openDocument(path: string): Promise<DocEntry> {
   if (existing) return existing;
   const text = await readText(path);
   const entry: DocEntry = {
-    state: createDocumentState(text, currentTheme().appearance, listenerFor(path)),
+    state: createDocumentState(text, currentTheme().appearance, listenerFor(path), path),
     savedText: text,
     scrollTop: 0,
   };

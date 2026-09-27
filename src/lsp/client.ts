@@ -36,7 +36,8 @@ export const LOG_CAP = 200;
 export function createClient(options: ClientOptions): LSPClient {
   return new LSPClient({
     rootUri: options.rootUri,
-    timeout: 8000,
+    // Pyright through uv can take a while to boot on a cold cache.
+    timeout: 20000,
     sanitizeHTML: (html) => DOMPurify.sanitize(html, { USE_PROFILES: { html: true } }),
     notificationHandlers: {
       "textDocument/publishDiagnostics": (_client, params: PublishParams) => {

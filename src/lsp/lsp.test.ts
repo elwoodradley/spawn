@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ESSENTIAL_RULES, filterDiagnostics, keepDiagnostic, pyrightSettings } from "./diagnostics";
+import { withWorkspaceFolders } from "./transport";
 import { pathToUri, uriToPath } from "./uri";
 
 describe("file URIs", () => {
@@ -54,5 +55,26 @@ describe("diagnostic levels", () => {
     expect(s.python.analysis.typeCheckingMode).toBe("basic");
     expect(pyrightSettings("strict", null).python.analysis.typeCheckingMode).toBe("strict");
     expect("pythonPath" in pyrightSettings("strict", null).python).toBe(false);
+  });
+});
+
+describe("withWorkspaceFolders", () => {
+  it("adds workspaceFolders and rootPath to initialize only", () => {
+    const init = JSON.stringify({
+      jsonrpc: "2.0",
+      id: 0,
+      method: "initialize",
+      params: { rootUri: null },
+    });
+    const out = JSON.parse(withWorkspaceFolders(init, "file:///home/me/my%20project")) as {
+      params: { rootPath: string; workspaceFolders: Array<{ name: string; uri: string }> };
+    };
+    expect(out.params.rootPath).toBe("/home/me/my project");
+    expect(out.params.workspaceFolders[0]).toEqual({
+      uri: "file:///home/me/my%20project",
+      name: "my project",
+    });
+    const other = JSON.stringify({ jsonrpc: "2.0", method: "initialized", params: {} });
+    expect(withWorkspaceFolders(other, "file:///x")).toBe(other);
   });
 });

@@ -20,11 +20,14 @@ import { settings } from "../app/settings";
 import { spawnEditorTheme } from "../theme/codemirror";
 import type { Theme } from "../theme/schema";
 import { cellExtensions } from "./cellDecorations";
-import { hoverInspection } from "./hover";
+import { lspExtensionFor } from "../lsp/server";
+import { mergedHover } from "../lsp/hover";
 import { prefsExtensions } from "./prefs";
 
 /** Holds the editor theme; reconfigured when the app theme changes. */
 export const themeCompartment = new Compartment();
+/** Holds the language server plugin for the document's file, or nothing. */
+export const lspCompartment = new Compartment();
 
 export function baseExtensions(appearance: Theme["appearance"]): Extension[] {
   return [
@@ -51,7 +54,7 @@ export function baseExtensions(appearance: Theme["appearance"]): Extension[] {
     ]),
     python(),
     ...cellExtensions(),
-    hoverInspection(),
+    mergedHover(),
     themeCompartment.of(spawnEditorTheme(appearance)),
   ];
 }
@@ -61,11 +64,21 @@ export function createDocumentState(
   text: string,
   appearance: Theme["appearance"],
   onUpdate: (update: ViewUpdate) => void,
+  path: string | null = null,
 ): EditorState {
   return EditorState.create({
     doc: text,
-    extensions: [...baseExtensions(appearance), EditorView.updateListener.of(onUpdate)],
+    extensions: [
+      ...baseExtensions(appearance),
+      lspCompartment.of(lspExtensionFor(path)),
+      EditorView.updateListener.of(onUpdate),
+    ],
   });
+}
+
+/** (Re)attach the language server plugin for `path` to the live view. */
+export function applyLsp(view: EditorView, path: string | null): void {
+  view.dispatch({ effects: lspCompartment.reconfigure(lspExtensionFor(path)) });
 }
 
 /** The single view; documents are swapped into it with `setState`. */
@@ -74,7 +87,11 @@ export function createView(parent: HTMLElement, appearance: Theme["appearance"])
     parent,
     state: EditorState.create({
       doc: "",
-      extensions: [...baseExtensions(appearance), EditorView.editable.of(false)],
+      extensions: [
+        ...baseExtensions(appearance),
+        lspCompartment.of([]),
+        EditorView.editable.of(false),
+      ],
     }),
   });
 }

@@ -165,7 +165,30 @@ copies straight into your file. Equations from Word's equation editor come
 through as plain text; anything the converter skipped is listed in a note at
 the top.
 
-### 7. Make it yours
+### 7. Language intelligence
+
+Completion, problem underlines, hover documentation, signature help,
+go-to-definition (F12), find references (Shift+F12) and rename (F2) come
+from pyright, the standard Python language server, running against the
+interpreter you selected, so imports resolve exactly as they will when the
+code runs. The status bar shows `pyright: ready`.
+
+Pyright is a Node program that students rarely have installed, so SPAWN
+finds it in this order: a path you set in Settings, `pyright-langserver` on
+PATH, or, if you turn on "Run pyright through uv" in Settings › Editor, uv
+fetches pyright and its own Node.js into uv's cache (about 250 MB, once).
+Nothing is added to your project. Without any of those the editor simply has
+no server and everything else works.
+
+**Problems shown** is a setting with three levels, defaulting to Essential:
+things that stop the code running or are clear mistakes (undefined names, bad
+imports, wrong arguments, obvious type mismatches, syntax errors). Standard
+is pyright's usual set; Strict is everything. Messages keep pyright's own
+wording and rule names; hover an underline to read it. Hovering a name shows
+its documentation and, when the Interactive Console is idle and knows the
+name, its live value beneath.
+
+### 8. Make it yours
 
 Ctrl+, opens Settings: theme, UI and editor fonts and sizes, line height, zoom,
 tab size, word wrap, autosave (off / after a delay / on focus change), trim
@@ -239,6 +262,10 @@ Restart Interactive Console and Run All Cells Above are in the Console menu.
 | Ctrl+D                | Select next occurrence                             |
 | Ctrl+Shift+K          | Delete line                                        |
 | Ctrl+] / Ctrl+[       | Indent / dedent selection                          |
+| Ctrl+Space            | Completion (also appears as you type)              |
+| F12                   | Go to definition                                   |
+| Shift+F12             | Find references                                    |
+| F2                    | Rename symbol                                      |
 | Escape                | Close the search panel, palette, menus and dialogs |
 
 ### Tabs and panels
@@ -302,8 +329,6 @@ The example project at `examples/tour` has a file per feature:
 
 ## Not yet
 
-- Language intelligence: completion, diagnostics, hover docs, go-to-definition
-  (Phase 3, pyright over LSP).
 - Debugger with breakpoints and stepping (Phase 4).
 - PDF handouts, plotly figures, seaborn is fine but plotly needs its own
   renderer.

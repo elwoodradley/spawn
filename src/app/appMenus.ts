@@ -83,6 +83,11 @@ export function appMenus(): Menu[] {
         cmd("edit.selectAll", { hint: EDITOR_HINTS.selectAll }),
         separator,
         cmd("edit.gotoLine", { label: "Go to line…", hint: EDITOR_HINTS.gotoLine }),
+        separator,
+        cmd("lsp.definition"),
+        cmd("lsp.references"),
+        cmd("lsp.rename", { hint: "F2" }),
+        cmd("lsp.restart"),
       ],
     },
     {

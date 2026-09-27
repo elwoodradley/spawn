@@ -20,6 +20,8 @@ import OutputPanel from "../output/OutputPanel";
 import { attachPoolEvents } from "../output/rich/attach";
 import { registerPoolCommands } from "../pool/commands";
 import { installLivePool } from "../pool/live";
+import { registerLspCommands } from "../lsp/commands";
+import { installLanguageServer } from "../lsp/server";
 import { output } from "../spawn/controller";
 import { registerSpawnCommands } from "../spawn/commands";
 import { initTheme } from "../theme/store";
@@ -77,6 +79,8 @@ export default function App() {
   onCleanup(registerViewCommands());
   onCleanup(registerPoolCommands());
   onCleanup(installLivePool());
+  onCleanup(installLanguageServer());
+  onCleanup(registerLspCommands());
   onCleanup(attachPoolEvents(output));
   startBroodTree();
 

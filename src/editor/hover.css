@@ -71,3 +71,30 @@
   background: transparent;
   border: none;
 }
+
+.sp-hover__docs {
+  max-height: 260px;
+  overflow: auto;
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  font-family: var(--sp-font-ui);
+  font-size: calc(var(--sp-font-size-ui) * 0.95);
+  line-height: 1.45;
+}
+.sp-hover__docs pre,
+.sp-hover__docs code {
+  font-family: var(--sp-font-mono);
+  font-size: calc(var(--sp-font-size-mono) * 0.9);
+}
+.sp-hover__docs pre {
+  margin: 0 0 var(--sp-space-sm);
+  padding: var(--sp-space-xs) var(--sp-space-sm);
+  background: var(--sp-color-bg-panel);
+  border-radius: var(--sp-radius-sm);
+  overflow-x: auto;
+}
+.sp-hover__docs p {
+  margin: 0 0 var(--sp-space-sm);
+}
+.sp-hover__docs + .sp-hover__live {
+  border-top: 1px solid var(--sp-color-border);
+}

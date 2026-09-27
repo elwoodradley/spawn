@@ -2,7 +2,9 @@
 import { Show } from "solid-js";
 
 import { settings, updateSettings } from "../../app/settings";
-import { Field, NumberInput, Select, Toggle } from "./Field";
+import { DIAGNOSTIC_LEVELS, LEVEL_LABELS } from "../../lsp/diagnostics";
+import { lspDetail, lspStatus } from "../../lsp/server";
+import { Field, NumberInput, Select, TextInput, Toggle } from "./Field";
 
 export default function EditorPane() {
   const editor = () => settings().editor;
@@ -42,6 +44,41 @@ export default function EditorPane() {
         checked={editor().highlightActiveLine}
         onChange={(v) => set({ highlightActiveLine: v })}
       />
+
+      <h3>Language intelligence</h3>
+      <p class="sp-settings__hint">
+        Completion, problems, hover documentation, signatures and go-to-definition come from
+        pyright, the standard Python language server. Status: {lspStatus()}
+        {lspDetail() ? ` · ${lspDetail()}` : ""}
+      </p>
+      <Toggle
+        label="Enable language intelligence (pyright)"
+        checked={settings().lsp.enabled}
+        onChange={(v) => void updateSettings({ lsp: { enabled: v } })}
+      />
+      <Field label="Problems shown" hint="Essential keeps a beginner's editor free of noise.">
+        <Select
+          value={settings().lsp.diagnostics}
+          options={DIAGNOSTIC_LEVELS.map((level) => ({ value: level, label: LEVEL_LABELS[level] }))}
+          onChange={(v) => void updateSettings({ lsp: { diagnostics: v } })}
+        />
+      </Field>
+      <Toggle
+        label="Run pyright through uv when it is not installed"
+        checked={settings().lsp.useUv}
+        onChange={(v) => void updateSettings({ lsp: { useUv: v } })}
+      />
+      <p class="sp-settings__hint">
+        The first run downloads pyright and its own Node.js into uv's cache (about 250 MB). Nothing
+        is installed into your project.
+      </p>
+      <Field label="pyright-langserver path" hint="Leave empty to find it on PATH.">
+        <TextInput
+          value={settings().lsp.serverPath ?? ""}
+          placeholder="auto"
+          onInput={(v) => void updateSettings({ lsp: { serverPath: v.trim() ? v.trim() : null } })}
+        />
+      </Field>
 
       <h3>Saving</h3>
 

@@ -9,7 +9,8 @@ import { createEffect, on, onCleanup, onMount, Show } from "solid-js";
 import { settings } from "../app/settings";
 import { activeFilePath } from "../app/state";
 import { currentTheme } from "../theme/store";
-import { applyEditorTheme, createView } from "./createEditor";
+import { clientGeneration } from "../lsp/server";
+import { applyEditorTheme, applyLsp, createView } from "./createEditor";
 import { getDocument, isDirty, revealRequest, saveDocument, setCursorPosition } from "./documents";
 import { applyEditorPrefs } from "./prefs";
 import { setActiveView } from "./view";
@@ -50,12 +51,24 @@ export default function Editor() {
       view.setState(entry.state);
       applyEditorTheme(view, currentTheme().appearance);
       applyEditorPrefs(view, settings().editor);
+      applyLsp(view, path);
       view.scrollDOM.scrollTop = entry.scrollTop;
       const head = entry.state.selection.main.head;
       const line = entry.state.doc.lineAt(head);
       setCursorPosition({ line: line.number, col: head - line.from + 1 });
       view.focus();
     }),
+  );
+
+  // A (re)started language server means a new client: re-attach its plugin.
+  createEffect(
+    on(
+      clientGeneration,
+      () => {
+        if (view && activeFilePath()) applyLsp(view, activeFilePath());
+      },
+      { defer: true },
+    ),
   );
 
   createEffect(

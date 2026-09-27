@@ -99,3 +99,17 @@
     transform: rotate(360deg);
   }
 }
+
+.sp-statusbar__lsp.is-ready .sp-statusbar__dot {
+  background: var(--sp-color-success);
+}
+.sp-statusbar__lsp.is-starting .sp-statusbar__dot {
+  background: var(--sp-color-warning);
+}
+.sp-statusbar__lsp.is-error .sp-statusbar__dot,
+.sp-statusbar__lsp.is-missing .sp-statusbar__dot {
+  background: var(--sp-color-croak);
+}
+.sp-statusbar__lsp.is-off .sp-statusbar__dot {
+  background: var(--sp-color-fg-faint);
+}

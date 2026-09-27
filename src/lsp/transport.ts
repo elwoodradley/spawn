@@ -16,6 +16,28 @@ export interface TransportHooks {
   onLog?: (line: string) => void;
   onExit?: (code: number | null) => void;
   onCroak?: (message: string) => void;
+  /** Project root URI; added to `initialize` as workspaceFolders/rootPath. */
+  rootUri?: string;
+}
+
+/**
+ * The client library sends only `rootUri`. Pyright reads `workspaceFolders`
+ * (and, failing that, the older `rootPath`), so add both to the initialize
+ * request; every other message passes through untouched.
+ */
+export function withWorkspaceFolders(message: string, rootUri: string | undefined): string {
+  if (!rootUri || !message.includes('"initialize"')) return message;
+  try {
+    const parsed = JSON.parse(message) as { method?: string; params?: Record<string, unknown> };
+    if (parsed.method !== "initialize" || !parsed.params) return message;
+    const name = decodeURIComponent(rootUri.split("/").filter(Boolean).pop() ?? "project");
+    parsed.params.rootUri = rootUri;
+    parsed.params.rootPath = decodeURIComponent(rootUri.replace(/^file:\/\//, ""));
+    parsed.params.workspaceFolders = [{ uri: rootUri, name }];
+    return JSON.stringify(parsed);
+  } catch {
+    return message;
+  }
 }
 
 export async function startServerProcess(
@@ -42,7 +64,9 @@ export async function startServerProcess(
   const id = await lspStart(request, onEvent);
   const transport: Transport = {
     send(message: string) {
-      void lspSend(id, message).catch((err: unknown) => hooks.onCroak?.(String(err)));
+      void lspSend(id, withWorkspaceFolders(message, hooks.rootUri)).catch((err: unknown) =>
+        hooks.onCroak?.(String(err)),
+      );
     },
     subscribe(handler) {
       handlers.add(handler);

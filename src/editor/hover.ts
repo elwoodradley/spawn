@@ -153,6 +153,16 @@ createRoot(() => {
   createEffect(on(execGeneration, () => cache.clear(), { defer: true }));
 });
 
+/**
+ * The live value of a dotted name from the Interactive Console, cached per
+ * exec generation; null when the console is not idle or has no such name.
+ */
+export async function inspectName(name: string): Promise<DisplayPayload | null> {
+  if (poolStatus() !== "idle") return null;
+  const payload = await lookup(name);
+  return payload && payload.kind !== "error" ? payload : null;
+}
+
 async function lookup(name: string): Promise<DisplayPayload | null> {
   const generation = execGeneration();
   const hit = cache.get(name);

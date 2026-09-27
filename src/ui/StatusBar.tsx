@@ -25,6 +25,7 @@ import {
 import { baseName, type MlInfo } from "../ipc";
 import { formatBytes } from "../output/chart";
 import { poolStatus } from "../pool/client";
+import { lspDetail, lspStatus } from "../lsp/server";
 import { poolClickCommand, poolLabel, poolTitle } from "../pool/status";
 import { elapsedMs, outcome, spawnStatus } from "../spawn/controller";
 import { currentTheme } from "../theme/store";
@@ -114,6 +115,17 @@ export default function StatusBar() {
         >
           <span class="sp-statusbar__dot" aria-hidden="true" />
           {poolLabel()}
+        </button>
+        <button
+          class="sp-statusbar__item sp-statusbar__button sp-statusbar__lsp"
+          classList={{ [`is-${lspStatus()}`]: true }}
+          title={`pyright: ${lspStatus()}${lspDetail() ? `\n${lspDetail()}` : ""}\nClick to restart`}
+          onClick={() =>
+            void runCommand(lspStatus() === "missing" ? "settings.open" : "lsp.restart")
+          }
+        >
+          <span class="sp-statusbar__dot" aria-hidden="true" />
+          {`pyright: ${lspStatus()}`}
         </button>
         <button
           class="sp-statusbar__item sp-statusbar__button sp-statusbar__spawn"
