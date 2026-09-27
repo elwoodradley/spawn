@@ -154,7 +154,7 @@ export default function OutputPanel() {
                 if (path) void spawnFile(path);
               }}
             >
-              Spawn
+              Run
             </button>
           }
         >
