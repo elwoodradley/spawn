@@ -357,3 +357,24 @@ export function fitRange(lines: readonly (readonly number[])[], margin = 0.08): 
   );
   return { min: fitted.min, max: fitted.max, clipped: true };
 }
+
+/**
+ * Metrics that live in [0, 1] by definition: accuracy, precision, recall,
+ * f1, AUC, IoU, Dice, mAP, and anything ending in `_acc`. Their axis should
+ * never be padded above 1.0 (or below 0).
+ */
+export function isBoundedMetric(name: string): boolean {
+  const n = name.toLowerCase();
+  return (
+    /(^|[_/\s-])(acc|accuracy|precision|recall|f1|f1[_-]?score|auc|roc[_-]?auc|iou|dice|map|top\d+)$/.test(
+      n,
+    ) || /(^|[_/\s-])(acc|accuracy)([_/\s-]|$)/.test(n)
+  );
+}
+
+/** Clamp a fitted range into [0, 1] for bounded metrics, keeping a hair of room. */
+export function clampUnit(range: Range): Range {
+  const min = Math.max(0, range.min);
+  const max = Math.min(1, range.max);
+  return { min: Math.min(min, max - 1e-6), max, clipped: range.clipped };
+}

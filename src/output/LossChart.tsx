@@ -17,8 +17,10 @@ import type { Series, XUnit } from "../spawn/metrics";
 import { groupLines, type ChartGroup } from "../spawn/pairs";
 import type { RunRecord } from "../spawn/runHistory";
 import {
+  clampUnit,
   clampedScale,
   fitRange,
+  isBoundedMetric,
   formatValue,
   gapPath,
   integerTicks,
@@ -124,6 +126,7 @@ export default function LossChart(props: {
       const hi = Math.max(...ys);
       range = { min: lo / 1.15, max: hi * 1.15, clipped: false };
     }
+    if (mode !== "log" && isBoundedMetric(props.group.metric)) range = clampUnit(range);
     const yMin = range.min;
     const yMax = range.max;
     const offScale = ys.filter((v) => v < yMin || v > yMax).length;
@@ -188,6 +191,12 @@ export default function LossChart(props: {
   };
 
   const xLabel = () => (props.xUnit === "sample" ? "sample" : props.xUnit);
+  /** Width of the last x tick's text, so the unit label sits after it with a gap. */
+  const lastTickWidth = () => {
+    const ticks = layout().xTicks;
+    const last = ticks[ticks.length - 1];
+    return last === undefined ? 0 : String(last).length * CHAR_W;
+  };
   const valColour = () => colourOf(props.group.train ? 1 : 0);
 
   return (
@@ -292,10 +301,9 @@ export default function LossChart(props: {
           </For>
           <text
             class="sp-chart__tick sp-chart__axis-name"
-            x={layout().w - layout().right}
+            x={layout().w - layout().right + (lastTickWidth() / 2 + 8)}
             y={layout().h - 7}
             text-anchor="start"
-            dx="8"
           >
             {xLabel()}
           </text>

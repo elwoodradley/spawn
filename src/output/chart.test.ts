@@ -10,7 +10,9 @@ import {
   integerTicks,
   linearScale,
   linePath,
+  clampUnit,
   fitRange,
+  isBoundedMetric,
   logTicks,
   nearestIndex,
   niceTicks,
@@ -239,5 +241,37 @@ describe("fitRange", () => {
     expect(r.clipped).toBe(true);
     expect(r.max).toBeLessThan(2);
     expect(r.min).toBeLessThanOrEqual(0.05);
+  });
+});
+
+describe("bounded metrics", () => {
+  it("recognises accuracy-like names and not loss-like ones", () => {
+    for (const n of [
+      "acc",
+      "val_acc",
+      "accuracy",
+      "train/accuracy",
+      "precision",
+      "recall",
+      "f1",
+      "f1_score",
+      "auc",
+      "iou",
+      "top5",
+    ]) {
+      expect(isBoundedMetric(n), n).toBe(true);
+    }
+    for (const n of ["loss", "val_loss", "lr", "mse", "accumulated", "epoch"]) {
+      expect(isBoundedMetric(n), n).toBe(false);
+    }
+  });
+
+  it("clamps a padded range into [0, 1]", () => {
+    expect(clampUnit({ min: 0.7, max: 1.03, clipped: false })).toEqual({
+      min: 0.7,
+      max: 1,
+      clipped: false,
+    });
+    expect(clampUnit({ min: -0.05, max: 0.5, clipped: false }).min).toBe(0);
   });
 });
