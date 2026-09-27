@@ -326,8 +326,12 @@ an opaque origin, so it cannot reach the Tauri bridge. Hover and pane
 inspection evaluate dotted names only, never expressions, so looking at a
 value cannot run code.
 
-**Size note.** `pool.py` is the one file in the repo allowed past the ~300
-line guideline: it must stay a single stdlib-only script so it can be
+**Size note.** Two files sit past the ~300 line guideline on purpose.
+`src-tauri/src/env/discover.rs` holds the whole interpreter search order in
+one place (venv, uv-resolved, uv-managed, Homebrew, pyenv, PATH, system) with
+its path classifier and tests, because the order is the policy and reading
+it split across files would hide that. And `pool.py` is the one script allowed
+past the guideline: it must stay a single stdlib-only script so it can be
 embedded and shipped as-is, and splitting it would mean shipping and
 importing a package from the cache dir. It is organised in sections
 (transport, JSON safety, displays, detectors, namespace, main loop) and

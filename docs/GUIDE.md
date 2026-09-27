@@ -85,10 +85,19 @@ opens any file by fuzzy name; Ctrl+Shift+F searches inside files.
 ### 2. Pick an interpreter
 
 The status bar shows the current Python. Click it for **Select Python
-Interpreter**: SPAWN lists the project's `.venv`, whatever `uv python find`
-returns, and Pythons on
-PATH. "Browse for a Python…" lets you point at any interpreter, for example a
-venv in another folder; the choice is remembered per project. The bar also shows
+Interpreter**. SPAWN looks in this order and offers everything it finds, best
+first: the project's own `.venv` (or `venv`, `.env`); the Python uv resolves
+for the project from `requires-python` in `pyproject.toml`; interpreters uv
+manages; Homebrew and pyenv installs; and finally whatever is on PATH. The
+operating system's own Python (`/usr/bin/python3`, Apple's 3.9 on a Mac) is
+listed last, labelled **system**, and chosen only when nothing else exists,
+with a warning in the status bar, because projects almost never want it.
+
+If the project has no environment, the picker offers **Create .venv with uv**
+(runs `uv venv`), and **uv sync** when a `pyproject.toml` exists, which also
+installs the declared dependencies. The exact command is in the button's
+tooltip; nothing runs until you click. "Browse for a Python…" lets you point
+at any interpreter; the choice is remembered per project. The bar also shows
 numpy and torch versions and the torch device once the interpreter is probed.
 
 ### 3. Run a file (fresh process)
@@ -104,6 +113,16 @@ Shift+F5 stops it. Dirty files are saved first (a setting).
 Right-click the output for find, copy all, save to a file, word wrap and
 timestamps. The header shows the exact command and working directory on
 hover, elapsed time and exit code.
+
+**Working directory.** A run starts in the file's own folder, the same as
+typing `python tester.py` in that folder, so `open("puzzles/easy_1.txt")`
+finds a file next to the script. The Output header shows it next to the
+command, e.g. `python -u tester.py · in puzzles/`, with the full path on
+hover. Settings › Run switches the default to the project root, and a
+per-project override is saved to `<project>/.spawn/project.json`. F5 and the
+Interactive Console (cells, selections, files) always use the same rule, and
+the console also puts the file's folder first on the import path, so
+`import helper` beside the file works both ways.
 
 ### 4. Run in the Interactive Console (persistent kernel)
 
@@ -148,6 +167,9 @@ Print metrics as `name: value` or `name=value` (any name), count epochs as
 - the value axis fits the bulk of the data; an isolated spike (a first-epoch
   `val_loss` of 6.78) sits off-scale as a marker with a count, so the rest of
   the curve stays readable. Each chart has an **auto / full / log** toggle;
+- metrics that cannot exceed 1 (`acc`, `accuracy`, `precision`, `recall`,
+  `f1`, `auc`, `iou`, `dice`, `map`, `top5`, anything ending in `_acc`) never
+  get an axis above 1.0 in auto or full mode;
 - values printed fewer than three times (`hidden=64`, `accuracy 0.923`) are
   listed above the charts, not charted;
 - the last five runs are kept and overlaid as dashed lines you can toggle per
@@ -281,7 +303,12 @@ Restart Interactive Console and Run All Cells Above are in the Console menu.
 | Ctrl+Shift+J              | Maximize / restore the output panel |
 
 Drag the divider between editor and output, or beside the sidebar, to resize;
-double-click it to reset. Drag tabs to reorder; middle-click closes.
+double-click it to reset. The sidebar also has a collapse chevron in its header
+and, when hidden, a thin rail you can click to bring it back; its width is
+remembered. Drag tabs to reorder; middle-click closes.
+
+Switching tabs keeps each file's place: scroll position, cursor, selection and
+undo history for code, and scroll position for a handout.
 
 ### App
 
