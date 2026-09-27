@@ -74,6 +74,26 @@ def main(python: str) -> int:
     names = {v["name"]: v for v in ev[-1]["data"]}
     expect(names.get("y", {}).get("summary") == "42", "state persists between execs")
 
+    import tempfile
+    work = tempfile.mkdtemp(prefix="spawn-cwd-")
+    sub = os.path.join(work, "puzzles")
+    os.makedirs(sub)
+    with open(os.path.join(sub, "helper.py"), "w") as fh:
+        fh.write("VALUE = 'beside the file'\n")
+    with open(os.path.join(sub, "data.txt"), "w") as fh:
+        fh.write("found\n")
+    script = os.path.join(sub, "tester.py")
+    ev = request("exec", code="import os, sys\nos.getcwd()", file=script, startLine=1, scope="cell", cwd=sub)
+    expect(ev[0]["payload"]["text"] == repr(os.path.realpath(sub)) or ev[0]["payload"]["text"] == repr(sub), "exec chdirs to the requested working directory")
+    ev = request("exec", code="sys.path[0]", file=script, startLine=1, scope="cell", cwd=sub)
+    expect(ev[0]["payload"]["text"] == repr(sub), "the file's folder is first on sys.path")
+    ev = request("exec", code="import helper\nopen('data.txt').read().strip() + ' / ' + helper.VALUE", file=script, startLine=1, scope="cell", cwd=sub)
+    expect(ev[0]["payload"]["text"] == repr("found / beside the file"), "relative paths and sibling imports resolve like `python tester.py`")
+    ev2 = request("exec", code="sys.path.count(sys.path[0])", file=script, startLine=1, scope="cell", cwd=sub)
+    expect(ev2[0]["payload"]["text"] == "1", "the sys.path entry is replaced, not accumulated")
+    ev = request("exec", code="os.getcwd()", file=os.path.join(work, "top.py"), startLine=1, scope="cell", cwd=work)
+    expect(ev[0]["payload"]["text"] in (repr(work), repr(os.path.realpath(work))), "a later exec can move the working directory again")
+
     ev = request("exec", code="\n\n1/0", file="t.py", startLine=10, scope="cell")
     err = ev[0]["payload"]
     expect(err["kind"] == "error" and err["type"] == "ZeroDivisionError", "errors become payloads")

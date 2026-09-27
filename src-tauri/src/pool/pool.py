@@ -871,6 +871,7 @@ class Pool:
         file = req.get("file") or "<pool>"
         start = int(req.get("startLine") or 1)
         self.namespace["__file__"] = file
+        self.enter_working_directory(req.get("cwd"), file)
         before = time.perf_counter()
         ok = True
         try:
@@ -900,6 +901,24 @@ class Pool:
                 }
             )
             self.current_id = None
+
+    def enter_working_directory(self, cwd, file: str) -> None:
+        """Match `python file.py`: chdir to the requested folder and put the
+        file's folder first on sys.path (replacing our previous entry)."""
+        if cwd:
+            try:
+                if os.path.realpath(os.getcwd()) != os.path.realpath(cwd):
+                    os.chdir(cwd)
+            except OSError:
+                pass
+        folder = os.path.dirname(file) if file and not file.startswith("<") else None
+        previous = getattr(self, "_path_entry", None)
+        if previous is not None and previous in sys.path:
+            sys.path.remove(previous)
+        self._path_entry = None
+        if folder:
+            sys.path.insert(0, folder)
+            self._path_entry = folder
 
     def run(self, code: str, file: str, start: int) -> None:
         tree = ast.parse(code, filename=file)

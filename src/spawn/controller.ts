@@ -5,7 +5,8 @@
  * CONTRACT (other modules import these; keep the signatures):
  * - `spawnStatus()` is "idle" or "running".
  * - `spawnFile(path)` saves dirty documents, then runs `path` with the
- *   selected interpreter, cwd = brood root (or the file's folder), unbuffered.
+ *   selected interpreter, unbuffered, in the working directory the project
+ *   settings resolve (the file's own folder by default).
  * - `stopSpawn()` kills the running child.
  *
  * Python runs with `-u` and PYTHONUNBUFFERED so prompts from input() reach
@@ -14,11 +15,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import { createSignal } from "solid-js";
 
+import { resolveWorkingDirectory } from "../app/project";
 import { settings, type RunPattern } from "../app/settings";
-import { brood } from "../app/state";
 import { saveAllDirty } from "../editor/documents";
 import { selectedInterpreter } from "../env/store";
-import { baseName, dirName, notify, spawnProcess, type ProcEvent, type ProcHandle } from "../ipc";
+import { baseName, notify, spawnProcess, type ProcEvent, type ProcHandle } from "../ipc";
 import { MetricsModel } from "./metrics";
 import { recordRun } from "./runHistory";
 import { OutputModel } from "./output";
@@ -76,7 +77,7 @@ export async function spawnFile(path: string): Promise<void> {
     return;
   }
 
-  const cwd = brood() ?? dirName(path);
+  const cwd = resolveWorkingDirectory(path);
   const command: SpawnCommand = { program, args: ["-u", path], cwd };
   setSpawnCommand(command);
   setExitCode(null);

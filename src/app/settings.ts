@@ -64,6 +64,8 @@ export const SettingsSchema = z.object({
       serverPath: z.string().nullable().default(null),
       /** The user agreed to run pyright through uv (downloads on first use). */
       useUv: z.boolean().default(false),
+      /** The "pyright isn't installed" banner was dismissed. */
+      dismissedMissingNotice: z.boolean().default(false),
     })
     .prefault({}),
   run: z
@@ -73,6 +75,11 @@ export const SettingsSchema = z.object({
       keepRuns: z.number().int().min(0).max(20).default(5),
       /** Draw the previous runs' curves behind the live one. */
       overlayPrevious: z.boolean().default(true),
+      /**
+       * Where a run starts: the file's own folder (what `python file.py` from
+       * a terminal does) or the project root. A project can override it.
+       */
+      workingDirectory: z.enum(["file", "project"]).default("file"),
     })
     .prefault({}),
 });

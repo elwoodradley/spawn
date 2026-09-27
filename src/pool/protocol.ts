@@ -113,6 +113,11 @@ export interface ExecRequest {
   startLine: number;
   /** What the user ran: the output labels the block with it. */
   scope: "cell" | "selection" | "file" | "expression";
+  /**
+   * Working directory for this exec; the console chdirs there and puts the
+   * file's folder first on sys.path, so cells agree with a fresh-process run.
+   */
+  cwd: string | null;
 }
 
 export interface ExecResult {

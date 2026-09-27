@@ -14,6 +14,7 @@ import {
   sidebarTab,
   sidebarVisible,
 } from "../app/layout";
+import { resolveWorkingDirectory } from "../app/project";
 import { settings } from "../app/settings";
 import { activeFilePath } from "../app/state";
 import { toast } from "../app/toast";
@@ -52,6 +53,7 @@ async function spawnPiece(piece: Piece): Promise<boolean> {
     file,
     startLine: piece.startLine,
     scope: piece.scope,
+    cwd: file ? resolveWorkingDirectory(file) : null,
   });
   await refreshVariables();
   return result.ok;

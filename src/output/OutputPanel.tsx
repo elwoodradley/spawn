@@ -10,6 +10,7 @@ import { createEffect, createSignal, on, Show } from "solid-js";
 import { runCommand } from "../app/commands";
 import { settings } from "../app/settings";
 import { activeFilePath } from "../app/state";
+import { describeWorkingDirectory } from "../app/project";
 import { baseName } from "../ipc";
 import {
   elapsedMs,
@@ -88,7 +89,7 @@ export default function OutputPanel() {
   const commandLabel = () => {
     const ran = spawnCommand();
     if (!ran) return "nothing run yet";
-    return `${baseName(ran.program)} ${ran.args.map(baseName).join(" ")}`;
+    return `${baseName(ran.program)} ${ran.args.map(baseName).join(" ")} · in ${describeWorkingDirectory(ran.cwd)}`;
   };
 
   const commandTitle = () => {

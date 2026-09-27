@@ -1,6 +1,10 @@
 /** What happens around a run. */
+import { Show } from "solid-js";
+
+import { projectSettings, updateProjectSettings } from "../../app/project";
 import { settings, updateSettings } from "../../app/settings";
-import { Field, NumberInput, Toggle } from "./Field";
+import { brood } from "../../app/state";
+import { Field, NumberInput, Select, Toggle } from "./Field";
 
 export default function SpawnPane() {
   const spawn = () => settings().spawn;
@@ -31,6 +35,37 @@ export default function SpawnPane() {
         checked={spawn().notifyWhenDone}
         onChange={(v) => set({ notifyWhenDone: v })}
       />
+      <Field
+        label="Working directory"
+        hint="Where relative paths resolve from when you run. The file's folder matches `python tester.py` from a terminal. Applies to F5 and to cells in the Interactive Console alike."
+      >
+        <Select
+          value={run().workingDirectory}
+          options={[
+            { value: "file", label: "The file's own folder" },
+            { value: "project", label: "The project root" },
+          ]}
+          onChange={(v) => void updateSettings({ run: { workingDirectory: v } })}
+        />
+      </Field>
+      <Show when={brood()}>
+        <Field
+          label="For this project"
+          hint="Overrides the default above; saved in the project's own settings file."
+        >
+          <Select
+            value={projectSettings().workingDirectory ?? "default"}
+            options={[
+              { value: "default", label: "Use the default" },
+              { value: "file", label: "The file's own folder" },
+              { value: "project", label: "The project root" },
+            ]}
+            onChange={(v) =>
+              void updateProjectSettings({ workingDirectory: v === "default" ? undefined : v })
+            }
+          />
+        </Field>
+      </Show>
       <h2>Run panel</h2>
       <Field
         label="Runs to keep for comparison"
