@@ -23,6 +23,8 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - **editor:** Hover a name to inspect it in the pool
 - **env:** Browse for any interpreter and remember it per brood
 - **viewer:** Open .docx handouts as readable tabs
+- **lsp:** Byte-accurate stdio transport for language servers, client factory, diagnostic levels
+- **lsp:** Pyright language intelligence with student-friendly diagnostic levels
 
 ### Fixed
 
@@ -31,16 +33,22 @@ All notable changes to SPAWN. Generated from commit history by git-cliff.
 - **spawn:** Run panel promotes only real series, fits the axis around spikes, repels labels
 - **ui:** Splitters get a real grab zone, a grip, double-click reset, and keyboard resize
 
+### Changed
+
+- Standard terminology everywhere a user can see it
+
 ### Documentation
 
 - README, CONTRIBUTING, architecture, theme guide, research notes, CI
 - Describe the pool, its transport, interrupt and security model
+- User guide with audience, workflow and every shortcut; move output resize keys off CodeMirror's multi-cursor chords
 
 ### Internal
 
 - Scaffold SPAWN with Rust process layer, theme system, and command registry
 - Add module contracts as stubs for parallel Phase 1 work
 - Generate changelog
+- Regenerate changelog
 - Regenerate changelog
 - Regenerate changelog
 - Regenerate changelog
