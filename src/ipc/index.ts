@@ -11,3 +11,4 @@ export * from "./store";
 export * from "./print";
 export * from "./notification";
 export * from "./pool";
+export * from "./lsp";

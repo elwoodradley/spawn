@@ -92,6 +92,16 @@ pub async fn env_probe(python: String) -> Result<PythonInfo> {
         .map_err(|err| Error::Message(format!("unreadable probe output from {python}: {err}")))
 }
 
+/// Absolute path of an executable on PATH, or none. Used to find tools
+/// such as a language server without shelling out to `which`.
+#[tauri::command]
+pub fn env_which(name: String) -> Option<String> {
+    if name.contains(['/', '\\']) || name.is_empty() {
+        return None;
+    }
+    find_on_path(&name).map(|p| p.to_string_lossy().into_owned())
+}
+
 /// Path to `uv` if it is installed, so the chrome can say so.
 #[tauri::command]
 pub fn env_uv_path() -> Option<String> {

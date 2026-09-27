@@ -4,6 +4,7 @@
 
 mod env;
 mod error;
+mod lsp;
 mod pool;
 mod proc;
 
@@ -30,6 +31,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .manage(Arc::new(proc::ProcRegistry::default()))
         .manage(Arc::new(pool::PoolRegistry::default()))
+        .manage(Arc::new(lsp::LspRegistry::default()))
         .invoke_handler(tauri::generate_handler![
             proc::proc_spawn,
             proc::proc_write,
@@ -38,9 +40,13 @@ pub fn run() {
             pool::pool_start,
             pool::pool_send,
             pool::pool_interrupt,
+            lsp::lsp_start,
+            lsp::lsp_send,
+            lsp::lsp_stop,
             env::env_discover,
             env::env_probe,
             env::env_uv_path,
+            env::env_which,
             env::ml::env_probe_ml,
             env::ml::sys_memory,
             print_page,

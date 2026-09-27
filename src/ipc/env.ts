@@ -54,3 +54,8 @@ export function probeMl(python: string): Promise<MlInfo> {
 export function sysMemory(): Promise<MemoryInfo> {
   return invoke<MemoryInfo>("sys_memory");
 }
+
+/** Absolute path of an executable on PATH, or null. */
+export function which(name: string): Promise<string | null> {
+  return invoke<string | null>("env_which", { name });
+}
