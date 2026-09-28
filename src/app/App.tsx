@@ -13,6 +13,7 @@ import {
 import { startBroodTree } from "../brood/store";
 import { isDirty, saveAllDirty } from "../editor/documents";
 import Editor from "../editor/Editor";
+import { installInlineValues } from "../editor/inlineValues/install";
 import DocxView from "../viewer/DocxView";
 import { isViewerPath } from "../viewer/docx";
 import { baseName } from "../ipc";
@@ -87,6 +88,7 @@ export default function App() {
   onCleanup(installProjectSettings());
   onCleanup(registerLspCommands());
   onCleanup(attachPoolEvents(output));
+  onCleanup(installInlineValues());
   startBroodTree();
 
   onMount(() => {

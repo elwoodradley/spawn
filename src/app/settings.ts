@@ -44,6 +44,8 @@ export const SettingsSchema = z.object({
       autosaveDelayMs: z.number().int().min(100).max(60_000).default(1000),
       trimTrailingWhitespace: z.boolean().default(false),
       insertFinalNewline: z.boolean().default(true),
+      /** Faint values at the end of assignment lines after an Interactive Console run. */
+      inlineValues: z.boolean().default(true),
     })
     .prefault({}),
   spawn: z
