@@ -27,6 +27,7 @@ import json
 import math
 import os
 import queue
+import re
 import signal
 import socket
 import struct
@@ -816,6 +817,58 @@ def safe_repr(value) -> str:
         return f"<{type(value).__name__}: repr failed: {err}>"
 
 
+def torch_device(value) -> str | None:
+    """`cpu`, `cuda` or `mps` for a torch tensor or module; None for anything else.
+
+    Only looks when the user has already imported torch, so asking never
+    imports it. A module's device is that of its first parameter.
+    """
+    torch = sys.modules.get("torch")
+    if torch is None:
+        return None
+    try:
+        tensor_type = getattr(torch, "Tensor", None)
+        if tensor_type is not None and isinstance(value, tensor_type):
+            return str(value.device.type)
+        module_type = getattr(getattr(torch, "nn", None), "Module", None)
+        if module_type is not None and isinstance(value, module_type):
+            first = next(iter(value.parameters()), None)
+            return None if first is None else str(first.device.type)
+    except Exception:
+        return None
+    return None
+
+
+def torch_module_info(value) -> tuple[int, int] | None:
+    """(parameter count, parameter bytes) for a torch nn.Module, else None."""
+    torch = sys.modules.get("torch")
+    module_type = getattr(getattr(torch, "nn", None), "Module", None) if torch else None
+    if module_type is None or not isinstance(value, module_type):
+        return None
+    try:
+        count = 0
+        nbytes = 0
+        for p in value.parameters():
+            n = int(p.numel())
+            count += n
+            nbytes += n * int(p.element_size())
+        return count, nbytes
+    except Exception:
+        return None
+
+
+def frame_bytes(value) -> int | None:
+    """Memory a DataFrame holds, when the library can say cheaply."""
+    try:
+        if hasattr(value, "memory_usage"):
+            return int(value.memory_usage().sum())  # pandas: O(columns) without deep=True
+        if hasattr(value, "estimated_size"):
+            return int(value.estimated_size())  # polars
+    except Exception:
+        return None
+    return None
+
+
 # ── the namespace and execution ─────────────────────────────────────────────
 
 
@@ -1021,6 +1074,7 @@ class Pool:
         dtype = None
         size = None
         summary = ""
+        module = torch_module_info(value)
         try:
             if hasattr(value, "shape") and hasattr(value, "dtype"):
                 shape = [int(s) for s in value.shape]
@@ -1031,15 +1085,24 @@ class Pool:
                     size = nbytes
                 elif hasattr(value, "element_size") and hasattr(value, "numel"):
                     size = int(value.element_size() * value.numel())
+                if not shape and hasattr(value, "item"):
+                    # A 0-d array or tensor is one number: show it.
+                    summary = f"{safe_repr(value.item())} {dtype}"
             elif hasattr(value, "columns") and hasattr(value, "shape"):
                 shape = [int(s) for s in value.shape]
                 summary = f"{kind} {shape[0]}×{shape[1]}"
+                size = frame_bytes(value)
             elif isinstance(value, (list, tuple, set, dict, str, bytes)):
                 summary = f"{kind}[{len(value)}]"
                 if isinstance(value, str):
                     summary = safe_repr(value)[:80]
+            elif module is not None:
+                summary = f"{kind} · {module[0]:,} params"
+                size = module[1]
             else:
                 summary = safe_repr(value)
+                if "\n" in summary or re.match(r"<.* at 0x[0-9a-fA-F]+>$", summary):
+                    summary = kind  # a long or anonymous repr: the class name says more
         except Exception:
             summary = kind
         if len(summary) > 80:
@@ -1051,6 +1114,7 @@ class Pool:
             "shape": shape,
             "dtype": dtype,
             "size": size,
+            "device": torch_device(value),
             "changed": name in self.changed,
         }
 

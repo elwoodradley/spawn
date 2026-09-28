@@ -133,6 +133,10 @@ export function appMenus(): Menu[] {
           label: "Word wrap",
           checked: () => settings().editor.wordWrap,
         }),
+        cmd("view.inlineValues", {
+          label: "Inline values",
+          checked: () => settings().editor.inlineValues,
+        }),
         separator,
         cmd("view.zoomIn"),
         cmd("view.zoomOut"),

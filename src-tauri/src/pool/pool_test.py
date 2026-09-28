@@ -73,6 +73,39 @@ def main(python: str) -> int:
     ev = request("variables")
     names = {v["name"]: v for v in ev[-1]["data"]}
     expect(names.get("y", {}).get("summary") == "42", "state persists between execs")
+    expect(names.get("y", {}).get("device") is None, "variables carry a device field (None without torch)")
+
+    # The device field without real torch: a stand-in module with the same
+    # surface (Tensor.device.type, nn.Module.parameters) exercises the path.
+    fake_torch = (
+        "import sys, types\n"
+        "torch = types.ModuleType('torch')\n"
+        "class _Dev:\n"
+        "    def __init__(self, t): self.type = t\n"
+        "class Tensor:\n"
+        "    def __init__(self, dev='cpu'): self.device = _Dev(dev)\n"
+        "    def numel(self): return 3\n"
+        "    def element_size(self): return 4\n"
+        "torch.Tensor = Tensor\n"
+        "torch.nn = types.ModuleType('torch.nn')\n"
+        "class Module:\n"
+        "    def parameters(self): return iter([Tensor('mps'), Tensor('mps')])\n"
+        "torch.nn.Module = Module\n"
+        "sys.modules['torch'] = torch\n"
+        "class Net(Module): pass\n"
+        "class Empty(Module):\n"
+        "    def parameters(self): return iter([])\n"
+        "t = Tensor('cpu'); model = Net(); empty = Empty()\n"
+        "class Plain: pass\n"
+        "plain = Plain()\n"
+    )
+    request("exec", code=fake_torch, file="t.py", startLine=1, scope="cell")
+    names = {v["name"]: v for v in request("variables")[-1]["data"]}
+    expect(names["t"]["device"] == "cpu" and names["t"]["summary"] == "Tensor", "a tensor reports its device; an anonymous repr becomes the class name")
+    expect(names["model"]["device"] == "mps" and names["model"]["summary"] == "Net · 6 params" and names["model"]["size"] == 24, "a module reports its first parameter's device, parameter count and bytes")
+    expect(names["empty"]["device"] is None and names["empty"]["summary"] == "Empty · 0 params", "a module without parameters has no device")
+    expect(names["plain"]["device"] is None and names["plain"]["summary"] == "Plain", "plain objects have no device")
+    request("exec", code="del sys.modules['torch'], torch, t, model, empty, plain, Net, Empty, Module, Tensor", file="t.py", startLine=1, scope="cell")
 
     import tempfile
     work = tempfile.mkdtemp(prefix="spawn-cwd-")
@@ -127,6 +160,13 @@ def main(python: str) -> int:
         ref = tab["ref"]
         ev = request("table_rows", ref=ref, rowStart=1, count=5)
         expect(len(ev[-1]["data"]) == 2, "table paging")
+
+        request("exec", code="scalar = np.float64(2.5)\nsmall = np.zeros((400, 5), dtype='float32')", file="t.py", startLine=1, scope="cell")
+        names = {v["name"]: v for v in request("variables")[-1]["data"]}
+        expect(names["small"]["shape"] == [400, 5] and names["small"]["dtype"] == "float32" and names["small"]["size"] == 8000, "array variables carry shape, dtype and bytes")
+        expect(names["scalar"]["summary"] == "2.5 float64" and names["scalar"]["shape"] == [], "a 0-d value shows its number")
+        expect(names["df"]["shape"] == [3, 2] and isinstance(names["df"]["size"], int) and names["df"]["size"] > 0, "a DataFrame carries its shape and memory use")
+        expect(names["df"]["summary"] == "DataFrame 3×2", "DataFrame summary")
 
         code = (
             "import matplotlib.pyplot as plt\n"

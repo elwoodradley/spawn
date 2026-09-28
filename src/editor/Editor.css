@@ -72,3 +72,15 @@
   font-size: calc(var(--sp-font-size-mono) * 0.75);
   opacity: 0.8;
 }
+
+/* Inline values: the result of an assignment, faint, at the end of its line. */
+.sp-editor-surface .sp-inline-value {
+  margin-left: var(--sp-space-xl);
+  color: var(--sp-color-fg-faint);
+  font-family: var(--sp-font-mono);
+  font-size: calc(var(--sp-font-size-mono) * 0.9);
+  user-select: none;
+  -webkit-user-select: none;
+  white-space: pre;
+  cursor: default;
+}

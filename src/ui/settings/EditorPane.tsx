@@ -44,6 +44,12 @@ export default function EditorPane() {
         checked={editor().highlightActiveLine}
         onChange={(v) => set({ highlightActiveLine: v })}
       />
+      <Toggle
+        label="Inline values"
+        hint="After a run in the Interactive Console, show each assigned variable's shape or value at the end of its line."
+        checked={editor().inlineValues}
+        onChange={(v) => set({ inlineValues: v })}
+      />
 
       <h3>Language intelligence</h3>
       <p class="sp-settings__hint">

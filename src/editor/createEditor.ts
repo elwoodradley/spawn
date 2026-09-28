@@ -23,6 +23,11 @@ import { cellExtensions } from "./cellDecorations";
 import { lspExtensionFor } from "../lsp/server";
 import { mergedHover } from "../lsp/hover";
 import { completionKeys } from "./completionKeys";
+import {
+  inlineValuesCompartment,
+  inlineValuesExtension,
+  inlineValuesPath,
+} from "./inlineValues/decorations";
 import { prefsExtensions } from "./prefs";
 
 /** Holds the editor theme; reconfigured when the app theme changes. */
@@ -57,6 +62,7 @@ export function baseExtensions(appearance: Theme["appearance"]): Extension[] {
     python(),
     ...cellExtensions(),
     mergedHover(),
+    inlineValuesCompartment.of(inlineValuesExtension(settings().editor.inlineValues)),
     themeCompartment.of(spawnEditorTheme(appearance)),
   ];
 }
@@ -73,6 +79,7 @@ export function createDocumentState(
     extensions: [
       ...baseExtensions(appearance),
       lspCompartment.of(lspExtensionFor(path)),
+      inlineValuesPath.of(path),
       EditorView.updateListener.of(onUpdate),
     ],
   });

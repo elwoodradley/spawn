@@ -14,6 +14,8 @@ import { startBroodTree } from "../brood/store";
 import { installDatasetChecks } from "../dataset/checks";
 import { isDirty, saveAllDirty } from "../editor/documents";
 import Editor from "../editor/Editor";
+import { installInlineValues } from "../editor/inlineValues/install";
+import { installNudges } from "../nudges/store";
 import DocxView from "../viewer/DocxView";
 import { isViewerPath } from "../viewer/docx";
 import { baseName } from "../ipc";
@@ -91,6 +93,8 @@ export default function App() {
   onCleanup(registerLspCommands());
   onCleanup(attachPoolEvents(output));
   onCleanup(installDatasetChecks());
+  onCleanup(installInlineValues());
+  onCleanup(installNudges());
   startBroodTree();
 
   onMount(() => {

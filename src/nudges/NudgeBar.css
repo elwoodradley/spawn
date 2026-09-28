@@ -1,0 +1,30 @@
+.sp-nudge {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-space-sm) var(--sp-space-md);
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  background: var(--sp-color-bg-panel);
+  border-bottom: 1px solid var(--sp-color-border);
+  border-left: 3px solid var(--sp-color-info);
+  font-size: calc(var(--sp-font-size-ui) * 0.9);
+}
+.sp-nudge__text {
+  color: var(--sp-color-fg);
+}
+.sp-nudge__actions {
+  display: inline-flex;
+  gap: var(--sp-space-sm);
+  margin-left: auto;
+}
+.sp-nudge__btn {
+  padding: 0 var(--sp-space-md);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-fg-muted);
+  border: 1px solid var(--sp-color-border);
+}
+.sp-nudge__btn:hover {
+  color: var(--sp-color-fg);
+  background: var(--sp-color-bg-hover);
+}

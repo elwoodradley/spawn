@@ -57,6 +57,13 @@ export const viewCommands: Command[] = [
     keys: "Alt-Z",
     run: () => updateSettings({ editor: { wordWrap: !settings().editor.wordWrap } }),
   },
+  {
+    id: "view.inlineValues",
+    title: "Toggle Inline Values",
+    run: async () => {
+      await updateSettings({ editor: { inlineValues: !settings().editor.inlineValues } });
+    },
+  },
 ];
 
 export function registerViewCommands(): () => void {
