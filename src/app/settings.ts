@@ -82,6 +82,12 @@ export const SettingsSchema = z.object({
       workingDirectory: z.enum(["file", "project"]).default("file"),
     })
     .prefault({}),
+  check: z
+    .object({
+      /** Check Before Submitting stops a fresh run or a test run after this long. */
+      timeoutSeconds: z.number().int().min(10).max(3600).default(120),
+    })
+    .prefault({}),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 

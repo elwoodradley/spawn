@@ -5,9 +5,10 @@
  * a metric, when the setting allows and the user has not picked a tab by
  * hand this session.
  */
-import { createEffect, createSignal, on, Show } from "solid-js";
+import { createEffect, createSignal, Match, on, Show, Switch } from "solid-js";
 
 import { runCommand } from "../app/commands";
+import CheckPanel from "../check/CheckPanel";
 import { settings } from "../app/settings";
 import { activeFilePath } from "../app/state";
 import { describeWorkingDirectory } from "../app/project";
@@ -31,7 +32,7 @@ import "./OutputPanel.css";
 import RunPanel from "./RunPanel";
 import { setShowTimestamps, setWrapLines, showTimestamps, wrapLines } from "./view";
 
-type Tab = "output" | "run";
+type Tab = "output" | "run" | "check";
 
 const [tab, setTab] = createSignal<Tab>("output");
 let userPicked = false;
@@ -123,6 +124,7 @@ export default function OutputPanel() {
         <div class="sp-output__tabs" role="tablist">
           <TabButton id="output" label="Output" current={tab()} />
           <TabButton id="run" label="Metrics" current={tab()} badge={metrics.series.length} />
+          <TabButton id="check" label="Check" current={tab()} />
         </div>
         <span class="sp-output__dot" classList={{ [`is-${dotState()}`]: true }} />
         <span class="sp-output__command mono" title={commandTitle()}>
@@ -167,6 +169,14 @@ export default function OutputPanel() {
             Stop
           </button>
         </Show>
+        <button
+          class="sp-output__button"
+          disabled={!/\.pyw?$/i.test(activeFilePath() ?? "")}
+          title="Check the current file before submitting (F6)"
+          onClick={() => void runCommand("check.run")}
+        >
+          Check
+        </button>
         <button class="sp-output__button" title="Clear the output" onClick={() => output.clear()}>
           Clear
         </button>
@@ -187,9 +197,14 @@ export default function OutputPanel() {
           ⋯
         </button>
       </header>
-      <Show when={tab() === "output"} fallback={<RunPanel />}>
-        <OutputConsole />
-      </Show>
+      <Switch fallback={<RunPanel />}>
+        <Match when={tab() === "output"}>
+          <OutputConsole />
+        </Match>
+        <Match when={tab() === "check"}>
+          <CheckPanel />
+        </Match>
+      </Switch>
     </section>
   );
 }

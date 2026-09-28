@@ -11,6 +11,7 @@ import {
 } from "solid-js";
 
 import { startBroodTree } from "../brood/store";
+import { registerCheckCommands } from "../check/commands";
 import { isDirty, saveAllDirty } from "../editor/documents";
 import Editor from "../editor/Editor";
 import DocxView from "../viewer/DocxView";
@@ -86,6 +87,7 @@ export default function App() {
   onCleanup(installLanguageServer());
   onCleanup(installProjectSettings());
   onCleanup(registerLspCommands());
+  onCleanup(registerCheckCommands());
   onCleanup(attachPoolEvents(output));
   startBroodTree();
 

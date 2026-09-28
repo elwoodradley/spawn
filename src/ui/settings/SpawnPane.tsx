@@ -87,6 +87,21 @@ export default function SpawnPane() {
         checked={run().overlayPrevious}
         onChange={(v) => void updateSettings({ run: { overlayPrevious: v } })}
       />
+      <h2>Check before submitting</h2>
+      <Field
+        label="Time limit in seconds"
+        hint="The fresh run and the test run are each stopped after this long and reported as a note."
+      >
+        <NumberInput
+          value={settings().check.timeoutSeconds}
+          min={10}
+          max={3600}
+          onInput={(raw) => {
+            const n = Number.parseInt(raw, 10);
+            if (Number.isFinite(n)) void updateSettings({ check: { timeoutSeconds: n } });
+          }}
+        />
+      </Field>
     </div>
   );
 }
