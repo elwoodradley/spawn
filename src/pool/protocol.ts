@@ -18,6 +18,38 @@ export interface ColumnInfo {
 
 export type Cell = string | number | boolean | null;
 
+/** One thing the dataset check noticed, worded for a first ML course. */
+export interface DatasetFinding {
+  /** Stable id: missing, numeric_text, imbalance, leakage, scale, duplicates, constant, id_column. */
+  id: string;
+  severity: "warn" | "info";
+  title: string;
+  detail: string;
+  /** The column it is about, when it is about one. */
+  column: string | null;
+}
+
+export interface DatasetColumn {
+  name: string;
+  dtype: string;
+  missing: number;
+  /** Distinct non-missing values; null when the check ran out of time. */
+  unique: number | null;
+}
+
+/** The dataset check's report on a DataFrame or 2-D array. */
+export interface DatasetHealth {
+  kind: "dataframe" | "array";
+  rows: number;
+  cols: number;
+  /** Rows actually examined (the first 50 000 of a big frame). */
+  sampled: number;
+  /** Some checks were skipped to stay within the time budget. */
+  partial: boolean;
+  findings: DatasetFinding[];
+  columns: DatasetColumn[];
+}
+
 export type DisplayPayload =
   /** The repr of a bare expression, or explicit text output. */
   | { kind: "text"; text: string }
@@ -95,6 +127,8 @@ export type DisplayPayload =
     }
   /** Trusted HTML from a library's `_repr_html_`, rendered sandboxed. */
   | { kind: "html"; html: string }
+  /** The dataset check's report on a variable, appended after the exec that created it. */
+  | { kind: "dataset"; name: string; health: DatasetHealth }
   /** A traceback from the Interactive Console; frames link like errors in the output. */
   | { kind: "error"; type: string; message: string; traceback: string };
 
@@ -150,6 +184,8 @@ export interface PoolClient {
   /** Evaluate a name or expression without printing side effects; null if unknown. */
   inspect(expression: string): Promise<DisplayPayload | null>;
   variables(): Promise<VariableInfo[]>;
+  /** Plain-language checks on a DataFrame or 2-D array by name; null if it is neither. */
+  datasetHealth(name: string): Promise<DatasetHealth | null>;
   /** More rows of a table previously shown. */
   tableRows(ref: string, rowStart: number, count: number): Promise<Cell[][]>;
   /** Sample indices that landed in one confusion-matrix cell (true row, predicted col). */

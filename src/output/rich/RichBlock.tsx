@@ -3,6 +3,7 @@ import { Match, Switch } from "solid-js";
 
 import type { DisplayPayload } from "../../pool/protocol";
 import ArrayBlock from "./ArrayBlock";
+import DatasetBlock from "./DatasetBlock";
 import ErrorBlock from "./ErrorBlock";
 import FigureBlock from "./FigureBlock";
 import HtmlBlock from "./HtmlBlock";
@@ -34,6 +35,9 @@ export default function RichBlock(props: { payload: DisplayPayload }) {
       </Match>
       <Match when={props.payload.kind === "html" && props.payload}>
         {(p) => <HtmlBlock payload={p()} />}
+      </Match>
+      <Match when={props.payload.kind === "dataset" && props.payload}>
+        {(p) => <DatasetBlock payload={p()} />}
       </Match>
       <Match when={props.payload.kind === "error" && props.payload}>
         {(p) => <ErrorBlock payload={p()} />}

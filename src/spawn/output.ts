@@ -266,6 +266,8 @@ export function richSummary(payload: DisplayPayload): string {
       return `[${payload.count} images (${payload.shape.join(", ")}) ${payload.dtype}]`;
     case "html":
       return "[html]";
+    case "dataset":
+      return `[dataset check ${payload.name}: ${payload.health.findings.map((f) => f.title).join("; ") || "no problems found"}]`;
     case "error":
       return `${payload.type}: ${payload.message}`;
   }

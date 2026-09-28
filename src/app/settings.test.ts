@@ -15,6 +15,7 @@ describe("normalizeSettings", () => {
     expect(s.editor.tabSize).toBe(2);
     expect(s.editor.wordWrap).toBe(false);
     expect(s.spawn.notifyWhenDone).toBe(true);
+    expect(s.console.datasetChecks).toBe(true);
   });
 
   it("salvages good sections when one section is broken", () => {

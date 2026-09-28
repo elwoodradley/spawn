@@ -18,6 +18,7 @@ import { emitPoolEvent, poolStatus, setPoolClient, setPoolStatus } from "./clien
 import { notifyExecFinished } from "./hooks";
 import type {
   Cell,
+  DatasetHealth,
   DisplayPayload,
   ExecRequest,
   ExecResult,
@@ -215,6 +216,12 @@ const live: PoolClient = {
     if (procId === null) return [];
     const data = await send("variables", {});
     return Array.isArray(data) ? (data as VariableInfo[]) : [];
+  },
+
+  async datasetHealth(name: string): Promise<DatasetHealth | null> {
+    if (procId === null) return null;
+    const data = await send("dataset_health", { name });
+    return data && typeof data === "object" ? (data as DatasetHealth) : null;
   },
 
   async tableRows(ref: string, rowStart: number, count: number): Promise<Cell[][]> {

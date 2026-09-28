@@ -21,6 +21,8 @@ use crate::error::{Error, Result};
 use crate::proc::{ProcEvent, ProcRegistry, SpawnRequest, launch};
 
 const POOL_SOURCE: &str = include_str!("pool.py");
+/// Dataset health checks; pool.py loads it from beside itself on demand.
+const POOL_HEALTH_SOURCE: &str = include_str!("pool_health.py");
 const ACCEPT_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// Live pool connections keyed by the process id `launch` returned.
@@ -65,12 +67,18 @@ fn install_script(app: &AppHandle) -> Result<std::path::PathBuf> {
         .map_err(|err| Error::Message(format!("no cache dir: {err}")))?
         .join("pool");
     std::fs::create_dir_all(&dir)?;
+    write_if_changed(&dir.join("pool_health.py"), POOL_HEALTH_SOURCE)?;
     let path = dir.join("pool.py");
-    // Rewrite only when it changed, so the file's mtime stays stable.
-    if std::fs::read_to_string(&path).ok().as_deref() != Some(POOL_SOURCE) {
-        std::fs::write(&path, POOL_SOURCE)?;
-    }
+    write_if_changed(&path, POOL_SOURCE)?;
     Ok(path)
+}
+
+/// Rewrite only when the content changed, so the file's mtime stays stable.
+fn write_if_changed(path: &std::path::Path, source: &str) -> Result<()> {
+    if std::fs::read_to_string(path).ok().as_deref() != Some(source) {
+        std::fs::write(path, source)?;
+    }
+    Ok(())
 }
 
 /// Start a pool. Process output arrives on `on_proc`, protocol lines on

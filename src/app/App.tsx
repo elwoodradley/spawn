@@ -11,6 +11,7 @@ import {
 } from "solid-js";
 
 import { startBroodTree } from "../brood/store";
+import { installDatasetChecks } from "../dataset/checks";
 import { isDirty, saveAllDirty } from "../editor/documents";
 import Editor from "../editor/Editor";
 import DocxView from "../viewer/DocxView";
@@ -87,6 +88,7 @@ export default function App() {
   onCleanup(installProjectSettings());
   onCleanup(registerLspCommands());
   onCleanup(attachPoolEvents(output));
+  onCleanup(installDatasetChecks());
   startBroodTree();
 
   onMount(() => {

@@ -10,7 +10,8 @@ to 127.0.0.1:port, sends the token, then exchanges JSON lines:
   request  {"id": 2, "op": "inspect", "expression": "df"}
   event    {"id": 2, "event": "result", "data": {...} | null}
 
-Other ops: variables, table_rows, configure, shutdown.
+Other ops: variables, table_rows, matrix_cells, dataset_health (a name;
+handled by pool_health.py next to this file), configure, shutdown.
 
 The program's stdout and stderr are the real pipes SPAWN already reads;
 only protocol messages travel over the socket. Code runs on the main thread
@@ -984,6 +985,24 @@ class Pool:
                 return None
         return self.displays.of(value)
 
+    def dataset_health(self, name: str) -> dict | None:
+        """Plain-language checks on a DataFrame or 2-D array by name; the
+        work lives in pool_health.py, written beside this file."""
+        if not name.isidentifier() or name not in self.namespace:
+            return None
+        health = getattr(self, "_health", None)
+        if health is None:
+            import importlib.util
+
+            path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pool_health.py")
+            spec = importlib.util.spec_from_file_location("spawn_pool_health", path)
+            if spec is None or spec.loader is None:
+                return None
+            health = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(health)
+            self._health = health
+        return health.dataset_health(self.namespace[name])
+
     def variables(self) -> list[dict]:
         out = []
         for name, value in list(self.namespace.items()):
@@ -1090,6 +1109,8 @@ def main() -> None:
             elif op == "matrix_cells":
                 cells = pool.displays.matrix_cells(req.get("ref", ""), int(req.get("row", 0)), int(req.get("col", 0)))
                 link.send({"id": rid, "event": "result", "data": cells})
+            elif op == "dataset_health":
+                link.send({"id": rid, "event": "result", "data": pool.dataset_health(str(req.get("name", "")))})
             elif op == "configure":
                 pool.displays.plot_theme = req.get("plot")
                 pool.displays.configure_matplotlib()
