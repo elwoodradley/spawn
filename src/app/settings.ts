@@ -55,6 +55,12 @@ export const SettingsSchema = z.object({
       notifyWhenDone: z.boolean().default(true),
     })
     .prefault({}),
+  console: z
+    .object({
+      /** After a cell runs, report common data problems in each new DataFrame or 2-D array. */
+      datasetChecks: z.boolean().default(true),
+    })
+    .prefault({}),
   lsp: z
     .object({
       /** Language intelligence via pyright. Off means a plain editor. */

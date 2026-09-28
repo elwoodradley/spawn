@@ -66,6 +66,13 @@ export default function SpawnPane() {
           />
         </Field>
       </Show>
+      <h2>Interactive Console</h2>
+      <Toggle
+        label="Check new datasets for common problems"
+        hint="After a cell runs, each new DataFrame or 2-D array gets a short report in the output: missing values, class imbalance, possible leakage, columns on very different scales, duplicate rows, constant and ID columns."
+        checked={settings().console.datasetChecks}
+        onChange={(v) => void updateSettings({ console: { datasetChecks: v } })}
+      />
       <h2>Run panel</h2>
       <Field
         label="Runs to keep for comparison"

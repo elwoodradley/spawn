@@ -36,6 +36,7 @@ const stub: PoolClient = {
     Promise.resolve({ exec: ++execCounter, ok: false, durationMs: 0 }),
   inspect: (_expression: string): Promise<DisplayPayload | null> => Promise.resolve(null),
   variables: (): Promise<VariableInfo[]> => Promise.resolve([]),
+  datasetHealth: () => Promise.resolve(null),
   tableRows: () => Promise.resolve([]),
   matrixCells: () => Promise.resolve([]),
   interrupt: () => Promise.resolve(),

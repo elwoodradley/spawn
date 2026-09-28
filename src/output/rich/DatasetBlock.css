@@ -1,0 +1,105 @@
+/* The dataset check card. Every value is a --sp-* token. */
+
+.sp-dataset__bar {
+  flex-wrap: wrap;
+}
+.sp-dataset__title {
+  font-weight: bold;
+  color: var(--sp-color-fg);
+}
+.sp-dataset__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+  margin-left: auto;
+}
+
+.sp-dataset__clean {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  color: var(--sp-color-success);
+}
+
+.sp-dataset__list {
+  list-style: none;
+  margin: 0;
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-sm);
+}
+.sp-dataset__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-space-sm);
+}
+.sp-dataset__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4em;
+  height: 1.4em;
+  border-radius: var(--sp-radius-lg);
+  font-weight: bold;
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  color: var(--sp-color-bg);
+  background: var(--sp-color-info);
+}
+.sp-dataset__item.is-warn .sp-dataset__icon {
+  background: var(--sp-color-warning);
+}
+.sp-dataset__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-xs);
+  min-width: 0;
+}
+.sp-dataset__heading {
+  font-weight: bold;
+  color: var(--sp-color-fg);
+}
+.sp-dataset__item.is-warn .sp-dataset__heading {
+  color: var(--sp-color-warning);
+}
+.sp-dataset__detail {
+  color: var(--sp-color-fg-muted);
+  line-height: var(--sp-line-height);
+}
+
+.sp-dataset__note {
+  padding: 0 var(--sp-space-md) var(--sp-space-sm);
+  color: var(--sp-color-fg-faint);
+}
+
+.sp-dataset__columns-wrap {
+  border-top: 1px solid var(--sp-color-border);
+  max-height: 16em;
+}
+.sp-dataset__columns {
+  border-collapse: collapse;
+  min-width: 100%;
+}
+.sp-dataset__columns th,
+.sp-dataset__columns td {
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--sp-color-border);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sp-dataset__columns th {
+  position: sticky;
+  top: 0;
+  background: var(--sp-color-bg-elevated);
+  color: var(--sp-color-fg-muted);
+  font-weight: normal;
+}
+.sp-dataset__columns .is-numeric {
+  text-align: right;
+}
+.sp-dataset__columns .is-flagged {
+  color: var(--sp-color-warning);
+}

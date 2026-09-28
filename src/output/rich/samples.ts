@@ -88,6 +88,38 @@ export const samples: Record<DisplayPayload["kind"], DisplayPayload> = {
     normalized: true,
   },
   html: { kind: "html", html: "<b>hello</b> from <i>_repr_html_</i>" },
+  dataset: {
+    kind: "dataset",
+    name: "df",
+    health: {
+      kind: "dataframe",
+      rows: 400,
+      cols: 3,
+      sampled: 400,
+      partial: false,
+      findings: [
+        {
+          id: "missing",
+          severity: "warn",
+          title: "Missing values in 1 column",
+          detail: "age: 12 missing of 400 (3%). Most models cannot train on missing values.",
+          column: "age",
+        },
+        {
+          id: "scale",
+          severity: "info",
+          title: "Features on very different scales",
+          detail: "income ranges from 1,000 to 250,000 while age ranges from 18 to 90.",
+          column: null,
+        },
+      ],
+      columns: [
+        { name: "age", dtype: "float64", missing: 12, unique: 70 },
+        { name: "income", dtype: "float64", missing: 0, unique: 398 },
+        { name: "survived", dtype: "int64", missing: 0, unique: 2 },
+      ],
+    },
+  },
   error: {
     kind: "error",
     type: "ValueError",

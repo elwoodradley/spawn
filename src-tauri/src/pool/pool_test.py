@@ -188,6 +188,46 @@ def main(python: str) -> int:
         expect(ev[0]["payload"]["kind"] == "table" and ev[0]["payload"]["columns"][1]["nulls"] == 1, "records → table with null counts")
         ev = request("exec", code="{'nested': {'deep': {'x': 1}}}", file="t.py", startLine=1, scope="cell")
         expect(ev[0]["payload"]["kind"] == "text", "a dict with non-scalar leaves stays text")
+
+        code = (
+            "rng = np.random.default_rng(0); n = 400\n"
+            "sick = pd.DataFrame({'passenger_id': np.arange(1, n + 1),"
+            " 'age': rng.integers(18, 90, n).astype(float),"
+            " 'income': rng.integers(1000, 250000, n).astype(float),"
+            " 'region': ['north'] * n,"
+            " 'price': [f'{v:.1f}' for v in rng.random(n) * 100],"
+            " 'survived': (rng.random(n) < 0.1).astype(int)})\n"
+            "sick.loc[rng.choice(n, 12, replace=False), 'age'] = np.nan\n"
+            "sick['paid_out'] = sick['survived'] * 100.0 + rng.random(n) * 0.01\n"
+            "sick = pd.concat([sick, sick.iloc[:8]], ignore_index=True)\n"
+            "clean = pd.DataFrame({'a': rng.normal(size=n), 'b': rng.normal(size=n) * 3, 'c': rng.integers(0, 3, n)})\n"
+            "ids = pd.DataFrame({'user_id': np.arange(n), 'x': rng.normal(size=n), 'y': rng.normal(size=n)})\n"
+            "mat = np.column_stack([rng.normal(size=n), rng.normal(size=n) * 5000]); mat[3, 0] = np.nan\n"
+        )
+        request("exec", code=code, file="t.py", startLine=1, scope="cell")
+        ev = request("dataset_health", name="sick")
+        health = ev[-1]["data"]
+        found = {f["id"]: f for f in health["findings"]}
+        expect(health["kind"] == "dataframe" and health["rows"] == 408 and health["cols"] == 7, "dataset_health describes the frame")
+        expect(found.get("missing", {}).get("detail", "").startswith("age: 12 missing of 408 (3%)"), "missing values are counted per column")
+        expect(found.get("imbalance", {}).get("column") == "survived" and "accuracy means the model may have learned nothing" in found["imbalance"]["detail"], "class imbalance on the named target")
+        expect(found.get("leakage", {}).get("column") == "paid_out" and "answer in disguise" in found["leakage"]["detail"], "a column correlated with the target is flagged as leakage")
+        expect("income ranges from" in found.get("scale", {}).get("detail", "") and "age ranges from" in found["scale"]["detail"], "features on very different scales name both extremes")
+        expect(found.get("duplicates", {}).get("title") == "8 duplicate rows", "duplicate rows are counted")
+        expect(found.get("constant", {}).get("column") == "region", "a constant column is named")
+        expect(found.get("numeric_text", {}).get("column") == "price", "text that looks numeric is named")
+        expect([c["name"] for c in health["columns"]][:2] == ["passenger_id", "age"] and health["columns"][1]["missing"] == 12, "column table carries missing counts")
+        ev = request("dataset_health", name="clean")
+        expect(ev[-1]["data"]["findings"] == [], "a clean frame has no findings")
+        ev = request("dataset_health", name="ids")
+        expect([f["id"] for f in ev[-1]["data"]["findings"]] == ["id_column"], "a unique-integer id column is the only finding")
+        ev = request("dataset_health", name="mat")
+        ids = [f["id"] for f in ev[-1]["data"]["findings"]]
+        expect(ev[-1]["data"]["kind"] == "array" and ids == ["missing", "scale"], "a 2-D numpy array gets missing and scale checks")
+        ev = request("dataset_health", name="x")
+        expect(ev[-1]["data"] is None, "dataset_health ignores non-datasets")
+        ev = request("dataset_health", name="no_such_name")
+        expect(ev[-1]["data"] is None, "dataset_health ignores unknown names")
     else:
         print("skip rich checks (numpy/pandas/matplotlib missing)")
 
