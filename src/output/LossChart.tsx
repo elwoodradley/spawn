@@ -55,6 +55,13 @@ export interface OverlayRun {
   enabled: boolean;
 }
 
+/** A vertical dashed line at a step with a short label, e.g. "val rising", "NaN". */
+export interface ChartMarker {
+  step: number;
+  label: string;
+  tone: "warn" | "error" | "info";
+}
+
 interface Line {
   name: string;
   points: Series["points"];
@@ -67,6 +74,7 @@ export default function LossChart(props: {
   xUnit: XUnit;
   overlays: OverlayRun[];
   onToggleOverlay: (id: number) => void;
+  markers?: ChartMarker[];
 }) {
   let host: HTMLDivElement | undefined;
   const [size, setSize] = createSignal({ w: 320, h: 160 });
@@ -198,6 +206,18 @@ export default function LossChart(props: {
     return last === undefined ? 0 : String(last).length * CHAR_W;
   };
   const valColour = () => colourOf(props.group.train ? 1 : 0);
+  /** Markers inside the x range, with the label flipped left near the right edge. */
+  const markers = () => {
+    const { x, w, right } = layout();
+    const [d0, d1] = x.domain;
+    return (props.markers ?? [])
+      .filter((m) => m.step >= d0 && m.step <= d1)
+      .map((m) => {
+        const px = x(m.step);
+        const flip = px + 4 + m.label.length * CHAR_W > w - right;
+        return { ...m, px, flip };
+      });
+  };
 
   return (
     <figure class="sp-chart">
@@ -361,6 +381,20 @@ export default function LossChart(props: {
                     </g>
                   )}
                 </Show>
+              </g>
+            )}
+          </For>
+          <For each={markers()}>
+            {(m) => (
+              <g class="sp-chart__marker" classList={{ [`is-${m.tone}`]: true }}>
+                <line x1={m.px} x2={m.px} y1={PAD.top} y2={layout().h - PAD.bottom} />
+                <text
+                  x={m.flip ? m.px - 4 : m.px + 4}
+                  y={PAD.top + 10}
+                  text-anchor={m.flip ? "end" : "start"}
+                >
+                  {m.label}
+                </text>
               </g>
             )}
           </For>

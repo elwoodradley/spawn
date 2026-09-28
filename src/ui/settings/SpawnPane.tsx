@@ -87,6 +87,12 @@ export default function SpawnPane() {
         checked={run().overlayPrevious}
         onChange={(v) => void updateSettings({ run: { overlayPrevious: v } })}
       />
+      <Toggle
+        label="Point out training problems above the charts"
+        hint="Overfitting, a loss that became NaN or is exploding, a loss that stopped improving, a large train/validation gap: named in plain words, with a marker on the chart."
+        checked={run().health}
+        onChange={(v) => void updateSettings({ run: { health: v } })}
+      />
     </div>
   );
 }
