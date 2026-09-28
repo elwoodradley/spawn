@@ -6,6 +6,7 @@
 import { For, Show, type JSX } from "solid-js";
 
 import { openFile } from "../app/state";
+import { TracebackCard } from "../errors/ErrorCard";
 import type { OutputLine } from "../spawn/output";
 import RichBlock from "./rich/RichBlock";
 import { formatStamp, lineMatches } from "./view";
@@ -23,9 +24,10 @@ export default function OutputLines(props: OutputLinesProps) {
   return (
     <div class="sp-output__lines mono" role="log" aria-live="polite">
       <For each={props.lines}>
-        {(line) => (
+        {(line, index) => (
           <Show when={visible(line)}>
             <Row line={line} query={query()} timestamps={props.timestamps ?? false} />
+            <TracebackCard lines={props.lines} index={index()} />
           </Show>
         )}
       </For>

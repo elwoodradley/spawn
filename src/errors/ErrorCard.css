@@ -1,0 +1,129 @@
+/* The explanation card under a traceback. Every value is a --sp-* token. */
+
+.sp-error-card {
+  margin: var(--sp-space-sm) 0 var(--sp-space-md);
+  max-width: 72ch;
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  border: 1px solid var(--sp-color-border);
+  border-left: var(--sp-space-xs) solid var(--sp-color-croak);
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-color-bg-elevated);
+  color: var(--sp-color-fg);
+  font-family: var(--sp-font-ui);
+  font-size: var(--sp-font-size-ui);
+  font-style: normal;
+  line-height: var(--sp-line-height);
+  white-space: normal;
+  user-select: text;
+}
+
+.sp-error-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-space-sm);
+}
+
+.sp-error-card__title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--sp-font-size-ui);
+  font-weight: bold;
+  color: var(--sp-color-fg);
+}
+
+.sp-error-card__close {
+  flex: none;
+  padding: var(--sp-space-xs);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-fg-muted);
+}
+.sp-error-card__close:hover {
+  background: var(--sp-color-bg-hover);
+  color: var(--sp-color-fg);
+}
+
+.sp-error-card__text {
+  margin: var(--sp-space-xs) 0 0;
+  color: var(--sp-color-fg-muted);
+}
+
+.sp-error-card__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0 var(--sp-space-lg);
+  margin: var(--sp-space-sm) 0 0;
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-color-bg-panel);
+}
+.sp-error-card__facts dt {
+  color: var(--sp-color-fg-muted);
+}
+.sp-error-card__facts dd {
+  margin: 0;
+  color: var(--sp-color-fg);
+  font-size: var(--sp-font-size-mono);
+  overflow-wrap: anywhere;
+}
+
+.sp-error-card__where {
+  display: inline-block;
+  margin-top: var(--sp-space-xs);
+  color: var(--sp-color-accent);
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+}
+.sp-error-card__where:hover {
+  text-decoration-style: solid;
+}
+
+.sp-error-card__todo {
+  margin-top: var(--sp-space-sm);
+}
+.sp-error-card__label {
+  display: block;
+  color: var(--sp-color-fg-muted);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.sp-error-card__todo ul {
+  margin: var(--sp-space-xs) 0 0;
+  padding-left: var(--sp-space-lg);
+}
+.sp-error-card__todo li + li {
+  margin-top: var(--sp-space-xs);
+}
+
+.sp-error-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-space-sm) var(--sp-space-md);
+  margin-top: var(--sp-space-sm);
+}
+.sp-error-card__action {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-space-sm);
+}
+.sp-error-card__button {
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  border: 1px solid transparent;
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-color-accent);
+  color: var(--sp-color-accent-fg);
+  font-family: var(--sp-font-mono);
+  font-size: var(--sp-font-size-mono);
+}
+.sp-error-card__button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.sp-error-card__button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.sp-error-card__result {
+  color: var(--sp-color-fg-muted);
+}

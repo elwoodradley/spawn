@@ -35,6 +35,12 @@ export default function SpawnPane() {
         checked={spawn().notifyWhenDone}
         onChange={(v) => set({ notifyWhenDone: v })}
       />
+      <Toggle
+        label="Explain errors under the traceback"
+        hint="A short card in plain words for the most common errors, with a button when SPAWN can fix it (install a missing package, run from the project root). Applies to F5 runs and the Interactive Console."
+        checked={settings().output.explainErrors}
+        onChange={(v) => void updateSettings({ output: { explainErrors: v } })}
+      />
       <Field
         label="Working directory"
         hint="Where relative paths resolve from when you run. The file's folder matches `python tester.py` from a terminal. Applies to F5 and to cells in the Interactive Console alike."

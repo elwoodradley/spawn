@@ -55,6 +55,12 @@ export const SettingsSchema = z.object({
       notifyWhenDone: z.boolean().default(true),
     })
     .prefault({}),
+  output: z
+    .object({
+      /** Show the plain-words card with a fix button under a traceback. */
+      explainErrors: z.boolean().default(true),
+    })
+    .prefault({}),
   lsp: z
     .object({
       /** Language intelligence via pyright. Off means a plain editor. */
