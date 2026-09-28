@@ -9,10 +9,26 @@ import { settings } from "../app/settings";
 import { elapsedMs, metrics, spawnCommand, spawnStatus } from "../spawn/controller";
 import { groupSeries } from "../spawn/pairs";
 import { promote } from "../spawn/promote";
-import { removeRun, runLabel, runs } from "../spawn/runHistory";
+import { codeChanged, removeRun, runLabel, runs, type RunRecord } from "../spawn/runHistory";
 import { formatDuration, formatRate, formatValue } from "./chart";
+import CompareView from "./CompareView";
 import LossChart, { type OverlayRun } from "./LossChart";
 import "./RunPanel.css";
+import {
+  compareMode,
+  comparing,
+  exitCompare,
+  isPicked,
+  toggleCompareMode,
+  togglePick,
+} from "./runPicker";
+
+/** True when this run saved code that differs from the run before it. */
+function changedFromPrevious(run: RunRecord): boolean {
+  const list = runs();
+  const prev = list[list.indexOf(run) - 1];
+  return prev !== undefined && codeChanged(prev, run) === true;
+}
 
 export default function RunPanel() {
   const progress = metrics.progress;
@@ -46,7 +62,7 @@ export default function RunPanel() {
   );
 
   return (
-    <section class="sp-run" aria-label="Run">
+    <section class="sp-run" aria-label="Run" classList={{ "is-comparing": comparing() !== null }}>
       <div class="sp-run__stats">
         <Stat label="elapsed" value={formatDuration(elapsedMs() / 1000)} />
         <Stat label="rate" value={formatRate(metrics.rate())} />
@@ -83,10 +99,28 @@ export default function RunPanel() {
           <span class="sp-run__runs-label">runs</span>
           <For each={runs()}>
             {(run) => (
-              <span class="sp-run__run" title={run.command}>
+              <span
+                class="sp-run__run"
+                classList={{ "is-picked": isPicked(run.id) }}
+                title={run.command}
+              >
+                <Show when={compareMode()}>
+                  <input
+                    type="checkbox"
+                    class="sp-run__pick"
+                    checked={isPicked(run.id)}
+                    aria-label={`Pick run ${run.id} to compare`}
+                    onChange={() => togglePick(run.id)}
+                  />
+                </Show>
                 <span class="sp-run__run-dot" classList={{ [`is-${run.outcome}`]: true }} />
                 <span>{run.file}</span>
                 <span>{runLabel(run)}</span>
+                <Show when={changedFromPrevious(run)}>
+                  <span class="sp-run__changed" title="Code changed since the previous run">
+                    ·
+                  </span>
+                </Show>
                 <button
                   class="sp-run__run-x"
                   title="Forget this run"
@@ -110,7 +144,23 @@ export default function RunPanel() {
               </span>
             )}
           </Show>
+          <Show when={runs().length >= 2}>
+            <button
+              class="sp-run__compare"
+              classList={{ "is-active": compareMode() }}
+              title="Pick two runs to see what changed in the code and the metrics"
+              onClick={toggleCompareMode}
+            >
+              {compareMode() ? "Cancel" : "Compare"}
+            </button>
+          </Show>
+          <Show when={compareMode() && comparing() === null}>
+            <span class="sp-run__runs-hint">tick two runs</span>
+          </Show>
         </div>
+      </Show>
+      <Show when={comparing()}>
+        {(pair) => <CompareView pair={pair()} onClose={exitCompare} />}
       </Show>
       <Show when={metrics.patternErrors().length > 0}>
         <p class="sp-run__error">

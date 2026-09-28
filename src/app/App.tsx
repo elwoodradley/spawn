@@ -26,6 +26,7 @@ import { installLanguageServer } from "../lsp/server";
 import { installProjectSettings } from "./project";
 import { output } from "../spawn/controller";
 import { registerSpawnCommands } from "../spawn/commands";
+import { installRunHistory } from "../spawn/runStore";
 import { initTheme } from "../theme/store";
 import { loadSettings } from "./settings";
 import CommandPalette from "../ui/CommandPalette";
@@ -85,6 +86,7 @@ export default function App() {
   onCleanup(installLivePool());
   onCleanup(installLanguageServer());
   onCleanup(installProjectSettings());
+  onCleanup(installRunHistory());
   onCleanup(registerLspCommands());
   onCleanup(attachPoolEvents(output));
   startBroodTree();

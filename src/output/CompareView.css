@@ -1,0 +1,184 @@
+/* While a comparison is open it takes the charts' place. */
+.sp-run.is-comparing .sp-run__charts,
+.sp-run.is-comparing .sp-run__scalars,
+.sp-run.is-comparing .sp-run__empty {
+  display: none;
+}
+
+.sp-compare {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--sp-color-fg);
+}
+
+.sp-compare__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  border-bottom: 1px solid var(--sp-color-border);
+}
+.sp-compare__title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-xs);
+}
+.sp-compare__meta {
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  color: var(--sp-color-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.sp-compare__close {
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-fg-muted);
+}
+.sp-compare__close:hover {
+  background: var(--sp-color-bg-hover);
+  color: var(--sp-color-fg);
+}
+
+.sp-compare__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--sp-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-lg);
+}
+
+.sp-compare__findings {
+  margin: 0;
+  padding: 0 0 0 var(--sp-space-xl);
+  line-height: var(--sp-line-height);
+}
+.sp-compare__findings li.is-better {
+  color: var(--sp-color-success);
+}
+.sp-compare__findings li.is-worse {
+  color: var(--sp-color-warning);
+}
+.sp-compare__findings li.is-note {
+  color: var(--sp-color-fg-muted);
+}
+
+.sp-compare__table {
+  border-collapse: collapse;
+  align-self: flex-start;
+  font-size: calc(var(--sp-font-size-ui) * 0.9);
+}
+.sp-compare__table th {
+  text-align: left;
+  font-weight: normal;
+  color: var(--sp-color-fg-muted);
+  padding: var(--sp-space-xs) var(--sp-space-lg) var(--sp-space-xs) 0;
+  border-bottom: 1px solid var(--sp-color-border);
+}
+.sp-compare__table td {
+  padding: var(--sp-space-xs) var(--sp-space-lg) var(--sp-space-xs) 0;
+  border-bottom: 1px solid var(--sp-color-border);
+  font-variant-numeric: tabular-nums;
+}
+.sp-compare__table td.is-better {
+  color: var(--sp-color-success);
+}
+.sp-compare__table td.is-worse {
+  color: var(--sp-color-warning);
+}
+
+.sp-diff {
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-md);
+  overflow: hidden;
+  background: var(--sp-color-bg);
+}
+.sp-diff__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  border-bottom: 1px solid var(--sp-color-border);
+  background: var(--sp-color-bg-panel);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+  color: var(--sp-color-fg-muted);
+}
+.sp-diff__stat {
+  font-variant-numeric: tabular-nums;
+}
+.sp-diff__stat.is-add {
+  color: var(--sp-color-success);
+}
+.sp-diff__stat.is-del {
+  color: var(--sp-color-croak);
+}
+.sp-diff__note {
+  color: var(--sp-color-warning);
+}
+.sp-diff__empty {
+  margin: 0;
+  padding: var(--sp-space-sm) var(--sp-space-md);
+  color: var(--sp-color-fg-muted);
+}
+.sp-diff__body {
+  margin: 0;
+  padding: var(--sp-space-xs) 0;
+  overflow-x: auto;
+  font-family: var(--sp-font-mono);
+  font-size: var(--sp-font-size-mono);
+  line-height: var(--sp-line-height);
+}
+.sp-diff__line {
+  display: flex;
+  white-space: pre;
+}
+.sp-diff__line.is-add {
+  background: color-mix(in srgb, var(--sp-color-success) 18%, transparent);
+}
+.sp-diff__line.is-del {
+  background: color-mix(in srgb, var(--sp-color-croak) 18%, transparent);
+}
+.sp-diff__num {
+  flex: none;
+  width: 3.5em;
+  padding-right: var(--sp-space-sm);
+  text-align: right;
+  color: var(--sp-color-fg-faint);
+  user-select: none;
+}
+.sp-diff__sign {
+  flex: none;
+  width: 1.5em;
+  text-align: center;
+  color: var(--sp-color-fg-muted);
+  user-select: none;
+}
+.sp-diff__line.is-add .sp-diff__sign {
+  color: var(--sp-color-success);
+}
+.sp-diff__line.is-del .sp-diff__sign {
+  color: var(--sp-color-croak);
+}
+.sp-diff__text {
+  flex: 1;
+  padding-right: var(--sp-space-md);
+}
+.sp-diff__fold {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-space-xs) var(--sp-space-md);
+  color: var(--sp-color-fg-faint);
+  background: var(--sp-color-bg-panel);
+  font-family: var(--sp-font-ui);
+  font-size: calc(var(--sp-font-size-ui) * 0.85);
+}
+.sp-diff__fold:hover {
+  color: var(--sp-color-fg);
+  background: var(--sp-color-bg-hover);
+}

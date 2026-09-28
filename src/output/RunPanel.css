@@ -329,3 +329,31 @@
 .sp-run__scalar-value {
   color: var(--sp-color-fg);
 }
+
+/* Compare mode in the runs strip. */
+.sp-run__run.is-picked {
+  border-color: var(--sp-color-accent);
+  color: var(--sp-color-fg);
+}
+.sp-run__pick {
+  margin: 0;
+  accent-color: var(--sp-color-accent);
+}
+.sp-run__changed {
+  color: var(--sp-color-accent);
+  font-weight: bold;
+}
+.sp-run__compare {
+  padding: 0 var(--sp-space-sm);
+  border: 1px solid var(--sp-color-border);
+  border-radius: var(--sp-radius-sm);
+  color: var(--sp-color-fg-muted);
+}
+.sp-run__compare:hover,
+.sp-run__compare.is-active {
+  color: var(--sp-color-fg);
+  background: var(--sp-color-bg-hover);
+}
+.sp-run__runs-hint {
+  color: var(--sp-color-fg-faint);
+}
