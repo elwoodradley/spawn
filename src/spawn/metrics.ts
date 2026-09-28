@@ -22,6 +22,16 @@ export interface Series {
   points: Point[];
 }
 
+/**
+ * A metric printed as `nan`, `inf` or `-inf`. Kept apart from the points so
+ * charts are unaffected; the health check reads them.
+ */
+export interface NonFinite {
+  name: string;
+  step: number;
+  kind: "nan" | "inf";
+}
+
 export interface Progress {
   current: number;
   total: number;
@@ -59,6 +69,8 @@ export interface MetricsOptions {
 
 export const DEFAULT_MAX_POINTS = 2000;
 export const DEFAULT_MAX_SERIES = 8;
+/** Non-finite events kept; a loop printing `nan` forever must not grow the store. */
+const MAX_NON_FINITE = 100;
 const MAX_NAME = 24;
 
 const NUMBER = String.raw`(-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)`;
@@ -77,6 +89,14 @@ const SPACE_PAIR = new RegExp(
 );
 const METRIC_WORD =
   /loss|acc|lr|err|score|f1|auc|ppl|perplexity|reward|mse|mae|rmse|bleu|iou|dice|map/i;
+/**
+ * `loss: nan`, `loss=inf`, `val_loss -inf`. The separator is captured so the
+ * space-separated form can be held to metric-like names, as SPACE_PAIR is.
+ */
+const NON_FINITE = new RegExp(
+  String.raw`(?<![\w./-])([A-Za-z_][\w./-]{1,${MAX_NAME - 1}})(\s*[:=]\s*|\s+)(-?(?:nan|inf|infinity))(?![\w.])`,
+  "gi",
+);
 /** Names that are counters, not metrics. */
 const COUNTERS = new Set([
   "step",
@@ -119,6 +139,7 @@ export class MetricsModel {
     null,
   );
   private readonly errorsSignal = createSignal<readonly PatternError[]>([]);
+  private readonly nonFiniteSignal = createSignal<readonly NonFinite[]>([]);
   private readonly maxPoints: number;
   private readonly maxSeries: number;
   private readonly now: () => number;
@@ -158,6 +179,10 @@ export class MetricsModel {
   get patternErrors() {
     return this.errorsSignal[0];
   }
+  /** Metrics that printed as `nan` or `inf`, in order, never charted. */
+  get nonFinite() {
+    return this.nonFiniteSignal[0];
+  }
 
   /** Replace user patterns. Bad regexes are reported, never thrown. */
   setPatterns(patterns: UserPattern[]): void {
@@ -185,6 +210,7 @@ export class MetricsModel {
     this.recordCount = 0;
     this.tqdmRate = null;
     this.setSeries([]);
+    this.nonFiniteSignal[1]([]);
     this.progressSignal[1](null);
     this.rateSignal[1](null);
     this.epochSignal[1](null);
@@ -221,6 +247,27 @@ export class MetricsModel {
       if (m[1] !== undefined && METRIC_WORD.test(m[1])) this.collect(values, m[1], m[2]);
     }
     if (values.size > 0) this.record(values, x);
+    this.scanNonFinite(line, x);
+  }
+
+  /** `loss: nan` is an event, not a point: charts ignore it, health reads it. */
+  private scanNonFinite(line: string, explicitStep: number | null): void {
+    if (this.nonFinite().length >= MAX_NON_FINITE) return;
+    const found: NonFinite[] = [];
+    for (const m of line.matchAll(NON_FINITE)) {
+      const name = m[1];
+      const sep = m[2];
+      const raw = m[3];
+      if (name === undefined || sep === undefined || raw === undefined) continue;
+      if (!/[:=]/.test(sep) && !METRIC_WORD.test(name)) continue;
+      if (COUNTERS.has(name.toLowerCase())) continue;
+      const kind = /nan/i.test(raw) ? "nan" : "inf";
+      const s = this.series.find((entry) => entry.name === name);
+      const counter = this.lastStep ?? this.lastEpoch;
+      const step = explicitStep ?? counter ?? s?.points.length ?? 0;
+      found.push({ name, step, kind });
+    }
+    if (found.length > 0) this.nonFiniteSignal[1]((prev) => [...prev, ...found]);
   }
 
   private collect(

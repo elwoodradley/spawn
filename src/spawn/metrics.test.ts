@@ -200,6 +200,43 @@ describe("housekeeping", () => {
   });
 });
 
+describe("non-finite values", () => {
+  it("records nan and inf as events, not points", () => {
+    const { m } = model();
+    m.feed("epoch 39 loss: 0.5\nepoch 40 loss: nan\nval_loss=inf\nlr -inf\n");
+    expect(pts(m, "loss")).toEqual([[39, 0.5]]);
+    expect(m.series.some((s) => s.name === "val_loss")).toBe(false);
+    expect(m.nonFinite()).toEqual([
+      { name: "loss", step: 40, kind: "nan" },
+      { name: "val_loss", step: 40, kind: "inf" },
+      { name: "lr", step: 40, kind: "inf" },
+    ]);
+  });
+
+  it("uses an explicit step, else the running index of the series", () => {
+    const { m } = model();
+    m.feed("loss: 1\nloss: 0.5\nloss: NaN\nstep 7 loss: Infinity\n");
+    expect(m.nonFinite()).toEqual([
+      { name: "loss", step: 2, kind: "nan" },
+      { name: "loss", step: 7, kind: "inf" },
+    ]);
+  });
+
+  it("ignores words that merely start with nan or inf", () => {
+    const { m } = model();
+    m.feed("loss information: nancy\nmode=inference\nstep: nan\n");
+    expect(m.nonFinite()).toEqual([]);
+  });
+
+  it("caps the number of events and clears them on reset", () => {
+    const { m } = model();
+    for (let i = 0; i < 150; i++) m.feed("loss: nan\n");
+    expect(m.nonFinite().length).toBeLessThanOrEqual(100);
+    m.reset();
+    expect(m.nonFinite()).toEqual([]);
+  });
+});
+
 describe("parseClock", () => {
   it("reads mm:ss and h:mm:ss", () => {
     expect(parseClock("00:04")).toBe(4);
