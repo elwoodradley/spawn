@@ -135,6 +135,8 @@ export interface VariableInfo {
   dtype: string | null;
   /** Bytes, when cheap to know. */
   size: number | null;
+  /** `cpu`, `cuda` or `mps` for a torch tensor or module (its first parameter); else null. */
+  device?: string | null;
 }
 
 export type PoolStatus = "cold" | "starting" | "idle" | "busy" | "croaked";
