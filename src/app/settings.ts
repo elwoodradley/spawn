@@ -48,6 +48,12 @@ export const SettingsSchema = z.object({
       inlineValues: z.boolean().default(true),
     })
     .prefault({}),
+  nudges: z
+    .object({
+      /** Ids of one-line suggestions the user never wants to see again. */
+      dismissed: z.array(z.string()).default([]),
+    })
+    .prefault({}),
   spawn: z
     .object({
       saveBeforeSpawn: z.boolean().default(true),

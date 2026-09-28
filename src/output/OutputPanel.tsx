@@ -12,6 +12,7 @@ import { settings } from "../app/settings";
 import { activeFilePath } from "../app/state";
 import { describeWorkingDirectory } from "../app/project";
 import { baseName } from "../ipc";
+import NudgeBar from "../nudges/NudgeBar";
 import {
   elapsedMs,
   exitCode,
@@ -187,6 +188,7 @@ export default function OutputPanel() {
           ⋯
         </button>
       </header>
+      <NudgeBar />
       <Show when={tab() === "output"} fallback={<RunPanel />}>
         <OutputConsole />
       </Show>
