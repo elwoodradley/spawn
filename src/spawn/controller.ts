@@ -17,11 +17,11 @@ import { createSignal } from "solid-js";
 
 import { resolveWorkingDirectory } from "../app/project";
 import { settings, type RunPattern } from "../app/settings";
-import { saveAllDirty } from "../editor/documents";
+import { documentText, saveAllDirty } from "../editor/documents";
 import { selectedInterpreter } from "../env/store";
-import { baseName, notify, spawnProcess, type ProcEvent, type ProcHandle } from "../ipc";
+import { baseName, notify, readText, spawnProcess, type ProcEvent, type ProcHandle } from "../ipc";
 import { MetricsModel } from "./metrics";
-import { recordRun } from "./runHistory";
+import { recordRun, type RunSnapshot } from "./runHistory";
 import { OutputModel } from "./output";
 
 export type SpawnStatus = "idle" | "running";
@@ -79,6 +79,7 @@ export async function spawnFile(path: string): Promise<void> {
 
   const cwd = resolveWorkingDirectory(path);
   const command: SpawnCommand = { program, args: ["-u", path], cwd };
+  snapshot = await takeSnapshot(path, command);
   setSpawnCommand(command);
   setExitCode(null);
   setOutcome("none");
@@ -214,9 +215,23 @@ function snapshotRun(): void {
       durationMs: elapsedMs(),
       outcome: kind,
       series: metrics.series,
+      snapshot: snapshot ?? undefined,
+      xUnit: metrics.xUnit(),
     },
     settings().run.keepRuns,
   );
+}
+
+/** The code and launch settings a run started with, for "what changed?". */
+let snapshot: RunSnapshot | null = null;
+
+async function takeSnapshot(path: string, command: SpawnCommand): Promise<RunSnapshot | null> {
+  try {
+    const code = documentText(path) ?? (await readText(path));
+    return { path, code, python: command.program, cwd: command.cwd, args: [...command.args] };
+  } catch {
+    return null;
+  }
 }
 
 /** A desktop notification when a spawn ends while the user is elsewhere. */
