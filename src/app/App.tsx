@@ -11,6 +11,7 @@ import {
 } from "solid-js";
 
 import { startBroodTree } from "../brood/store";
+import { registerCheckCommands } from "../check/commands";
 import { installDatasetChecks } from "../dataset/checks";
 import { isDirty, saveAllDirty } from "../editor/documents";
 import Editor from "../editor/Editor";
@@ -91,6 +92,7 @@ export default function App() {
   onCleanup(installProjectSettings());
   onCleanup(installRunHistory());
   onCleanup(registerLspCommands());
+  onCleanup(registerCheckCommands());
   onCleanup(attachPoolEvents(output));
   onCleanup(installDatasetChecks());
   onCleanup(installInlineValues());

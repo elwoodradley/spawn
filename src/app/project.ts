@@ -20,6 +20,8 @@ export const ProjectSettingsSchema = z
     workingDirectory: WorkingDirectory.optional(),
     pythonPath: z.string().nullable().optional(),
     testCommand: z.array(z.string()).nullable().optional(),
+    /** What Python the course expects, e.g. `>=3.11` or `3.11`; Check Before Submitting compares. */
+    pythonVersion: z.string().nullable().optional(),
   })
   .passthrough();
 export type ProjectSettings = z.infer<typeof ProjectSettingsSchema>;
@@ -37,7 +39,7 @@ export function normalizeProjectSettings(input: unknown): ProjectSettings {
   if (typeof input !== "object" || input === null) return {};
   const raw = input as Record<string, unknown>;
   const out: Record<string, unknown> = { ...raw };
-  for (const key of ["workingDirectory", "pythonPath", "testCommand"] as const) {
+  for (const key of ["workingDirectory", "pythonPath", "testCommand", "pythonVersion"] as const) {
     const shape = ProjectSettingsSchema.shape[key];
     if (!shape.safeParse(raw[key]).success) delete out[key];
   }
