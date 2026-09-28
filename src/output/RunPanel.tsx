@@ -3,16 +3,27 @@
  * iteration rate, progress with an ETA, a strip of kept runs, and a live
  * chart per metric group (train and val of one metric share a chart).
  */
-import { createMemo, createSignal, For, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  on,
+  onCleanup,
+  Show,
+  untrack,
+} from "solid-js";
 
 import { settings } from "../app/settings";
 import { elapsedMs, metrics, spawnCommand, spawnStatus } from "../spawn/controller";
+import { analyzeHealth, type Finding } from "../spawn/health";
 import { groupSeries } from "../spawn/pairs";
 import { promote } from "../spawn/promote";
 import { codeChanged, removeRun, runLabel, runs, type RunRecord } from "../spawn/runHistory";
 import { formatDuration, formatRate, formatValue } from "./chart";
 import CompareView from "./CompareView";
-import LossChart, { type OverlayRun } from "./LossChart";
+import HealthStrip, { dismissedFindings, dismissFinding, toneOf } from "./HealthStrip";
+import LossChart, { type ChartMarker, type OverlayRun } from "./LossChart";
 import "./RunPanel.css";
 import {
   compareMode,
@@ -29,6 +40,9 @@ function changedFromPrevious(run: RunRecord): boolean {
   const prev = list[list.indexOf(run) - 1];
   return prev !== undefined && codeChanged(prev, run) === true;
 }
+
+/** How often the health check re-reads the curves while a run streams. */
+const HEALTH_INTERVAL_MS = 300;
 
 export default function RunPanel() {
   const progress = metrics.progress;
@@ -60,6 +74,58 @@ export default function RunPanel() {
       ? runs().map((run) => ({ run, enabled: !hidden().has(run.id) }))
       : [],
   );
+
+  /**
+   * Findings are recomputed on a timer while the run streams rather than on
+   * every printed line: the analysis is O(n) but a flood prints thousands of
+   * lines a second. The store is read untracked; `tick` drives the memo.
+   */
+  const [tick, setTick] = createSignal(0);
+  createEffect(
+    on(spawnStatus, (status) => {
+      if (status !== "running") {
+        setTick((t) => t + 1);
+        return;
+      }
+      const timer = setInterval(() => setTick((t) => t + 1), HEALTH_INTERVAL_MS);
+      onCleanup(() => clearInterval(timer));
+    }),
+  );
+  const findings = createMemo<Finding[]>(() => {
+    tick();
+    if (!settings().run.health) return [];
+    return untrack(() =>
+      analyzeHealth({
+        series: metrics.series,
+        nonFinite: metrics.nonFinite(),
+        xUnit: metrics.xUnit(),
+      }),
+    );
+  });
+  const visibleFindings = () => {
+    const dismissed = dismissedFindings(spawnCommand());
+    return findings().filter((f) => !dismissed.has(f.id));
+  };
+  const markersFor = (metric: string): ChartMarker[] =>
+    visibleFindings()
+      .filter((f) => f.metric.toLowerCase() === metric.toLowerCase())
+      .map((f) => ({ step: f.step, label: f.label, tone: toneOf(f.kind) }));
+
+  let chartsHost: HTMLDivElement | undefined;
+  const [focused, setFocused] = createSignal<string | null>(null);
+  let focusTimer: ReturnType<typeof setTimeout> | null = null;
+  const focusChart = (finding: Finding) => {
+    const slot = chartsHost?.querySelector<HTMLElement>(
+      `[data-metric="${CSS.escape(finding.metric)}"]`,
+    );
+    slot?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    setFocused(finding.metric);
+    if (focusTimer !== null) clearTimeout(focusTimer);
+    focusTimer = setTimeout(() => setFocused(null), 1500);
+  };
+  onCleanup(() => {
+    if (focusTimer !== null) clearTimeout(focusTimer);
+  });
 
   return (
     <section class="sp-run" aria-label="Run" classList={{ "is-comparing": comparing() !== null }}>
@@ -162,6 +228,13 @@ export default function RunPanel() {
       <Show when={comparing()}>
         {(pair) => <CompareView pair={pair()} onClose={exitCompare} />}
       </Show>
+      <Show when={comparing() === null}>
+        <HealthStrip
+          findings={visibleFindings()}
+          onFocus={focusChart}
+          onDismiss={(id) => dismissFinding(spawnCommand(), id)}
+        />
+      </Show>
       <Show when={metrics.patternErrors().length > 0}>
         <p class="sp-run__error">
           Custom pattern problem:{" "}
@@ -201,15 +274,22 @@ export default function RunPanel() {
             </For>
           </div>
         </Show>
-        <div class="sp-run__charts">
+        <div class="sp-run__charts" ref={(el) => (chartsHost = el)}>
           <For each={groups()}>
             {(group) => (
-              <LossChart
-                group={group}
-                xUnit={metrics.xUnit()}
-                overlays={overlays()}
-                onToggleOverlay={toggle}
-              />
+              <div
+                class="sp-run__slot"
+                classList={{ "is-focused": focused() === group.metric }}
+                data-metric={group.metric}
+              >
+                <LossChart
+                  group={group}
+                  xUnit={metrics.xUnit()}
+                  overlays={overlays()}
+                  onToggleOverlay={toggle}
+                  markers={markersFor(group.metric)}
+                />
+              </div>
             )}
           </For>
         </div>

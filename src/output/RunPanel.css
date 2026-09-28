@@ -357,3 +357,39 @@
 .sp-run__runs-hint {
   color: var(--sp-color-fg-faint);
 }
+
+.sp-run__slot {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--sp-radius-md);
+  transition: box-shadow 200ms ease-out;
+}
+.sp-run__slot.is-focused {
+  box-shadow: 0 0 0 var(--sp-space-xs) var(--sp-color-accent);
+}
+.sp-chart__marker line {
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.sp-chart__marker text {
+  font-size: calc(var(--sp-font-size-ui) * 0.75);
+}
+.sp-chart__marker.is-warn line {
+  stroke: var(--sp-color-warning);
+}
+.sp-chart__marker.is-warn text {
+  fill: var(--sp-color-warning);
+}
+.sp-chart__marker.is-error line {
+  stroke: var(--sp-color-croak);
+}
+.sp-chart__marker.is-error text {
+  fill: var(--sp-color-croak);
+}
+.sp-chart__marker.is-info line {
+  stroke: var(--sp-color-info);
+}
+.sp-chart__marker.is-info text {
+  fill: var(--sp-color-info);
+}
