@@ -12,7 +12,16 @@ import { parseFrameLine } from "../../spawn/croak";
 type ErrorPayload = Extract<DisplayPayload, { kind: "error" }>;
 
 export default function ErrorBlock(props: { payload: ErrorPayload }) {
-  const lines = () => props.payload.traceback.split(/\r?\n/);
+  // The traceback text ends with the `Type: message` line that the block
+  // repeats emphasised below, so drop it there.
+  const lines = () => {
+    const all = props.payload.traceback.replace(/\s+$/, "").split(/\r?\n/);
+    const last = all[all.length - 1] ?? "";
+    const exc = props.payload.message
+      ? `${props.payload.type}: ${props.payload.message}`
+      : props.payload.type;
+    return last.trim() === exc.trim() ? all.slice(0, -1) : all;
+  };
   return (
     <>
       <div class="sp-rich sp-rich--error mono">
