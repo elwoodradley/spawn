@@ -124,6 +124,74 @@ Interactive Console (cells, selections, files) always use the same rule, and
 the console also puts the file's folder first on the import path, so
 `import helper` beside the file works both ways.
 
+### 3b. Check before submitting
+
+Before you hand a program in, press **F6** (or Run › Check Before
+Submitting, or the **Check** button in the output header). SPAWN checks the
+current file the way a grader will see it and shows a checklist in the
+**Check** tab: green passed, red failed, yellow worth a look, grey skipped.
+
+- **Runs from a fresh start.** The whole file runs in a new Python process
+  with nothing left over from the Interactive Console, so a variable that
+  only existed there shows up as a `NameError` here. A traceback becomes a
+  plain-words line with a "Go to line" button; the program's output is under
+  "Output". The program gets no keyboard: if it calls `input()` the check
+  says so and asks you to run it yourself with F5. A program still running
+  after two minutes is stopped and reported (Settings › Run changes the
+  limit).
+- **Python version.** Compared with `requires-python` in `pyproject.toml`,
+  a `.python-version` file, or `pythonVersion` in `.spawn/project.json`.
+  "Course expects Python >=3.11 but you are running 3.9.6" comes with a
+  Select Python Interpreter button. Skipped when the project states no
+  expectation.
+- **File paths.** Every file the program opens by name (`open`, `Path`,
+  `pd.read_csv`, `np.load`, `torch.load`, `Image.open`, …) is looked up from
+  the folder the program runs in. A file that exists from the project root
+  but not from the working directory (or the other way round) is the classic
+  "works for me" bug and is red; an absolute path like `/home/me/data.csv`
+  only works on your machine and is yellow. Files the program writes are
+  fine.
+- **Tests.** If the project has `tests.py`, `test_*.py`, `*_test.py` or a
+  `tests/` folder, they run with pytest when it is installed in the
+  interpreter, otherwise with `unittest`. "12 tests passed" or "2 of 12
+  tests failed", with the full output underneath. A `testCommand` in
+  `.spawn/project.json` replaces both.
+
+Cancel stops whatever is running. The check never touches the Output tab or
+the Metrics panel.
+
+**When something goes wrong.** Under a traceback, SPAWN adds a short card for
+the errors people meet most: what happened in plain words, the numbers from
+the message side by side (both shapes, both devices, the path and the folder
+the program ran in), the line in your own code, and what to do. Where SPAWN
+can help, the card has a button that says exactly what it will run:
+
+- `ModuleNotFoundError: No module named 'sklearn'` → **Install scikit-learn ·
+  runs uv add scikit-learn**. The command is echoed in the Output panel and
+  its output streams there; when it finishes the card says "Installed
+  scikit-learn. Run again." SPAWN uses `uv add` for the project's own `.venv`
+  with a `pyproject.toml`, `uv pip install --python …` for any other
+  environment, and never installs into the operating system's Python: with
+  the system interpreter selected the button reads **Create a .venv first**
+  and opens Select Python Interpreter.
+- `FileNotFoundError` → the card shows the path and the folder the run
+  started in, checks the disk, and if the file is in the project root (or
+  next to the script) offers **Run from project root** / **Run from the
+  file's folder**, which saves that choice for this project and runs again.
+
+The card knows the Interactive Console too: `NameError` on a name the console
+holds says so ("df exists in the Interactive Console but not in this file"),
+and a pandas `KeyError` names the DataFrame to print `.columns` on. Covered:
+missing modules and files, undefined names, missing keys and columns, index
+out of range, `None` where a value was expected, division by zero, runaway
+recursion, syntax and indentation errors, `input()` at end-of-file, wrong
+attribute names, text that is not a number, text mixed with numbers, wrong
+argument counts, and for numpy / torch / scikit-learn: shape mismatches,
+tensors on different devices, dtype mismatches, tensor-to-numpy conversion,
+and running out of GPU or system memory. Close a card with its ×; Settings ›
+Run › **Explain errors under the traceback** turns them all off. Everything
+is a hand-written rule: nothing is sent anywhere.
+
 ### 4. Run in the Interactive Console (persistent kernel)
 
 Put `# %%` lines in your file to make cells. Then:
@@ -155,6 +223,55 @@ most recently changed first; click one to inspect it. Hovering a name in the
 editor while the console is idle shows a compact card with the same
 information.
 
+**Values next to your code.** After a cell, a selection or the whole file
+runs in the Interactive Console, each line that assigns a variable shows what
+it now holds, faintly, at the end of the line: `x = data[:, 2]  → (400,)
+float64`. Arrays and tensors show shape and dtype (and the device for torch),
+a DataFrame shows `rows×cols`, a number shows its value, a string a short
+repr, a list or dict its length (`list[400]`), a model its class name and
+parameter count. Hover a value for the full summary. The values are the
+console's current variables, so a name re-assigned by a later cell updates
+everywhere it appears; assignments inside `def` and `class` bodies are not
+globals and get nothing. Editing a line hides its value until you run it
+again, switching tabs keeps them, and restarting the console clears them all.
+Only the Interactive Console feeds this: a fresh-process run with F5 shows
+nothing beside the code. Turn it off with View › Inline values, "Toggle
+Inline Values" in the command palette, or Settings › Editor.
+
+**Dataset checks.** When a cell creates or changes a pandas or polars
+DataFrame, or a 2-D numpy array with at least 20 rows, a **Dataset check**
+card appears after the cell's output: `Dataset check: df · 400 rows × 5
+columns`. It lists, in plain words, what could trip up a model:
+
+- **Missing values**, counted per column ("age: 12 missing of 400 (3%)").
+- **Class imbalance** on the likely target column (a column named `target`,
+  `label`, `y`, `class`, `species`, `survived`, `diagnosis` and the like, or
+  a last column with few distinct values): "90% of rows are class 0, so 90%
+  accuracy means the model may have learned nothing."
+- **Leakage**: a column that matches the target almost exactly (correlation
+  ≥ 0.99, or one value per class) "may be the answer in disguise".
+- **Features on very different scales**: the widest and narrowest numeric
+  columns when they differ by 1000× or more; scaling helps most models.
+- **Duplicate rows**, **constant columns**, a column that **looks like an
+  ID** (a different whole number in every row), and **text that looks
+  numeric** (strings like `"12.5"` that need `pd.to_numeric`).
+
+A clean frame says **No problems found**. **Columns** folds out a table of
+type, missing and distinct counts per column. Big frames are checked on their
+first 50 000 rows and the card says so; the checks stop after 200 ms so they
+never slow a cell down. Each variable is checked once, and again only when
+its shape or size changes; at most three new datasets are checked per cell.
+**Don't check this variable again** silences one variable for the session.
+Settings › Run › Interactive Console turns the checks off. The checks are
+fixed rules, not a model, and they run inside your own interpreter.
+
+**Suggestions about your hardware.** Sometimes a one-line note appears under
+the Output header after a run: your tensors are on the CPU while CUDA or MPS
+is available; one variable is a large share of this machine's memory; your
+variables together are; or the console is holding most of what is still free
+and a restart would give it back. Only one shows at a time. **Later** hides
+it until you next start SPAWN; **Dismiss** means never show that one again.
+
 ### 5. Read the Metrics panel
 
 Print metrics as `name: value` or `name=value` (any name), count epochs as
@@ -177,6 +294,42 @@ Print metrics as `name: value` or `name=value` (any name), count epochs as
 
 Add your own regexes under Settings › Run patterns (one capture group for the
 number).
+
+**Training problems, in plain words.** While the run streams, SPAWN reads the
+curves and, above the charts, says what it sees: validation loss climbing
+while training loss keeps falling ("The model started memorizing instead of
+learning. The best version was at epoch 13"), a loss that became NaN or
+infinite ("The learning rate is probably too high"), a loss sitting at ten
+times its lowest value (exploding), a loss that hasn't meaningfully improved
+over the second half of a long run, a loss that never moved at all (check the
+optimizer step and `requires_grad`), and training accuracy far above
+validation accuracy. Each line is marked `likely` or `possible` and worded to
+match: "may" means the curves suggest it, not prove it. Click a line to jump
+to its chart, where a dashed marker shows the step it refers to; the ×
+dismisses it for this run. The checks are deliberately cautious, so nothing
+appears in the first few epochs, and a noisy but healthy run stays quiet.
+Print `loss: nan` and the value is kept as an event rather than a point, so
+the chart stays readable. Turn it off under Settings › Run › "Point out
+training problems above the charts".
+
+**Compare two runs.** Every run remembers the code it ran, the interpreter,
+the working directory, the final value of each metric and the best validation
+value. The runs are saved with the project, so they are still there after a
+restart. Press **Compare** in the runs strip, tick two runs, and the Metrics
+tab explains the difference in plain sentences: "Learning rate went 0.01 →
+0.1. Final val_acc dropped 8% (0.91 → 0.84). Best val_loss improved: 0.42 at
+epoch 9 → 0.31 at epoch 6." SPAWN finds the settings by looking for simple
+`name = value` lines and keyword arguments such as `lr=0.01` in the two
+versions of the file, and names the common ones in words (learning rate,
+batch size, epochs, dropout, hidden size, weight decay, seed…). Below the
+sentences: a table of every final metric for both runs with the change, and a
+diff of the code with unchanged lines folded (click "⋯ N unchanged lines" to
+unfold). "No code changed between these runs" and "Same result" say so when
+nothing moved. Runs from different files can be compared too; a note says
+which files. A small dot on a run in the strip means its code differs from
+the run before it. Press **Close** to get the charts back. SPAWN keeps the
+last 10 runs per project; Settings › Run › kept runs controls how many are
+shown.
 
 ### 6. Read the handout
 
@@ -216,7 +369,9 @@ Ctrl+, opens Settings: theme, UI and editor fonts and sizes, line height, zoom,
 tab size, word wrap, autosave (off / after a delay / on focus change), trim
 trailing whitespace, save before run, clear output on run, auto-show the
 Metrics tab, desktop notification when a run finishes while you are
-elsewhere, run patterns, and kept-run count. Zoom with Ctrl+= and Ctrl+-.
+elsewhere, run patterns, kept-run count, inline values after a console
+run, dataset checks, error cards, training-problem notes and the
+check-before-submitting time limit. Zoom with Ctrl+= and Ctrl+-.
 
 Themes are JSON files. View › Theme lists the shipped ones; "Where are my
 themes?" shows the folder where your own go
@@ -250,6 +405,7 @@ Print is in the File menu (no key).
 | Key              | Does                                               |
 | ---------------- | -------------------------------------------------- |
 | F5 or Ctrl+Enter | Run the current file                               |
+| F6               | Check the current file before submitting           |
 | Shift+F5         | Stop the run                                       |
 | Ctrl+I           | Focus the stdin row                                |
 | Enter / Ctrl+D   | In the stdin row: send the line / send end-of-file |
@@ -327,8 +483,8 @@ undo history for code, and scroll position for a handout.
   torch item to re-probe; the console item to show variables (or restart after
   an error); the project name to open another; Ln/Col to go to a line; the
   theme name to cycle themes; the run status to toggle the output panel.
-- **Output header:** Output / Metrics tabs, the command with the working
-  directory on hover, Run / Stop, Clear, find, and a menu for copy, save,
+- **Output header:** Output / Metrics / Check tabs, the command with the
+  working directory on hover, Run / Stop, Check, Clear, find, and a menu for copy, save,
   wrap and timestamps.
 - **Charts:** hover for a crosshair with every line's value at that step;
   auto / full / log per chart; checkboxes in the legend toggle previous runs.
