@@ -41,8 +41,19 @@ src/                         TypeScript, SolidJS
   pool/       Interactive Console: protocol (display payloads), live
               client, cell commands, Variables pane
   spawn/      run controller, output model, croak.ts (traceback parser),
-              metrics parser for the Metrics panel (loss curves, tqdm, epochs)
-  output/     output console, Metrics panel with live charts, rich blocks
+              metrics parser for the Metrics panel (loss curves, tqdm, epochs),
+              health.ts (training problems in words), runHistory + runStore
+              (runs with code snapshots, persisted per project), compare.ts
+              and diff.ts (what changed between two runs)
+  output/     output console, Metrics panel with live charts, rich blocks,
+              HealthStrip, CompareView
+  check/      Check Before Submitting: fresh run, Python version, file
+              paths, tests; pure parts over injected ports
+  errors/     hand-written library of common tracebacks -> plain-words card
+              with actions (install into the project env, working directory)
+  dataset/    asks the console for a dataset health report for new frames
+  nudges/     hardware suggestions (device, memory), dismissible
+  editor/inlineValues/  assignment values beside code after a console run
   env/        Python interpreter discovery policy and selection
   ui/         menu bar, context menu, dialogs, tabs, splitter, status bar,
               palette
@@ -53,7 +64,8 @@ src-tauri/src/
   error.rs    one Error type, serialised as a message string
   proc/       start a child, stream output over a Channel, stdin, kill
   pool/       pool.py (the Interactive Console kernel, stdlib only), socket
-              host, interrupt
+              host, interrupt; pool_health.py (dataset checks, written next
+              to pool.py and imported by it on first use)
   env/        find interpreters, probe one for version and prefix; ml.rs
               probes numpy/pandas/torch/jax + device, reads system memory
 src-tauri/capabilities/   what the webview may call (see Security)
@@ -208,6 +220,21 @@ recursive watcher, and the tree component.
 `spawn/croak.ts` parses Python tracebacks into frames. `output/OutputPanel.tsx`
 renders them. `env/store.ts` exposes `selectedInterpreter()` and
 `refreshInterpreters(project)`.
+
+### The "notices" layer
+
+Everything that reads a run or a console cell and says something in plain
+words is rule-based and pure, so it is unit-tested with fixtures and never
+consults a model or a network: `spawn/health.ts` (curves in, findings out),
+`errors/match.ts` (traceback in, explanation out; actions are descriptors
+that `errors/fixes.ts` turns into commands), `check/sequence.ts` (runs the
+four checks over injected file and process ports), `dataset/tracker.ts`
+(which console variables deserve a health request), `nudges/rules.ts`
+(variables plus probe plus memory in, at most one nudge out) and
+`editor/inlineValues/assignments.ts` (which lines get a value). Console-fed
+features subscribe to `pool/hooks.ts` `onExecFinished`, which the live client
+fires once per exec with the variable listing, so none of them patch the
+runtime.
 
 ## A run, end to end
 

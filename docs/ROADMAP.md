@@ -188,6 +188,18 @@ example project when `pyright-langserver` is available, skipped otherwise.
 - Not doing: rebase, cherry-pick, merge tooling, history graphs, hosting
   integrations.
 
+## G. Notices (landed 2026-09-28)
+
+All rule-based, no model: Check Before Submitting (F6, `src/check/`), error
+cards with fix buttons (`src/errors/`), training problems above the charts
+(`src/spawn/health.ts`), values beside code after a console run
+(`src/editor/inlineValues/`), dataset checks (`pool_health.py`,
+`src/dataset/`), run history with code snapshots and compare
+(`src/spawn/runStore.ts`, `compare.ts`), hardware nudges (`src/nudges/`).
+Left for later: a settrace / `sys.monitoring` "trace this run" mode for
+per-line values inside functions (the current inline values are a snapshot
+of module globals after a console run).
+
 ## Order of work
 
 1. Terminology (A) — one sweep, then build, tests, GUIDE.
