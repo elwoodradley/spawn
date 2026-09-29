@@ -1,11 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { baseName, compareEntries, dirName, extension, joinPath } from "./fs";
+import { baseName, compareEntries, dirName, extension, joinPath, normalizePath } from "./fs";
 
 describe("path helpers", () => {
   it("joins without doubling separators", () => {
     expect(joinPath("/home/toad/", "brood", "main.py")).toBe("/home/toad/brood/main.py");
     expect(joinPath("/home/toad", "/brood/")).toBe("/home/toad/brood");
+  });
+
+  it("collapses dot and parent segments so the file scope accepts the path", () => {
+    expect(joinPath("/home/me/vision", "../README.md")).toBe("/home/me/README.md");
+    expect(joinPath("/home/me/vision", "./data/x.csv")).toBe("/home/me/vision/data/x.csv");
+    expect(normalizePath("/a/b/../../c", "/")).toBe("/c");
+    expect(normalizePath("/a/../..", "/")).toBe("/");
+    expect(normalizePath("../x", "/")).toBe("../x");
+    expect(normalizePath("a/../../x", "/")).toBe("../x");
+    expect(normalizePath("C:\\a\\..\\b", "\\")).toBe("C:\\b");
   });
 
   it("takes base and dir names on both separators", () => {

@@ -73,6 +73,9 @@ export function buildTestCommand(input: {
   return { program: input.python, args, label: `python ${args.join(" ")}`, runner: "unittest" };
 }
 
+/** pytest and unittest both exit with this when no test was collected. */
+const NO_TESTS_EXIT = 5;
+
 /** pytest's `3 passed, 1 failed in 0.2s` or unittest's `Ran 4 tests` + `OK`/`FAILED (...)`. */
 export function parseTestSummary(output: string): TestSummary | null {
   const text = output.replace(new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g"), "");
@@ -152,6 +155,17 @@ export function testsItem(input: {
       state: "fail",
       title: `${broken} of ${plural(summary.total, "test")} failed`,
       hint: `Command: ${command.label}. Open the details to see which ones.`,
+      detail,
+    };
+  }
+  // Both runners exit 5 when nothing was collected: files matched the test
+  // naming but held no test cases. Worth a look, not a failure.
+  if (input.code === NO_TESTS_EXIT && command.runner !== "custom") {
+    return {
+      id: "tests",
+      state: "warn",
+      title: "No tests were found to run",
+      hint: `${command.label} matched files by name but found no test cases in them.`,
       detail,
     };
   }

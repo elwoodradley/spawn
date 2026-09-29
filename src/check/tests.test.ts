@@ -125,6 +125,12 @@ describe("testsItem", () => {
     expect(bad.detail).toContain("2 failed");
   });
 
+  it("treats exit code 5 (nothing collected) as worth a look, not a failure", () => {
+    const none = testsItem({ command, code: 5, output: "Ran 0 tests in 0.000s\n\nNO TESTS RAN" });
+    expect(none.state).toBe("warn");
+    expect(none.title).toBe("No tests were found to run");
+  });
+
   it("handles a custom command by exit code, timeouts and start failures", () => {
     const custom = { ...command, runner: "custom" as const, label: "python tester.py" };
     expect(testsItem({ command: custom, code: 0, output: "all good" }).title).toBe("Tests passed");
@@ -135,6 +141,6 @@ describe("testsItem", () => {
     expect(testsItem({ command, code: null, output: "", startFailure: "no such file" }).title).toBe(
       "Tests could not start: no such file",
     );
-    expect(testsItem({ command, code: 5, output: "= no tests ran in 0.01s =" }).state).toBe("fail");
+    expect(testsItem({ command, code: 5, output: "= no tests ran in 0.01s =" }).state).toBe("warn");
   });
 });

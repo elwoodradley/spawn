@@ -115,10 +115,42 @@ function separator(): string {
 
 export function joinPath(...parts: string[]): string {
   const s = separator();
-  return parts
+  const joined = parts
     .filter((p) => p.length > 0)
     .map((p, i) => (i === 0 ? p.replace(/[\\/]+$/, "") : p.replace(/^[\\/]+|[\\/]+$/g, "")))
     .join(s);
+  return normalizePath(joined, s);
+}
+
+/**
+ * Collapse `.` and `..` segments so `vision/../README.md` becomes
+ * `README.md`. The file-system scope refuses paths that still contain `..`,
+ * and Python itself resolves them, so the check must see the real target.
+ * A leading root (`/` or `C:`) is kept; `..` that would climb above it is kept
+ * too, since there is nothing to pop.
+ */
+export function normalizePath(path: string, sep: string = separator()): string {
+  const parts = path.split(/[\\/]/);
+  const first = parts[0] ?? "";
+  const rooted = first === "" || /^[A-Za-z]:$/.test(first);
+  const out: string[] = [];
+  for (const [i, part] of parts.entries()) {
+    if (i === 0 && rooted) {
+      out.push(first);
+      continue;
+    }
+    if (part === "" || part === ".") continue;
+    if (part === "..") {
+      const last = out[out.length - 1];
+      const canPop = out.length > (rooted ? 1 : 0) && last !== "..";
+      if (canPop) out.pop();
+      else if (!rooted) out.push(part);
+      continue;
+    }
+    out.push(part);
+  }
+  if (rooted && out.length === 1) return first === "" ? sep : `${first}${sep}`;
+  return out.join(sep);
 }
 
 export function baseName(path: string): string {
