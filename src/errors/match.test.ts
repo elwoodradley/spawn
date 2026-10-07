@@ -73,6 +73,27 @@ ZeroDivisionError: division by zero
     expect(ex.actions?.[0]).toMatchObject({ packageName: "helper" });
   });
 
+  it("ModuleNotFoundError: no install button for the student's own module elsewhere in the project", async () => {
+    const croak = parseCroak(tb("ModuleNotFoundError: No module named 'solution'"));
+    const m = croak && match(croak, CTX);
+    if (!m || !croak) throw new Error("no match");
+    const fs: ProbeFs = {
+      exists: (p) => Promise.resolve(p === "/home/me/proj/solution.py"),
+      join: (...parts) => parts.join("/"),
+      dirName: (p) => p.slice(0, p.lastIndexOf("/")),
+    };
+    const ex = await probe(m, CTX, fs, croak);
+    expect(ex?.title).toBe("solution is your own module, but Python cannot see it from this file");
+    expect(ex?.actions).toBeUndefined();
+    // A real package name is never second-guessed by the disk.
+    const known = parseCroak(tb("ModuleNotFoundError: No module named 'numpy'"));
+    const k = known && match(known, CTX);
+    if (!k || !known) throw new Error("no match");
+    expect(await probe(k, CTX, { ...fs, exists: () => Promise.resolve(true) }, known)).toBeNull();
+    // Nothing on disk: the first card, with its button, stands.
+    expect(await probe(m, CTX, { ...fs, exists: () => Promise.resolve(false) }, croak)).toBeNull();
+  });
+
   it("ModuleNotFoundError: a stdlib module gets no install button", () => {
     const ex = run("ModuleNotFoundError: No module named '_tkinter'");
     expect(ex.actions).toBeUndefined();
