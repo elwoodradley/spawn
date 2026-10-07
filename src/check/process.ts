@@ -94,7 +94,8 @@ export function runToCompletion(request: SpawnRequest, options: RunOptions): Pro
     spawn({ ...request, env: { ...PY_ENV, ...request.env } }, onEvent)
       .then((h) => {
         handle = h;
-        if (cancelled) {
+        // The time limit or Cancel may have fired while the start was pending.
+        if (cancelled || timedOut) {
           kill();
           return;
         }

@@ -64,6 +64,17 @@ describe("runToCompletion", () => {
     expect(fake.log).toContain("kill");
   });
 
+  it("kills a child whose start outlasted the time limit", async () => {
+    const fake = fakeSpawn(() => undefined);
+    const slow = (request: SpawnRequest, onEvent: (e: ProcEvent) => void) =>
+      new Promise<ProcHandle>((resolve) => {
+        setTimeout(() => resolve(fake.spawn(request, onEvent)), 30);
+      });
+    const out = await runToCompletion({ program: "p", args: [] }, { timeoutMs: 5, spawn: slow });
+    expect(out.timedOut).toBe(true);
+    expect(fake.log).toContain("kill");
+  });
+
   it("kills the child when the signal aborts", async () => {
     const controller = new AbortController();
     const fake = fakeSpawn(() => controller.abort());
