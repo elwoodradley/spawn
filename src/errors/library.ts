@@ -45,18 +45,27 @@ const missingModule = define<MissingModule>({
       guess.packageName === guess.module
         ? ""
         : ` The package that provides it is called ${guess.packageName}.`;
-    const todo = guess.known
-      ? []
-      : [
+    const body = [
+      `Python looked for the module ${quote(module)} in the interpreter this project uses and did not find it.${named}`,
+    ];
+    if (!guess.known) {
+      // No one-click install for a name SPAWN does not know: a typo such as
+      // `sklern` would install whatever package happens to own that name.
+      return {
+        id: "missing-module",
+        title: `${guess.module} isn't installed, or the name is misspelled`,
+        body,
+        todo: [
           `If ${guess.module} is one of your own files, check that ${guess.module}.py sits next to this file, or in the folder the program runs from.`,
-        ];
+          `If it is a package, check the spelling and the package's real name on pypi.org, then install it from a terminal in the project folder, for example: uv add ${guess.packageName}`,
+        ],
+      };
+    }
     return {
       id: "missing-module",
       title: `${guess.module} isn't installed in this project's environment`,
-      body: [
-        `Python looked for the module ${quote(module)} in the interpreter this project uses and did not find it.${named}`,
-      ],
-      todo,
+      body,
+      todo: [],
       actions: [{ kind: "install", packageName: guess.packageName, moduleName: guess.module }],
     };
   },

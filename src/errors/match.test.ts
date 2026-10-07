@@ -70,7 +70,9 @@ ZeroDivisionError: division by zero
   it("ModuleNotFoundError: an unknown name may be the student's own file", () => {
     const ex = run("ModuleNotFoundError: No module named 'helper'");
     expect(ex.todo?.[0]).toContain("helper.py");
-    expect(ex.actions?.[0]).toMatchObject({ packageName: "helper" });
+    // No one-click install for an unknown name: it may be a typo.
+    expect(ex.actions).toBeUndefined();
+    expect(ex.todo?.[1]).toContain("uv add helper");
   });
 
   it("ModuleNotFoundError: no install button for the student's own module elsewhere in the project", async () => {

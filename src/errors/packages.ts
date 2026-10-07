@@ -123,8 +123,8 @@ export interface PackageGuess {
 /**
  * Turn `No module named 'sklearn.linear_model'` into a package to install.
  * Dotted names are looked up longest-prefix first (`google.protobuf`), then by
- * their first segment. A name that is not in the table installs as itself:
- * the user can still see the exact command before it runs.
+ * their first segment. A name that is not in the table is guessed as itself,
+ * but the card shows it as text rather than as an install button.
  */
 export function packageFor(moduleName: string): PackageGuess {
   const parts = moduleName.split(".");
