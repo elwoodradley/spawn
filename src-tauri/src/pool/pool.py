@@ -15,7 +15,8 @@ handled by pool_health.py next to this file), configure, shutdown.
 
 The program's stdout and stderr are the real pipes SPAWN already reads;
 only protocol messages travel over the socket. Code runs on the main thread
-so a SIGINT (or CTRL_BREAK on Windows) becomes KeyboardInterrupt inside it.
+so a SIGINT (sent by SPAWN on Unix, raised by the reader thread on Windows)
+becomes KeyboardInterrupt inside it, even in a blocking time.sleep().
 """
 
 from __future__ import annotations
@@ -904,6 +905,15 @@ class Pool:
 
         if self.current_id is None:
             return
+        if os.name == "nt":
+            # SPAWN cannot send SIGINT on Windows, and an async exception
+            # waits for the next bytecode, so a blocking time.sleep() would
+            # ignore it. Raising SIGINT here runs Python's C handler, which
+            # also sets the event that wakes the main thread's sleep. Only
+            # one of the two: a second KeyboardInterrupt would land in the
+            # handler of the first and swallow the "interrupted" message.
+            signal.raise_signal(signal.SIGINT)
+            return
         ctypes.pythonapi.PyThreadState_SetAsyncExc(
             ctypes.c_ulong(self.main_thread), ctypes.py_object(KeyboardInterrupt)
         )
@@ -1148,7 +1158,7 @@ def main() -> None:
     threading.Thread(target=reader, name="spawn-pool-reader", daemon=True).start()
 
     if hasattr(signal, "SIGBREAK"):
-        # Windows: SPAWN sends CTRL_BREAK; make it behave like SIGINT.
+        # Windows: a CTRL_BREAK (from a terminal, say) behaves like SIGINT.
         signal.signal(signal.SIGBREAK, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
 
     link.send({"event": "ready", "python": sys.version.split()[0], "pid": os.getpid()})

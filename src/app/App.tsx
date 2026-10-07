@@ -19,7 +19,7 @@ import { installInlineValues } from "../editor/inlineValues/install";
 import { installNudges } from "../nudges/store";
 import DocxView from "../viewer/DocxView";
 import { isViewerPath } from "../viewer/docx";
-import { baseName } from "../ipc";
+import { baseName, onMenuCommand } from "../ipc";
 import OutputPanel from "../output/OutputPanel";
 import { attachPoolEvents } from "../output/rich/attach";
 import { registerPoolCommands } from "../pool/commands";
@@ -47,6 +47,7 @@ import ToastHost from "../ui/Toast";
 import { PRINT_HOST_ID, registerAppCommands } from "./appCommands";
 import { appMenus } from "./appMenus";
 import { autosaveClutch, restoreClutch } from "./clutch";
+import { runCommand } from "./commands";
 import { registerEditCommands } from "./editCommands";
 import { chordLabel, installKeybindings } from "./keybindings";
 import {
@@ -105,6 +106,8 @@ export default function App() {
     const unlisteners: Array<() => void> = [];
     void installCloseGuard().then((fn) => unlisteners.push(fn));
     void installDragDrop().then((fn) => unlisteners.push(fn));
+    // macOS menu bar items (Close Tab, Quit) arrive as command ids.
+    void onMenuCommand((id) => void runCommand(id)).then((fn) => unlisteners.push(fn));
     // Autosave "when switching windows": save everything on blur.
     const onBlur = () => {
       if (settings().editor.autosave === "onFocusChange") void saveAllDirty();

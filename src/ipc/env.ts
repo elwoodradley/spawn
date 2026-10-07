@@ -4,10 +4,19 @@ import { invoke } from "@tauri-apps/api/core";
 /**
  * Where an interpreter came from, best first. `system` is the operating
  * system's own Python (Apple's /usr/bin/python3, a distro's /usr/bin/python3),
- * which projects almost never want. `custom` is a path the user browsed to.
+ * which projects almost never want. `pythonOrg` is a python.org install found
+ * in its default folder on Windows. `custom` is a path the user browsed to.
  */
 export type CandidateSource =
-  "broodVenv" | "uv" | "uvManaged" | "homebrew" | "pyenv" | "path" | "system" | "custom";
+  | "broodVenv"
+  | "uv"
+  | "uvManaged"
+  | "homebrew"
+  | "pyenv"
+  | "pythonOrg"
+  | "path"
+  | "system"
+  | "custom";
 
 export interface Candidate {
   path: string;

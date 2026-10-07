@@ -5,6 +5,8 @@
 mod env;
 mod error;
 mod lsp;
+mod menu;
+mod nav;
 mod pool;
 mod proc;
 
@@ -22,13 +24,22 @@ fn print_page(webview: tauri::Webview) -> error::Result<()> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     linux_render_compat();
+    // A Finder or desktop launch lacks ~/.local/bin, /opt/homebrew/bin and
+    // friends; without them uv, pyright and node are not found.
+    env::locations::extend_process_path();
 
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // Replace Tauri's default macOS menu, whose Cmd+W/H/Q bypass SPAWN.
+    #[cfg(target_os = "macos")]
+    let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
+
+    builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_notification::init())
+        .plugin(nav::guard())
         .manage(Arc::new(proc::ProcRegistry::default()))
         .manage(Arc::new(pool::PoolRegistry::default()))
         .manage(Arc::new(lsp::LspRegistry::default()))
@@ -51,11 +62,26 @@ pub fn run() {
             env::ml::sys_memory,
             print_page,
         ])
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())
         .unwrap_or_else(|err| {
             eprintln!("spawn: could not start: {err}");
             std::process::exit(1);
+        })
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                stop_children(app);
+            }
         });
+}
+
+/// Kill runs, the Interactive Console and the language server when SPAWN
+/// quits. Tauri exits the process directly, so the async tasks that own the
+/// children are never dropped and `kill_on_drop` alone would leave a
+/// training run or a busy kernel running with no window.
+fn stop_children(app: &tauri::AppHandle) {
+    use tauri::Manager;
+    app.state::<Arc<proc::ProcRegistry>>().kill_all();
+    app.state::<Arc<lsp::LspRegistry>>().kill_all();
 }
 
 /// WebKitGTK can paint a blank window on some Wayland + GPU driver

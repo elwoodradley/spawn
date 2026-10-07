@@ -288,6 +288,23 @@ def main(python: str) -> int:
         print("unexpected events after interrupt:", ev)
     expect(ev[0].get("payload", {}).get("text") == "'alive'", "pool survives the interrupt")
 
+    # The interrupt op alone (all SPAWN can send on Windows) must also wake a
+    # blocking sleep there; on Unix SPAWN adds a real SIGINT, tested below.
+    if os.name == "nt":
+        rid += 1
+        conn.sendall((json.dumps({"id": rid, "op": "exec", "code": "import time\ntime.sleep(30)", "file": "t.py", "startLine": 1, "scope": "cell"}) + "\n").encode())
+        time.sleep(0.3)
+        started = time.monotonic()
+        conn.sendall((json.dumps({"op": "interrupt"}) + "\n").encode())
+        msgs = []
+        while True:
+            msg = json.loads(reader.readline())
+            msgs.append(msg)
+            if msg.get("event") == "done":
+                break
+        expect(time.monotonic() - started < 5, "the interrupt op wakes a blocking sleep on Windows")
+        expect(any(m.get("payload", {}).get("type") == "KeyboardInterrupt" for m in msgs), "and reports KeyboardInterrupt")
+
     if os.name != "nt":
         rid += 1
         conn.sendall((json.dumps({"id": rid, "op": "exec", "code": "import time\ntime.sleep(30)", "file": "t.py", "startLine": 1, "scope": "cell"}) + "\n").encode())

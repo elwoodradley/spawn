@@ -72,6 +72,7 @@ export const SOURCE_LABELS: Record<CandidateSource, string> = {
   uvManaged: "uv-managed",
   homebrew: "Homebrew",
   pyenv: "pyenv",
+  pythonOrg: "python.org",
   path: "PATH",
   system: "system",
   custom: "chosen",

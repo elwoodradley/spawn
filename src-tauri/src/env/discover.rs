@@ -2,15 +2,16 @@
 //!
 //! Order: the project's own virtual environment; the interpreter uv resolves
 //! for the project (honouring `requires-python`); interpreters uv manages;
-//! Homebrew and pyenv installs; then whatever is on PATH, with the operating
-//! system's own Python last and tagged as such, because on macOS
-//! `/usr/bin/python3` is first on PATH and almost never what anyone wants.
+//! Homebrew, pyenv and (Windows) python.org installs; then whatever is on
+//! PATH, with the operating system's own Python last and tagged as such,
+//! because on macOS `/usr/bin/python3` is first on PATH and almost never what anyone wants.
 
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
+use super::locations::{home_dir, python_org_windows};
 use super::{find_on_path, quiet};
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -30,6 +31,8 @@ pub enum CandidateSource {
     UvManaged,
     Homebrew,
     Pyenv,
+    /// A python.org install found in its default folder (Windows).
+    PythonOrg,
     Path,
     System,
 }
@@ -68,6 +71,14 @@ pub async fn discover(project: Option<&str>) -> Vec<Candidate> {
     for python in pyenv_pythons() {
         let version = version_from_path(&python);
         push(&mut found, python, CandidateSource::Pyenv, version);
+    }
+
+    if cfg!(windows) {
+        let local = std::env::var_os("LOCALAPPDATA").map(PathBuf::from);
+        let programs = std::env::var_os("ProgramFiles").map(PathBuf::from);
+        for (python, version) in python_org_windows(local.as_deref(), programs.as_deref()) {
+            push(&mut found, python, CandidateSource::PythonOrg, version);
+        }
     }
 
     for name in ["python3", "python"] {
@@ -232,16 +243,24 @@ fn homebrew_pythons() -> Vec<String> {
 }
 
 fn pyenv_pythons() -> Vec<String> {
-    let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")) else {
+    let Some(home) = home_dir() else {
         return Vec::new();
     };
-    let versions = PathBuf::from(home).join(".pyenv").join("versions");
+    // pyenv on Unix; pyenv-win keeps python.exe at the top of each version.
+    let (versions, exe) = if cfg!(windows) {
+        (
+            home.join(".pyenv").join("pyenv-win").join("versions"),
+            "python.exe",
+        )
+    } else {
+        (home.join(".pyenv").join("versions"), "bin/python")
+    };
     let Ok(entries) = std::fs::read_dir(versions) else {
         return Vec::new();
     };
     let mut out: Vec<String> = entries
         .flatten()
-        .map(|e| e.path().join("bin").join("python"))
+        .map(|e| e.path().join(exe))
         .filter(|p| p.is_file())
         .map(|p| p.to_string_lossy().into_owned())
         .collect();
@@ -390,6 +409,8 @@ mod tests {
     fn sources_order_from_project_to_system() {
         assert!(CandidateSource::BroodVenv < CandidateSource::Uv);
         assert!(CandidateSource::UvManaged < CandidateSource::Homebrew);
+        assert!(CandidateSource::Pyenv < CandidateSource::PythonOrg);
+        assert!(CandidateSource::PythonOrg < CandidateSource::Path);
         assert!(CandidateSource::Path < CandidateSource::System);
     }
 }

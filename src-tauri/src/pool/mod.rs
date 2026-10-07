@@ -180,8 +180,9 @@ pub async fn pool_send(pools: State<'_, Arc<PoolRegistry>>, id: u32, line: Strin
         .map_err(|_| Error::Message(format!("pool {id} is gone")))
 }
 
-/// Interrupt whatever the pool is running: an async exception through the
-/// socket on every platform, plus SIGINT on Unix so blocking calls wake up.
+/// Interrupt whatever the pool is running: an interrupt op through the socket
+/// on every platform (the kernel raises SIGINT in itself on Windows), plus a
+/// real SIGINT on Unix so blocking calls wake up.
 #[tauri::command]
 pub async fn pool_interrupt(
     procs: State<'_, Arc<ProcRegistry>>,
