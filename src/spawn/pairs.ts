@@ -85,6 +85,26 @@ export function groupSeries(series: readonly Series[]): ChartGroup[] {
   });
 }
 
+/**
+ * `next` with each group replaced by its equal in `prev` (same metric, same
+ * series objects). Grouping runs on every printed point and builds new
+ * objects; a keyed list of charts must see the same object for an unchanged
+ * group, or it rebuilds every chart, losing its axis mode and hover, on
+ * every line the script prints.
+ */
+export function reuseGroups(prev: readonly ChartGroup[], next: ChartGroup[]): ChartGroup[] {
+  return next.map((g) => {
+    const old = prev.find((p) => p.metric === g.metric);
+    const same =
+      old !== undefined &&
+      old.train === g.train &&
+      old.val === g.val &&
+      old.others.length === g.others.length &&
+      old.others.every((s, i) => s === g.others[i]);
+    return same ? old : g;
+  });
+}
+
 /** Every series a group draws, train first, then val, then the rest. */
 export function groupLines(group: ChartGroup): Series[] {
   const out: Series[] = [];

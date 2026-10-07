@@ -9,8 +9,8 @@
  * Pure: no Tauri, no DOM. `feed()` accepts arbitrary chunks and buffers the
  * partial last line; `\r` counts as a line break so tqdm rewrites are seen.
  */
-import { createSignal } from "solid-js";
-import { createStore, produce } from "solid-js/store";
+import { batch, createSignal } from "solid-js";
+import { createStore, produce, unwrap } from "solid-js/store";
 
 export interface Point {
   step: number;
@@ -75,20 +75,36 @@ const MAX_NAME = 24;
 
 const NUMBER = String.raw`(-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)`;
 /**
+ * What may not follow a value: more of a word or number, a percent, a clock
+ * (`12:30`), a fraction, or a dash (a date `2024-01-05`, a range `1-10`).
+ */
+const END = String.raw`(?![\w.%:/-])`;
+/**
  * `name: 1.23` / `name=1.23`, names of 2 to 24 chars of word, dot, slash,
  * dash. Single letters (`w=1.4`, `b=-0.1`) are almost never metrics.
  */
 const PAIR = new RegExp(
-  String.raw`(?<![\w./-])([A-Za-z_][\w./-]{1,${MAX_NAME - 1}})\s*[:=]\s*${NUMBER}(?![\w.%:/])`,
+  String.raw`(?<![\w./-])([A-Za-z_][\w./-]{1,${MAX_NAME - 1}})\s*[:=]\s*${NUMBER}${END}`,
   "g",
 );
 /** `train_loss 0.234`: space-separated, only for names that read as metrics. */
 const SPACE_PAIR = new RegExp(
-  String.raw`(?<![\w./-])([A-Za-z_][\w./-]{0,${MAX_NAME - 1}})\s+${NUMBER}(?![\w.%:/])`,
+  String.raw`(?<![\w./-])([A-Za-z_][\w./-]{0,${MAX_NAME - 1}})\s+${NUMBER}${END}`,
   "g",
 );
-const METRIC_WORD =
-  /loss|acc|lr|err|score|f1|auc|ppl|perplexity|reward|mse|mae|rmse|bleu|iou|dice|map/i;
+/** One part of a name that reads as a metric: `loss`, `acc1`, `Loss` in `valLoss`. */
+const METRIC_PART =
+  /^(?:loss(?:es)?|acc(?:uracy)?|lr|err(?:ors?)?|scores?|f1|auc|ppl|perplexity|rewards?|mse|mae|rmse|bleu|iou|dice|map)\d*$/i;
+
+/**
+ * True when a whole part of the name (split at `_ . / -` and camelCase) is a
+ * metric word, so `val_loss` and `valLoss` count but `apples`, `previous`
+ * and `already` (which merely contain `ppl`, `iou`, `lr`) do not.
+ */
+export function isMetricName(name: string): boolean {
+  if (METRIC_PART.test(name)) return true;
+  return name.split(/[_./-]|(?<=[a-z])(?=[A-Z])/).some((part) => METRIC_PART.test(part));
+}
 /**
  * `loss: nan`, `loss=inf`, `val_loss -inf`. The separator is captured so the
  * space-separated form can be held to metric-like names, as SPACE_PAIR is.
@@ -221,7 +237,11 @@ export class MetricsModel {
     this.buffer += text;
     const lines = this.buffer.split(/\r\n|\n|\r/);
     this.buffer = lines.pop() ?? "";
-    for (const line of lines) if (line.length > 0) this.line(line);
+    // One update per chunk, not per line: a chunk of a fast loop holds
+    // hundreds of lines, and every update re-lays out every chart.
+    batch(() => {
+      for (const line of lines) if (line.length > 0) this.line(line);
+    });
   }
 
   /** Parse what is left in the buffer (call at exit). */
@@ -244,7 +264,7 @@ export class MetricsModel {
     }
     for (const m of line.matchAll(PAIR)) this.collect(values, m[1], m[2]);
     for (const m of line.matchAll(SPACE_PAIR)) {
-      if (m[1] !== undefined && METRIC_WORD.test(m[1])) this.collect(values, m[1], m[2]);
+      if (m[1] !== undefined && isMetricName(m[1])) this.collect(values, m[1], m[2]);
     }
     if (values.size > 0) this.record(values, x);
     this.scanNonFinite(line, x);
@@ -259,7 +279,7 @@ export class MetricsModel {
       const sep = m[2];
       const raw = m[3];
       if (name === undefined || sep === undefined || raw === undefined) continue;
-      if (!/[:=]/.test(sep) && !METRIC_WORD.test(name)) continue;
+      if (!/[:=]/.test(sep) && !isMetricName(name)) continue;
       if (COUNTERS.has(name.toLowerCase())) continue;
       const kind = /nan/i.test(raw) ? "nan" : "inf";
       const s = this.series.find((entry) => entry.name === name);
@@ -286,25 +306,30 @@ export class MetricsModel {
     this.recordSamples.push([this.now(), this.recordCount]);
     if (this.recordSamples.length > 20) this.recordSamples.shift();
     this.updateRate();
-    this.setSeries(
-      produce((list) => {
-        for (const [name, value] of values) {
-          let s = list.find((entry) => entry.name === name);
-          if (!s) {
-            if (list.length >= this.maxSeries) continue;
-            s = { name, points: [] };
-            list.push(s);
-          }
-          const step = explicitStep ?? this.impliedX(s);
+    // Update each series by index. A produce() over the whole list costs time
+    // proportional to every point already stored, on every printed line.
+    for (const [name, value] of values) {
+      let index = this.series.findIndex((entry) => entry.name === name);
+      if (index === -1) {
+        if (this.series.length >= this.maxSeries) continue;
+        index = this.series.length;
+        this.setSeries(index, { name, points: [] });
+      }
+      const current = this.series[index];
+      if (!current) continue;
+      const step = explicitStep ?? this.impliedX(current);
+      this.setSeries(
+        index,
+        produce((s) => {
           s.points.push({ step, value });
           if (s.points.length > this.maxPoints) {
             const last = s.points[s.points.length - 1];
             s.points = s.points.filter((_, i) => i % 2 === 0);
             if (last && s.points[s.points.length - 1] !== last) s.points.push(last);
           }
-        }
-      }),
-    );
+        }),
+      );
+    }
   }
 
   private scanProgress(line: string): void {
@@ -372,8 +397,10 @@ export class MetricsModel {
    */
   private impliedX(s: Series): number {
     const counter = this.lastStep ?? this.lastEpoch;
-    if (counter !== null && !s.points.some((p) => p.step === counter)) return counter;
-    return s.points.length;
+    // The raw array: scanning 2000 points through the store proxy per line is slow.
+    const points = unwrap(s).points;
+    if (counter !== null && !points.some((p) => p.step === counter)) return counter;
+    return points.length;
   }
 
   /** tqdm beats step counters, which beat epochs, which beat sample cadence. */

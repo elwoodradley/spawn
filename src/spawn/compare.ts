@@ -8,7 +8,8 @@
  */
 import { lowerIsBetter, type RunRecord } from "./runHistory";
 
-export type Direction = "better" | "worse" | "same";
+/** `changed`: a value that is neither better nor worse higher, such as a learning rate. */
+export type Direction = "better" | "worse" | "same" | "changed";
 
 export interface Finding {
   kind: "code" | "metric" | "note";
@@ -149,10 +150,14 @@ function percent(from: number, to: number): number | null {
   return Math.round((Math.abs(to - from) / Math.abs(from)) * 100);
 }
 
+/** Metrics where a larger number is better; anything else (`lr`, `grad_norm`) has no direction. */
+const HIGHER_IS_BETTER = /acc|precision|recall|f1|auc|iou|dice|map|score|reward|bleu|r2|top\d/i;
+
 function direction(name: string, from: number, to: number): Direction {
   if (from === to) return "same";
-  const better = lowerIsBetter(name) ? to < from : to > from;
-  return better ? "better" : "worse";
+  if (lowerIsBetter(name)) return to < from ? "better" : "worse";
+  if (HIGHER_IS_BETTER.test(name)) return to > from ? "better" : "worse";
+  return "changed";
 }
 
 /** "final val_acc dropped 8% (0.91 → 0.84)." */
@@ -160,12 +165,22 @@ export function describeFinal(name: string, from: number, to: number): Finding {
   const dir = direction(name, from, to);
   if (dir === "same")
     return { kind: "metric", text: `final ${name} unchanged at ${fmt(to)}.`, direction: dir };
-  const verb = dir === "better" ? "improved" : lowerIsBetter(name) ? "rose" : "dropped";
+  const verb =
+    dir === "better"
+      ? "improved"
+      : dir === "changed"
+        ? to > from
+          ? "rose"
+          : "fell"
+        : lowerIsBetter(name)
+          ? "rose"
+          : "dropped";
   const pct = percent(from, to);
-  const amount = pct === null || pct < 1 ? "slightly" : `${pct}%`;
+  // From zero there is no percentage; say nothing rather than "slightly".
+  const amount = pct === null ? "" : pct < 1 ? " slightly" : ` ${pct}%`;
   return {
     kind: "metric",
-    text: `final ${name} ${verb} ${amount} (${fmt(from)} → ${fmt(to)}).`,
+    text: `final ${name} ${verb}${amount} (${fmt(from)} → ${fmt(to)}).`,
     direction: dir,
   };
 }
@@ -187,7 +202,7 @@ function describeBest(a: RunRecord, b: RunRecord): Finding[] {
       });
       continue;
     }
-    const verb = dir === "better" ? "improved" : "got worse";
+    const verb = dir === "better" ? "improved" : dir === "worse" ? "got worse" : "changed";
     out.push({
       kind: "metric",
       text: `best ${name} ${verb}: ${fmt(was.value)} at ${at(was.step)} → ${fmt(now.value)} at ${at(now.step)}.`,

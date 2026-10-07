@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { Series } from "./metrics";
-import { classify, groupLines, groupSeries } from "./pairs";
+import { MetricsModel, type Series } from "./metrics";
+import { classify, groupLines, groupSeries, reuseGroups } from "./pairs";
 
 const s = (name: string): Series => ({ name, points: [{ step: 1, value: 1 }] });
 
@@ -81,5 +81,27 @@ describe("groupLines", () => {
   it("returns train, val, then the rest", () => {
     const [g] = groupSeries([s("lr"), s("val_loss"), s("loss")]);
     expect(groupLines(g as NonNullable<typeof g>).map((x) => x.name)).toEqual(["loss", "val_loss"]);
+  });
+});
+
+describe("reuseGroups", () => {
+  it("keeps a group's object while only its points change", () => {
+    const m = new MetricsModel();
+    m.feed("loss: 1 val_loss: 2 acc: 0.5\n");
+    const first = groupSeries(m.series);
+    m.feed("loss: 0.9 val_loss: 1.8 acc: 0.6\n");
+    const fresh = groupSeries(m.series);
+    expect(fresh[0]).not.toBe(first[0]);
+    const kept = reuseGroups(first, fresh);
+    expect(kept[0]).toBe(first[0]);
+    expect(kept[1]).toBe(first[1]);
+  });
+
+  it("replaces a group whose series changed", () => {
+    const loss = s("loss");
+    const before = groupSeries([loss]);
+    const after = reuseGroups(before, groupSeries([loss, s("val_loss")]));
+    expect(after[0]).not.toBe(before[0]);
+    expect(after[0]?.val?.name).toBe("val_loss");
   });
 });

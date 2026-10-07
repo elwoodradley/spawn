@@ -63,6 +63,16 @@ describe("evaluateNudges", () => {
       evaluateNudges({ variables: [v({ name: "t", device: "cpu" })], ml: ml("cpu"), memory: null }),
     ).toEqual([]);
     expect(
+      evaluateNudges({
+        variables: [
+          v({ name: "model", type: "Net", device: "cuda" }),
+          v({ name: "preds", type: "Tensor", device: "cpu" }),
+        ],
+        ml: ml("cuda"),
+        memory: null,
+      }),
+    ).toEqual([]);
+    expect(
       evaluateNudges({ variables: [v({ name: "t", device: "cpu" })], ml: null, memory: null }),
     ).toEqual([]);
   });

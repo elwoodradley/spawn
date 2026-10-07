@@ -6,6 +6,7 @@ import {
   formatRate,
   formatValue,
   alignSeries,
+  boundedRange,
   gapPath,
   integerTicks,
   linearScale,
@@ -20,6 +21,7 @@ import {
   robustRange,
   spacedTicks,
   valueTicks,
+  xAxisTicks,
 } from "./chart";
 
 describe("niceTicks", () => {
@@ -85,6 +87,19 @@ describe("integerTicks", () => {
     expect(integerTicks(1, 60, 4)).toEqual([1, 20, 40, 60]);
     expect(integerTicks(0, 3, 4)).toEqual([0, 1, 2, 3]);
     expect(integerTicks(5, 5)).toEqual([5]);
+  });
+});
+
+describe("xAxisTicks", () => {
+  it("drops an inner tick that would touch the end label", () => {
+    const x = linearScale([0, 101], [52, 352]);
+    expect(integerTicks(0, 101, 4)).toContain(100);
+    expect(xAxisTicks(0, 101, x, 300, 6.8)).toEqual([0, 50, 101]);
+  });
+
+  it("keeps well-spaced ticks", () => {
+    const x = linearScale([1, 60], [52, 352]);
+    expect(xAxisTicks(1, 60, x, 300, 6.8)).toEqual([1, 20, 40, 60]);
   });
 });
 
@@ -273,5 +288,14 @@ describe("bounded metrics", () => {
       clipped: false,
     });
     expect(clampUnit({ min: -0.05, max: 0.5, clipped: false }).min).toBe(0);
+  });
+
+  it("leaves accuracy printed as a percentage on its own range", () => {
+    const range = { min: 78, max: 96, clipped: false };
+    expect(boundedRange("val_acc", [80, 87.5, 94], range)).toEqual(range);
+    expect(boundedRange("val_acc", [0.8, 0.9], { min: 0.7, max: 1.03, clipped: false }).max).toBe(
+      1,
+    );
+    expect(boundedRange("loss", [0.5], { min: 0.4, max: 1.2, clipped: false }).max).toBe(1.2);
   });
 });

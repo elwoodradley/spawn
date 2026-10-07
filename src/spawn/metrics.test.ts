@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MetricsModel, parseClock } from "./metrics";
+import { isMetricName, MetricsModel, parseClock } from "./metrics";
 
 function model(extra: ConstructorParameters<typeof MetricsModel>[0] = {}) {
   let t = 0;
@@ -73,6 +73,33 @@ describe("metric pairs", () => {
     const { m } = model();
     m.feed("time: 00:03 done: 45% ratio: 3/4\n");
     expect(m.series).toHaveLength(0);
+  });
+
+  it("charts a space-separated pair only when a whole part of the name is a metric word", () => {
+    const { m } = model();
+    m.feed("apples 5\nprevious 3 already 7 indices 4 access 2\n");
+    m.feed("train_loss 0.5 valLoss 0.6 accuracy 0.9 acc1 0.8 mAP 0.4 episode_reward 12\n");
+    expect(m.series.map((s) => s.name)).toEqual([
+      "train_loss",
+      "valLoss",
+      "accuracy",
+      "acc1",
+      "mAP",
+      "episode_reward",
+    ]);
+  });
+
+  it("isMetricName matches whole parts only", () => {
+    expect(isMetricName("val/loss")).toBe(true);
+    expect(isMetricName("lr")).toBe(true);
+    expect(isMetricName("already")).toBe(false);
+    expect(isMetricName("sauce")).toBe(false);
+  });
+
+  it("does not read dates or ranges as metrics", () => {
+    const { m } = model();
+    m.feed("date: 2024-01-05\nrange=1-10\nphone 555-1234 loss: 0.5\n");
+    expect(m.series.map((s) => s.name)).toEqual(["loss"]);
   });
 });
 
@@ -180,6 +207,24 @@ describe("housekeeping", () => {
     const points = pts(m, "loss") ?? [];
     expect(points.length).toBeLessThanOrEqual(7);
     expect(points[points.length - 1]).toEqual([10, 10]);
+  });
+
+  it("keeps up with a flood: 20k lines in well under a few seconds", () => {
+    const { m } = model();
+    const t0 = performance.now();
+    for (let c = 0; c < 100; c++) {
+      let chunk = "";
+      for (let i = 0; i < 200; i++) {
+        const n = c * 200 + i;
+        chunk += `epoch ${Math.floor(n / 10)} loss: ${1 / (n + 1)} acc: 0.5\n`;
+      }
+      m.feed(chunk);
+    }
+    // Updating the whole store per line took over 20 s here.
+    expect(performance.now() - t0).toBeLessThan(3000);
+    expect(m.series.map((s) => s.name)).toEqual(["loss", "acc"]);
+    for (const s of m.series) expect(s.points.length).toBeLessThanOrEqual(2000);
+    expect(pts(m, "loss")?.at(-1)).toEqual([1999, 1 / 20000]);
   });
 
   it("reset clears everything including the partial buffer", () => {
