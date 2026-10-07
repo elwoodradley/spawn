@@ -1,16 +1,36 @@
 /**
- * HTML from a library's `_repr_html_`, shown in a fully sandboxed iframe so
- * it cannot touch the app. Sized to its content once it loads.
+ * HTML from a library's `_repr_html_`, shown in a sandboxed iframe. The frame
+ * gets scripts but no same-origin access, so nothing in it can reach the app,
+ * its storage or the file system. A small script inside reports the content
+ * height by postMessage and the frame is sized to it.
  */
-import { onCleanup } from "solid-js";
+import { onCleanup, onMount } from "solid-js";
 
 import type { DisplayPayload } from "../../pool/protocol";
 
 type Html = Extract<DisplayPayload, { kind: "html" }>;
 
+/** Message key the frame uses to report its height. */
+export const HEIGHT_MESSAGE = "spawn-html-height";
+const MAX_HEIGHT = 2000;
+
+const REPORTER = `<script>(function(){
+  function send(){parent.postMessage({type:"${HEIGHT_MESSAGE}",height:document.documentElement.scrollHeight},"*");}
+  addEventListener("load",send);
+  if(typeof ResizeObserver!=="undefined"){new ResizeObserver(send).observe(document.documentElement);}
+})();</script>`;
+
+/** The height a frame asked for, or null if the message is not one. */
+export function reportedHeight(data: unknown): number | null {
+  if (typeof data !== "object" || data === null) return null;
+  const msg = data as { type?: unknown; height?: unknown };
+  if (msg.type !== HEIGHT_MESSAGE || typeof msg.height !== "number") return null;
+  if (!Number.isFinite(msg.height) || msg.height < 0) return null;
+  return Math.min(Math.ceil(msg.height), MAX_HEIGHT);
+}
+
 export default function HtmlBlock(props: { payload: Html }) {
   let frame: HTMLIFrameElement | undefined;
-  let observer: ResizeObserver | undefined;
 
   const doc = () => {
     const style = getComputedStyle(document.documentElement);
@@ -21,35 +41,26 @@ export default function HtmlBlock(props: { payload: Html }) {
     return `<!doctype html><html><head><meta charset="utf-8"><style>
       html,body{margin:0;background:${bg};color:${fg};font-family:${font};font-size:${size};}
       table{border-collapse:collapse}td,th{padding:2px 8px}
-    </style></head><body>${props.payload.html}</body></html>`;
+    </style></head><body>${props.payload.html}${REPORTER}</body></html>`;
   };
 
-  const fit = () => {
-    const body = frame?.contentDocument?.body;
-    if (frame && body) frame.style.height = `${body.scrollHeight + 4}px`;
+  const onMessage = (event: MessageEvent) => {
+    if (!frame || event.source !== frame.contentWindow) return;
+    const height = reportedHeight(event.data);
+    if (height !== null) frame.style.height = `${height + 4}px`;
   };
 
-  const onLoad = () => {
-    fit();
-    const body = frame?.contentDocument?.body;
-    if (body && typeof ResizeObserver !== "undefined") {
-      observer?.disconnect();
-      observer = new ResizeObserver(fit);
-      observer.observe(body);
-    }
-  };
-
-  onCleanup(() => observer?.disconnect());
+  onMount(() => window.addEventListener("message", onMessage));
+  onCleanup(() => window.removeEventListener("message", onMessage));
 
   return (
     <div class="sp-rich sp-rich--html">
       <iframe
         ref={(el) => (frame = el)}
         class="sp-rich__frame"
-        sandbox=""
+        sandbox="allow-scripts"
         srcdoc={doc()}
         title="html output"
-        onLoad={onLoad}
       />
     </div>
   );
