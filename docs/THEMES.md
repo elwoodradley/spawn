@@ -6,7 +6,19 @@ panel and plots all read the same tokens.
 
 ## Where themes live
 
-- Shipped themes: `themes/*.json` in the repo (Pond, Bog, Lily).
+- Shipped themes: `themes/*.json` in the repo. Every file there is picked up
+  automatically. Dark: Pond (the default), Bog, Catppuccin Mocha, Dracula,
+  Everforest, Gruvbox Dark, High Contrast Dark, Ink, Kanagawa, Nord, One Dark,
+  Rosé Pine, Solarized Dark, Tokyo Night. Light: Lily, Catppuccin Latte,
+  GitHub Light, Gruvbox Light, High Contrast Light, Paper, Rosé Pine Dawn,
+  Solarized Light. The ports of well-known palettes keep their original
+  authors' names and MIT licences in the `author` field; where a light
+  palette's colour was too pale to read as code, it is the same hue a step
+  darker.
+- Every shipped theme must pass `src/theme/contrast.test.ts`: text at least
+  4.5:1 on the editor and panels, button text 4.5:1 on the accent, syntax
+  colours 3:1 (comments, docstrings and punctuation 2.5:1), errors and
+  warnings 3:1. Run it on your own theme by dropping the file in `themes/`.
 - Your themes: `<app config dir>/themes/*.json`. On Linux that is
   `~/.config/dev.stonetoad.spawn/themes/`, on macOS
   `~/Library/Application Support/dev.stonetoad.spawn/themes/`, on Windows

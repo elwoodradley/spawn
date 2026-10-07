@@ -393,7 +393,15 @@ elsewhere, run patterns, kept-run count, inline values after a console
 run, dataset checks, error cards, training-problem notes and the
 check-before-submitting time limit. Zoom with Ctrl+= and Ctrl+-.
 
-Themes are JSON files. View › Theme lists the shipped ones; "Where are my
+There are 22 themes: well-known palettes (Tokyo Night, Catppuccin, Dracula,
+Nord, Gruvbox, Solarized, One Dark, Rosé Pine, Everforest, Kanagawa, GitHub
+Light), SPAWN's own (Pond, Bog, Lily, and the minimal Ink and Paper) and two
+high-contrast themes. **Choose Theme…** (View › Theme, the command palette,
+or a click on the theme name in the status bar) lists them with colour
+swatches: the arrow keys preview each one on the whole app, Enter keeps it,
+Escape goes back.
+
+Themes are JSON files. View › Theme lists them all; "Where are my
 themes?" shows the folder where your own go
 (`~/.config/dev.stonetoad.spawn/themes/` on Linux). See `docs/THEMES.md` for
 every token, including the CSS or SVG filter layer over the editor.
@@ -503,7 +511,7 @@ undo history for code, and scroll position for a handout.
 - **Status bar:** click the interpreter to select a Python interpreter; the
   torch item to re-probe; the console item to show variables (or restart after
   an error); the project name to open another; Ln/Col to go to a line; the
-  theme name to cycle themes; the run status to toggle the output panel.
+  theme name to choose a theme; the run status to toggle the output panel.
 - **Output header:** Output / Metrics / Check tabs, the command with the
   working directory on hover, Run / Stop, Check, Clear, find, and a menu for copy, save,
   wrap and timestamps.
