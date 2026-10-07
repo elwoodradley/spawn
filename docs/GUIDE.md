@@ -59,15 +59,20 @@ best tool available.
 
 ## Install and first launch
 
-On Linux, from a clone of the repo:
+Download SPAWN for macOS, Windows or Linux from the
+[latest release](https://github.com/elwoodradley/spawn/releases/latest). The
+[README](../README.md#install) has the steps for each system, including how
+to open an app that is not yet signed. You need Python 3.9 or newer; uv is
+recommended.
+
+To build from source on Linux instead, from a clone of the repo:
 
 ```
 npm install; and npm run install:linux
 ```
 
 That builds a release binary and puts SPAWN in your app launcher with its
-icon. Remove it with `bash scripts/install-linux.sh --uninstall`. On macOS and
-Windows, `npm run tauri build` produces an app bundle or installer.
+icon. Remove it with `bash scripts/install-linux.sh --uninstall`.
 
 First launch shows a welcome screen. Open a project (a folder) or a single file,
 drop a folder onto the window, or pick something from the recent lists.
@@ -81,6 +86,12 @@ File › Open Project (Ctrl+Shift+O), or drag the folder onto the window. The
 sidebar's **Project** tab shows the tree. Right-click a file or folder for new
 file, new folder, rename, delete, copy path, or "Run File". Ctrl+P
 opens any file by fuzzy name; Ctrl+Shift+F searches inside files.
+
+SPAWN keeps a file's line endings (Windows CRLF stays CRLF) and its byte-order
+mark. A file changed by another program reloads when you come back to SPAWN;
+if you had unsaved edits in it, a warning says so and saving replaces the
+version on disk. Binary files, files that are not UTF-8, and files over 50 MB
+are not opened as text; a message says why.
 
 ### 2. Pick an interpreter
 
@@ -380,7 +391,8 @@ every token, including the CSS or SVG filter layer over the editor.
 
 ## Every keyboard shortcut
 
-`Ctrl` is `⌘` on macOS. All of these are also in the menus and the command
+`Ctrl` is `⌘` on macOS, except tab cycling, which stays Ctrl+Tab because
+⌘+Tab switches apps. All of these are also in the menus and the command
 palette (Ctrl+Shift+P), and F1 lists them inside the app.
 
 ### Files and projects
