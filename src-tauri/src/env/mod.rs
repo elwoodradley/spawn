@@ -72,14 +72,26 @@ pub fn env_uv_path() -> Option<String> {
 /// Walk PATH for an executable, like `which`, without a dependency.
 pub fn find_on_path(name: &str) -> Option<PathBuf> {
     let path = std::env::var_os("PATH")?;
-    let names: Vec<String> = if cfg!(windows) {
-        vec![format!("{name}.exe"), name.to_owned()]
-    } else {
-        vec![name.to_owned()]
-    };
+    let names = executable_names(name, cfg!(windows));
     std::env::split_paths(&path)
         .flat_map(|dir| names.iter().map(move |n| dir.join(n)))
         .find(|p| is_executable(p))
+}
+
+/// File names that run as `name`. On Windows that is `name.exe` or a
+/// `.cmd`/`.bat` shim (npm installs `pyright-langserver.cmd` next to an
+/// extensionless shell script that Windows cannot start), never the bare name
+/// unless it already carries an extension.
+fn executable_names(name: &str, windows: bool) -> Vec<String> {
+    if !windows {
+        return vec![name.to_owned()];
+    }
+    let lower = name.to_ascii_lowercase();
+    let exts = [".exe", ".cmd", ".bat", ".com"];
+    if exts.iter().any(|ext| lower.ends_with(ext)) {
+        return vec![name.to_owned()];
+    }
+    exts.iter().map(|ext| format!("{name}{ext}")).collect()
 }
 
 #[cfg(unix)]
@@ -137,6 +149,21 @@ mod tests {
         // Every CI image has some shell; on Windows `cmd` is always present.
         let name = if cfg!(windows) { "cmd" } else { "sh" };
         assert!(find_on_path(name).is_some());
+    }
+
+    #[test]
+    fn windows_names_prefer_exe_then_shims_and_skip_the_bare_script() {
+        assert_eq!(
+            executable_names("pyright-langserver", true),
+            vec![
+                "pyright-langserver.exe",
+                "pyright-langserver.cmd",
+                "pyright-langserver.bat",
+                "pyright-langserver.com"
+            ]
+        );
+        assert_eq!(executable_names("uv.EXE", true), vec!["uv.EXE"]);
+        assert_eq!(executable_names("uv", false), vec!["uv"]);
     }
 
     #[test]
