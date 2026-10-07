@@ -64,15 +64,48 @@ export function parseChord(chord: string, mac = isMac()): Chord {
 
 export interface KeyLike {
   key: string;
+  /** Physical key (`KeyJ`, `Period`); used when Shift or Option changed `key`. */
+  code?: string;
   ctrlKey: boolean;
   shiftKey: boolean;
   altKey: boolean;
   metaKey: boolean;
 }
 
-export function matchesChord(chord: Chord, event: KeyLike): boolean {
+const CODE_KEYS: Record<string, string> = {
+  Equal: "=",
+  Minus: "-",
+  Period: ".",
+  Comma: ",",
+  Slash: "/",
+  Backslash: "\\",
+  BracketLeft: "[",
+  BracketRight: "]",
+  Semicolon: ";",
+  Quote: "'",
+  Backquote: "`",
+};
+
+/** The unshifted key a physical key code stands for on a US layout, or null. */
+export function codeKey(code: string | undefined): string | null {
+  if (!code) return null;
+  const letter = /^Key([A-Z])$/.exec(code);
+  if (letter?.[1]) return letter[1].toLowerCase();
+  const digit = /^Digit(\d)$/.exec(code);
+  if (digit?.[1]) return digit[1];
+  return CODE_KEYS[code] ?? null;
+}
+
+/**
+ * Does the event press this chord? With `byCode`, compare the physical key
+ * instead of `event.key`: Shift turns `.` into `>` and `=` into `+`, and on
+ * macOS Option turns `J` into `∆`, so `Mod-Shift-.` or `Mod-Alt-J` would
+ * never match by `key` alone.
+ */
+export function matchesChord(chord: Chord, event: KeyLike, byCode = false): boolean {
+  const key = byCode ? codeKey(event.code) : event.key.toLowerCase();
   return (
-    event.key.toLowerCase() === chord.key &&
+    key === chord.key &&
     event.ctrlKey === chord.ctrl &&
     event.shiftKey === chord.shift &&
     event.altKey === chord.alt &&
@@ -110,12 +143,17 @@ export function chordLabel(chord: string, mac = isMac()): string {
 export function installKeybindings(target: Window = window): () => void {
   const handler = (event: KeyboardEvent) => {
     if (event.defaultPrevented) return;
-    for (const command of listCommands()) {
-      if (!command.keys) continue;
-      if (matchesChord(parseChord(command.keys), event)) {
-        event.preventDefault();
-        void runCommand(command.id);
-        return;
+    const commands = listCommands().filter((c) => c.keys);
+    // By `key` first, so non-US layouts keep their letters; by physical key
+    // only when a modifier that rewrites `key` is held.
+    const passes = event.shiftKey || event.altKey ? [false, true] : [false];
+    for (const byCode of passes) {
+      for (const command of commands) {
+        if (matchesChord(parseChord(command.keys ?? ""), event, byCode)) {
+          event.preventDefault();
+          void runCommand(command.id);
+          return;
+        }
       }
     }
   };
