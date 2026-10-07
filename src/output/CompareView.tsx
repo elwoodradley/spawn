@@ -71,7 +71,10 @@ export default function CompareView(props: { pair: [RunRecord, RunRecord]; onClo
             </tbody>
           </table>
         </Show>
-        <CodeDiff a={a()} b={b()} />
+        {/* Keyed on the pair: unfolded stretches belong to one diff, not the next. */}
+        <Show when={`${a().id}:${b().id}`} keyed>
+          {(_pair) => <CodeDiff a={a()} b={b()} />}
+        </Show>
       </div>
     </section>
   );
