@@ -233,6 +233,15 @@ describe("OutputModel housekeeping", () => {
     ]);
   });
 
+  it("keeps showing a progress bar whose line the cap dropped", () => {
+    const { m, flushed } = model(3);
+    m.append("stderr", " 10%|#         | 1/10\r");
+    m.append("stdout", "a\nb\nc\nd\n");
+    m.flush();
+    m.append("stderr", " 20%|##        | 2/10\r");
+    expect(flushed()).toContainEqual(["stderr", " 20%|##        | 2/10"]);
+  });
+
   it("system notes get their own line", () => {
     const { m, flushed } = model();
     m.append("stdout", "no newline");

@@ -193,9 +193,17 @@ export class OutputModel {
   }
 
   private overwrite(lines: OutputLine[], stream: Stream, segment: string): void {
-    const open = this.ensureOpen(lines, stream);
-    const line = lines[findIndex(lines, open.id)];
-    if (!line) return;
+    let open = this.ensureOpen(lines, stream);
+    let line = lines[findIndex(lines, open.id)];
+    if (!line) {
+      // The line cap dropped this stream's unfinished line (a tqdm bar on
+      // stderr while thousands of prints go to stdout); start a new one
+      // rather than losing everything the stream writes from now on.
+      delete this.open[stream];
+      open = this.ensureOpen(lines, stream);
+      line = lines[lines.length - 1];
+      if (!line) return;
+    }
     line.text =
       open.col >= line.text.length
         ? line.text + segment
