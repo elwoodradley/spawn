@@ -103,6 +103,14 @@ async function installAction(
       if (installing()) return "Another install is still running.";
       setInstalling(spec.packageName);
       try {
+        // The label promised this exact command. If the interpreter changed
+        // since the card appeared, running it would install somewhere the
+        // next run does not look, and running anything else would break the
+        // promise; say so instead.
+        const now = await currentInstallPlan(spec.packageName);
+        if (now.kind !== "command" || now.display !== plan.display || now.cwd !== plan.cwd) {
+          return "The Python Interpreter changed since this error. Run again for an up-to-date button.";
+        }
         const code = await runPlan(plan);
         if (code === 0) {
           const done = `Installed ${spec.packageName}. Run again.`;

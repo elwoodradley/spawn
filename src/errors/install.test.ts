@@ -24,6 +24,19 @@ describe("installPlan", () => {
     });
   });
 
+  it("never installs into a system Python, whatever source it was picked from", () => {
+    for (const interpreter of ["/usr/bin/python3.12", "/usr/bin/python3"]) {
+      for (const interpreterSource of ["custom", "path", null] as const) {
+        const plan = installPlan({ ...base, interpreter, interpreterSource });
+        expect(plan.kind).toBe("select-interpreter");
+      }
+    }
+    expect(
+      installPlan({ ...base, interpreter: "/usr/local/bin/python3", interpreterSource: "path" })
+        .kind,
+    ).toBe("command");
+  });
+
   it("uses uv pip install into the .venv when there is no pyproject", () => {
     const plan = installPlan({ ...base, hasPyproject: false });
     expect(plan.kind).toBe("command");

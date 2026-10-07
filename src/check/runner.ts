@@ -43,21 +43,34 @@ function emit(item: CheckItem): void {
 
 export async function runCheck(file: string): Promise<void> {
   if (checkStatus() === "running") return;
-  if (settings().spawn.saveBeforeSpawn) await saveAllDirty();
-
+  // Running from here on, before the first await, so a second F6 while the
+  // files save cannot start a second check that Cancel could not reach.
+  setCheckStatus("running");
   controller = new AbortController();
   const { signal } = controller;
   setCheckItems([]);
   setCheckedFile(file);
-  setCheckStatus("running");
 
+  try {
+    if (settings().spawn.saveBeforeSpawn) await saveAllDirty();
+    await runChecks(checkPorts(file, signal));
+  } finally {
+    if (signal.aborted) {
+      setCheckItems((items) => items.filter((i) => i.state !== "running"));
+    }
+    controller = null;
+    setCheckStatus("idle");
+  }
+}
+
+function checkPorts(file: string, signal: AbortSignal): CheckPorts {
   const root = brood();
   const cwd = resolveWorkingDirectory(file);
   const fileDir = dirName(file);
   const otherDir = root && root !== cwd ? root : fileDir !== cwd ? fileDir : null;
   const project = projectSettings();
 
-  const ports: CheckPorts = {
+  return {
     file,
     root,
     python: selectedInterpreter(),
@@ -79,16 +92,6 @@ export async function runCheck(file: string): Promise<void> {
     },
     signal,
   };
-
-  try {
-    await runChecks(ports);
-  } finally {
-    if (signal.aborted) {
-      setCheckItems((items) => items.filter((i) => i.state !== "running"));
-    }
-    controller = null;
-    setCheckStatus("idle");
-  }
 }
 
 export function cancelCheck(): void {

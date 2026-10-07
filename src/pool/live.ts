@@ -16,6 +16,7 @@ import { output, setStdinFallback } from "../spawn/controller";
 import { currentTheme } from "../theme/store";
 import { emitPoolEvent, poolStatus, setPoolClient, setPoolStatus } from "./client";
 import { notifyExecFinished } from "./hooks";
+import { clearVariables } from "./variables";
 import type {
   Cell,
   DatasetHealth,
@@ -45,7 +46,11 @@ interface Message {
 }
 
 let procId: number | null = null;
-/** Which kernel's events count: one still exiting must not tear down its successor. */
+/**
+ * Bumped for every kernel start and every shutdown. Events carry the
+ * generation they were started with, so a kernel that is shutting down (its
+ * exit arrives after a restart has begun) cannot tear down its successor.
+ */
 let generation = 0;
 let nextId = 0;
 /** Bumped every time an exec finishes, so caches keyed on pool state can expire. */
@@ -106,7 +111,9 @@ function onMessage(line: string): void {
       if (msg.id === undefined) break;
       const p = pending.get(msg.id);
       pending.delete(msg.id);
-      setPoolStatus("idle");
+      // Shift+Enter pressed again while a cell ran queues the next exec; the
+      // console is still busy until the last one is done.
+      setPoolStatus([...pending.values()].some((q) => q.resolveDone) ? "busy" : "idle");
       setExecGeneration((g) => g + 1);
       const result = { exec: msg.id, ok: msg.ok ?? false, durationMs: msg.durationMs ?? 0 };
       p?.resolveDone?.(result);
@@ -132,6 +139,9 @@ function onMessage(line: string): void {
 
 function teardown(status: "cold" | "croaked"): void {
   procId = null;
+  // The namespace died with the kernel; a stale list would also tell an
+  // error card that a name "exists in the Interactive Console".
+  clearVariables();
   for (const [, p] of pending) {
     p.resolveDone?.({ exec: -1, ok: false, durationMs: 0 });
     p.resolveResult?.(null);
@@ -155,20 +165,28 @@ async function ensureStarted(): Promise<boolean> {
   }
   setPoolStatus("starting");
   output.system(`console starting · ${python}`);
+  const started = ++generation;
+  const current = () => started === generation;
   try {
-    const mine = ++generation;
     procId = await poolStart(
       { python, cwd: brood() },
       (event) => {
-        if (mine === generation) onProc(event);
+        if (current()) onProc(event);
       },
       (line) => {
-        if (mine === generation) onMessage(line);
+        if (current()) onMessage(line);
       },
     );
   } catch (err) {
     output.append("croak", `could not start the Interactive Console: ${describe(err)}\n`);
     teardown("croaked");
+    return false;
+  }
+  // The kernel may already have died (a broken interpreter exits at once)
+  // or said ready before its id arrived; waiting then would never end.
+  if (poolStatus() === "idle") return true;
+  if (!current() || poolStatus() !== "starting") {
+    procId = null;
     return false;
   }
   await new Promise<void>((resolve) => readyResolvers.push(resolve));
@@ -261,6 +279,7 @@ const live: PoolClient = {
   async shutdown(): Promise<void> {
     if (procId === null) return;
     const id = procId;
+    generation++;
     output.system("console shutting down");
     try {
       await poolSend(id, JSON.stringify({ op: "shutdown" }));
@@ -282,6 +301,9 @@ export function installLivePool(): () => void {
   setStdinFallback(poolProcId);
   const dispose = createRoot((disposeRoot) => {
     createEffect(on(selectedInterpreter, () => void live.shutdown(), { defer: true }));
+    // One console per project: another project must not inherit this one's
+    // variables (or its working directory), even on the same interpreter.
+    createEffect(on(brood, () => void live.shutdown(), { defer: true }));
     createEffect(on(currentTheme, () => void configure(), { defer: true }));
     return disposeRoot;
   });

@@ -60,6 +60,29 @@ const missingModule = define<MissingModule>({
       actions: [{ kind: "install", packageName: guess.packageName, moduleName: guess.module }],
     };
   },
+  async probe({ module }, context, fs) {
+    // An unknown name that is a file in the project is the student's own
+    // module (tests/test_x.py importing solution.py from the root). The
+    // install button would fetch an unrelated package of that name from PyPI.
+    const guess = packageFor(module);
+    if (guess.known || guess.packageName === null) return null;
+    const top = guess.module;
+    for (const dir of new Set([context.projectRoot, context.cwd])) {
+      if (!dir) continue;
+      const own =
+        (await fs.exists(fs.join(dir, `${top}.py`))) || (await fs.exists(fs.join(dir, top)));
+      if (!own) continue;
+      return {
+        id: "missing-module",
+        title: `${top} is your own module, but Python cannot see it from this file`,
+        body: [
+          `${top} is in ${dir}. Python looks for imports in the folder of the file you run and in the installed packages, not in the project as a whole. Installing a package called ${guess.packageName} would not help.`,
+        ],
+        todo: [`Move the file you run next to ${top}, or run a file that sits beside it.`],
+      };
+    }
+    return null;
+  },
 });
 
 // 6. Undefined name ----------------------------------------------------------

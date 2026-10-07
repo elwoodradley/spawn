@@ -219,6 +219,51 @@ describe("OutputModel housekeeping", () => {
     expect(flushed()).toEqual([["stdout", "fresh"]]);
   });
 
+  it("starts the next run under its header, not on the last run's unfinished line", () => {
+    const { m, flushed } = model();
+    m.append("stdout", "Name: ");
+    m.system("stopped after 2.0s");
+    m.system("run b.py");
+    m.append("stdout", "hello\n");
+    expect(flushed()).toEqual([
+      ["stdout", "Name: "],
+      ["system", "stopped after 2.0s"],
+      ["system", "run b.py"],
+      ["stdout", "hello"],
+    ]);
+  });
+
+  it("keeps showing a progress bar whose line the cap dropped", () => {
+    const { m, flushed } = model(3);
+    m.append("stderr", " 10%|#         | 1/10\r");
+    m.append("stdout", "a\nb\nc\nd\n");
+    m.flush();
+    m.append("stderr", " 20%|##        | 2/10\r");
+    expect(flushed()).toContainEqual(["stderr", " 20%|##        | 2/10"]);
+  });
+
+  it("moves back on backspace, so a Keras progress bar redraws in place", () => {
+    const { m, flushed } = model();
+    const bar1 = "1/3 [=>....] - loss: 0.90";
+    const bar2 = "2/3 [===>..] - loss: 0.70";
+    m.append("stdout", bar1);
+    m.append("stdout", `${"\b".repeat(bar1.length)}\r${bar2}`);
+    m.append("stdout", "ab\b\bcd\n");
+    expect(flushed()).toEqual([["stdout", `${bar2}cd`]]);
+  });
+
+  it("strips a colour sequence split across two chunks", () => {
+    const { m, flushed } = model();
+    m.append("stdout", "loss \x1b[3");
+    m.append("stdout", "2m0.5\x1b[0m\n");
+    m.append("stderr", "warn \x1b");
+    m.append("stderr", "[33mslow\x1b[0m\n");
+    expect(flushed()).toEqual([
+      ["stdout", "loss 0.5"],
+      ["stderr", "warn slow"],
+    ]);
+  });
+
   it("system notes get their own line", () => {
     const { m, flushed } = model();
     m.append("stdout", "no newline");

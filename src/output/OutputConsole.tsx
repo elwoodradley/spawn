@@ -35,10 +35,12 @@ export default function OutputConsole() {
     following = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4;
   };
 
-  // New lines: stick to the bottom if we were already there.
+  // New lines: stick to the bottom if we were already there. Past the line
+  // cap the length stays at the maximum (old lines go as new ones come), so
+  // the dropped count is what changes then.
   createEffect(
     on(
-      () => output.lines.length,
+      () => [output.lines.length, output.dropped()],
       () => {
         if (following && scroller) scroller.scrollTop = scroller.scrollHeight;
       },

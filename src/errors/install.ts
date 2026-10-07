@@ -24,9 +24,28 @@ export type InstallPlan =
  * non-system interpreter gets `uv pip install --python <it>`, or `-m pip`
  * when uv is missing. The system Python is never touched.
  */
+/**
+ * The operating system's own Python by its path, the same prefixes the
+ * interpreter discovery labels "system". Checked as well as the source,
+ * because a browsed-to `/usr/bin/python3.12` is labelled "custom" and a
+ * selection missing from the candidate list has no source at all.
+ */
+const SYSTEM_PYTHON = [
+  "/usr/bin/python",
+  "/bin/python",
+  "/System/Library/",
+  "/Library/Developer/CommandLineTools/",
+  "/Applications/Xcode.app/",
+];
+
+export function isSystemPython(path: string): boolean {
+  const unix = path.replace(/\\/g, "/");
+  return SYSTEM_PYTHON.some((prefix) => unix.startsWith(prefix));
+}
+
 export function installPlan(input: InstallInput): InstallPlan {
   const { packageName, uv, interpreter, interpreterSource, projectRoot, hasPyproject } = input;
-  if (!interpreter || interpreterSource === "system") {
+  if (!interpreter || interpreterSource === "system" || isSystemPython(interpreter)) {
     return {
       kind: "select-interpreter",
       label: "Create a .venv first",

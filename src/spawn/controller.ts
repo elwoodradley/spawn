@@ -59,15 +59,28 @@ const [stdinFocusTick, setStdinFocusTick] = createSignal(0);
 export { spawnStatus, setSpawnStatus, spawnCommand, elapsedMs, exitCode, outcome, stdinFocusTick };
 
 let handle: ProcHandle | null = null;
+/** True from the moment a run is asked for until it is running or abandoned. */
+let starting = false;
 let stoppedByUser = false;
 let startedAt = 0;
 let timer: ReturnType<typeof setInterval> | null = null;
 
 export async function spawnFile(path: string): Promise<void> {
-  if (spawnStatus() === "running") {
+  // `starting` covers the awaits before the status flips, so a second F5
+  // (or F5 plus the Run button) cannot start a second process.
+  if (starting || spawnStatus() === "running") {
     output.system("A run is already in progress. Stop it first.");
     return;
   }
+  starting = true;
+  try {
+    await startRun(path);
+  } finally {
+    starting = false;
+  }
+}
+
+async function startRun(path: string): Promise<void> {
   if (settings().spawn.saveBeforeSpawn) await saveAllDirty();
   if (settings().spawn.clearOutputOnSpawn) output.clear();
 
@@ -90,24 +103,39 @@ export async function spawnFile(path: string): Promise<void> {
   setSpawnStatus("running");
   startTimer();
 
+  let started: ProcHandle;
   try {
-    handle = await spawnProcess(
+    started = await spawnProcess(
       { ...command, env: { PYTHONUNBUFFERED: "1", PYTHONIOENCODING: "utf-8" } },
       onEvent,
     );
-    requestStdinFocus();
   } catch (err) {
     finish(null, null, `could not start ${program}: ${describe(err)}`);
+    return;
   }
+  // A program that exits at once can deliver its exit event before the id
+  // arrives; then the run is already over and there is nothing to hold on to.
+  if (spawnStatus() !== "running") return;
+  handle = started;
+  if (stoppedByUser) await kill(started);
+  else requestStdinFocus();
 }
 
 export async function stopSpawn(): Promise<void> {
-  if (!handle) return;
+  // Once asked, a second press has nothing to add. Before the handle exists
+  // (the process is still being started) the request is remembered and the
+  // child is killed as soon as its handle arrives.
+  if (spawnStatus() !== "running" || stoppedByUser) return;
   stoppedByUser = true;
   output.system("stopping…");
+  if (handle) await kill(handle);
+}
+
+async function kill(target: ProcHandle): Promise<void> {
   try {
-    await handle.kill();
+    await target.kill();
   } catch (err) {
+    stoppedByUser = false;
     output.append("croak", `could not stop: ${describe(err)}\n`);
   }
 }

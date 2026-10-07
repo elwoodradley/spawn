@@ -164,6 +164,9 @@ async function checkTests(ports: CheckPorts): Promise<void> {
     { program: command.program, args: command.args, cwd: ports.root },
     ports.timeoutMs,
   );
+  // Cancelled mid-run: the runner drops the running row; a red "stopped
+  // before they finished" would blame the tests for the student's Cancel.
+  if (ports.signal.aborted) return;
   ports.emit(
     testsItem({
       command,

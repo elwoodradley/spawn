@@ -2,7 +2,8 @@
  * The output model: what the output panel shows.
  *
  * Child output arrives as arbitrary chunks. This model turns them into lines,
- * honouring `\r` the way a terminal does (tqdm rewrites its bar in place),
+ * honouring `\r` and backspace the way a terminal does (tqdm and Keras
+ * rewrite their bars in place),
  * stripping ANSI escapes, tagging each line by stream, and marking stderr
  * lines that belong to a Python traceback as croaks with a clickable link.
  *
@@ -48,6 +49,12 @@ export interface OutputModelOptions {
 // eslint-disable-next-line no-control-regex -- matching ESC is the whole point
 const ANSI = /\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[@-Z\\-_]/g;
 
+/** An escape sequence cut off at the end of a chunk; the rest is in the next. */
+// eslint-disable-next-line no-control-regex -- matching ESC is the whole point
+const ESC_TAIL = /\x1b(?:\[[0-9;?]*[ -/]*|\][^\x07\x1b]*)?$/;
+/** Longer than any colour or title sequence: a stray ESC, not a split one. */
+const MAX_ESC_TAIL = 256;
+
 export function stripAnsi(text: string): string {
   return text.replace(ANSI, "");
 }
@@ -78,6 +85,7 @@ export class OutputModel {
   private nextId = 1;
   /** One unterminated line per stream, so stdout and stderr never merge. */
   private open: Partial<Record<Stream, OpenLine>> = {};
+  private escTail: Partial<Record<Stream, string>> = {};
   private inCroak = false;
   /** Lines discarded by the cap since the last clear. Reactive. */
   readonly dropped: Accessor<number>;
@@ -96,8 +104,17 @@ export class OutputModel {
 
   /** Queue text for a stream. Applied on the next `flush`. */
   append(stream: Stream, text: string): void {
-    if (text.length === 0) return;
-    this.pending.push({ stream, text });
+    // Hold back an escape sequence split across two reads, so `\x1b[3` +
+    // `2m` is stripped whole instead of showing `[32m` in the output.
+    let whole = (this.escTail[stream] ?? "") + text;
+    delete this.escTail[stream];
+    const tail = ESC_TAIL.exec(whole);
+    if (tail && tail[0].length <= MAX_ESC_TAIL) {
+      this.escTail[stream] = tail[0];
+      whole = whole.slice(0, tail.index);
+    }
+    if (whole.length === 0) return;
+    this.pending.push({ stream, text: whole });
     if (!this.scheduled) {
       this.scheduled = true;
       this.schedule(() => this.flush());
@@ -125,6 +142,7 @@ export class OutputModel {
   clear(): void {
     this.pending = [];
     this.open = {};
+    this.escTail = {};
     this.inCroak = false;
     this.setLines([]);
     this.setDropped(0);
@@ -155,16 +173,24 @@ export class OutputModel {
   private write(lines: OutputLine[], stream: Stream, text: string): void {
     // What the user typed answers whatever prompt is pending, so the prompt's
     // unterminated line ends here; the program's reply then starts fresh
-    // instead of being glued onto the prompt.
-    if (stream === "stdin") {
+    // instead of being glued onto the prompt. A note from SPAWN ("exited…",
+    // "run b.py…") ends them too, so the next run's first output lands under
+    // its own header, not on the last run's unfinished line above it.
+    if (stream === "stdin" || stream === "system") {
       if (this.open.stdout) this.closeLine(lines, "stdout");
       if (this.open.stderr) this.closeLine(lines, "stderr");
     }
-    for (const token of text.split(/(\r\n|\n|\r)/)) {
+    // eslint-disable-next-line no-control-regex -- backspace is a cursor move here
+    for (const token of text.split(/(\r\n|\n|\r|\x08+)/)) {
       if (token === "") continue;
       if (token === "\n" || token === "\r\n") this.closeLine(lines, stream);
       else if (token === "\r") this.ensureOpen(lines, stream).col = 0;
-      else this.overwrite(lines, stream, token);
+      else if (token.startsWith("\x08")) {
+        // Backspace moves the cursor left, as in a terminal. Keras redraws
+        // its progress bar with a run of them before the `\r`.
+        const open = this.ensureOpen(lines, stream);
+        open.col = Math.max(0, open.col - token.length);
+      } else this.overwrite(lines, stream, token);
     }
   }
 
@@ -191,9 +217,17 @@ export class OutputModel {
   }
 
   private overwrite(lines: OutputLine[], stream: Stream, segment: string): void {
-    const open = this.ensureOpen(lines, stream);
-    const line = lines[findIndex(lines, open.id)];
-    if (!line) return;
+    let open = this.ensureOpen(lines, stream);
+    let line = lines[findIndex(lines, open.id)];
+    if (!line) {
+      // The line cap dropped this stream's unfinished line (a tqdm bar on
+      // stderr while thousands of prints go to stdout); start a new one
+      // rather than losing everything the stream writes from now on.
+      delete this.open[stream];
+      open = this.ensureOpen(lines, stream);
+      line = lines[lines.length - 1];
+      if (!line) return;
+    }
     line.text =
       open.col >= line.text.length
         ? line.text + segment

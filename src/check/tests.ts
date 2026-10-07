@@ -76,10 +76,13 @@ export function buildTestCommand(input: {
 /** pytest and unittest both exit with this when no test was collected. */
 const NO_TESTS_EXIT = 5;
 
-/** pytest's `3 passed, 1 failed in 0.2s` or unittest's `Ran 4 tests` + `OK`/`FAILED (...)`. */
+/** pytest's `1 failed, 3 passed in 0.2s` or unittest's `Ran 4 tests` + `OK`/`FAILED (...)`. */
 export function parseTestSummary(output: string): TestSummary | null {
   const text = output.replace(new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g"), "");
-  const pytest = /^=+ (.*?) in [\d.]+s.*=+\s*$/m.exec(text)?.[1];
+  // `-q` (what the check runs) prints the line bare; without it, inside `===`.
+  const pytest = /^=* ?((?:\d+ [a-z]+|no tests ran)(?:, \d+ [a-z]+)*) in [\d.]+s\b/m.exec(
+    text,
+  )?.[1];
   if (pytest) {
     const count = (word: string) => Number(new RegExp(`(\\d+) ${word}`).exec(pytest)?.[1] ?? 0);
     const passed = count("passed");

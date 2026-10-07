@@ -58,6 +58,11 @@ export function isCroakContinuation(line: string): boolean {
   return line.trim() === "" || /^\s/.test(line) || HEADER.test(line) || CHAIN.test(line);
 }
 
+/** Is this the sentence that links one traceback of a chain to the next? */
+export function isCroakChain(line: string): boolean {
+  return CHAIN.test(line);
+}
+
 /** Is this the `ExceptionType: message` line that closes a croak? */
 export function isCroakEnd(line: string): boolean {
   return END.test(line) && !HEADER.test(line) && !CHAIN.test(line);

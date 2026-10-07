@@ -90,6 +90,9 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  /* Following the bottom is done by hand; the browser's scroll anchoring
+     would pull the view up as the line cap removes lines from the top. */
+  overflow-anchor: none;
   user-select: text;
   cursor: text;
 }
