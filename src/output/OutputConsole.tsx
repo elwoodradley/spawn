@@ -3,7 +3,7 @@
  * list (following the bottom unless the user scrolls up), and the stdin row.
  * Mod-F with the console focused opens find here instead of in the editor.
  */
-import { createEffect, createMemo, on, onCleanup, Show } from "solid-js";
+import { createEffect, createMemo, on, onCleanup, onMount, Show } from "solid-js";
 
 import { output, spawnStatus } from "../spawn/controller";
 import Icon from "../ui/Icon";
@@ -30,9 +30,18 @@ export default function OutputConsole() {
   let following = true;
   let cursor = -1;
 
+  let lastTop = 0;
   const onScroll = () => {
     if (!scroller) return;
-    following = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4;
+    const top = scroller.scrollTop;
+    const atBottom = top + scroller.clientHeight >= scroller.scrollHeight - 4;
+    // Stop following only when the view moved up, which only the user does.
+    // A block that grows (an image decoding, a frame sizing itself) can fire
+    // a scroll event while the view is briefly above the bottom; that must
+    // not count as scrolling away.
+    if (atBottom) following = true;
+    else if (top < lastTop - 2) following = false;
+    lastTop = top;
   };
 
   // New lines: stick to the bottom if we were already there. Past the line
@@ -46,6 +55,19 @@ export default function OutputConsole() {
       },
     ),
   );
+
+  // Figures, tables and HTML blocks grow after they are added (an image
+  // decodes, a frame reports its height), which neither adds a line nor fires
+  // a scroll event. Keep following while the content grows.
+  onMount(() => {
+    const content = scroller?.firstElementChild;
+    if (!scroller || !content || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (following && scroller) scroller.scrollTop = scroller.scrollHeight;
+    });
+    observer.observe(content);
+    onCleanup(() => observer.disconnect());
+  });
 
   // A fresh run always starts at the bottom.
   createEffect(
