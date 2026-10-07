@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MetricsModel, parseClock } from "./metrics";
+import { isMetricName, MetricsModel, parseClock } from "./metrics";
 
 function model(extra: ConstructorParameters<typeof MetricsModel>[0] = {}) {
   let t = 0;
@@ -73,6 +73,27 @@ describe("metric pairs", () => {
     const { m } = model();
     m.feed("time: 00:03 done: 45% ratio: 3/4\n");
     expect(m.series).toHaveLength(0);
+  });
+
+  it("charts a space-separated pair only when a whole part of the name is a metric word", () => {
+    const { m } = model();
+    m.feed("apples 5\nprevious 3 already 7 indices 4 access 2\n");
+    m.feed("train_loss 0.5 valLoss 0.6 accuracy 0.9 acc1 0.8 mAP 0.4 episode_reward 12\n");
+    expect(m.series.map((s) => s.name)).toEqual([
+      "train_loss",
+      "valLoss",
+      "accuracy",
+      "acc1",
+      "mAP",
+      "episode_reward",
+    ]);
+  });
+
+  it("isMetricName matches whole parts only", () => {
+    expect(isMetricName("val/loss")).toBe(true);
+    expect(isMetricName("lr")).toBe(true);
+    expect(isMetricName("already")).toBe(false);
+    expect(isMetricName("sauce")).toBe(false);
   });
 
   it("does not read dates or ranges as metrics", () => {

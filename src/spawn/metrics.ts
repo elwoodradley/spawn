@@ -92,8 +92,19 @@ const SPACE_PAIR = new RegExp(
   String.raw`(?<![\w./-])([A-Za-z_][\w./-]{0,${MAX_NAME - 1}})\s+${NUMBER}${END}`,
   "g",
 );
-const METRIC_WORD =
-  /loss|acc|lr|err|score|f1|auc|ppl|perplexity|reward|mse|mae|rmse|bleu|iou|dice|map/i;
+/** One part of a name that reads as a metric: `loss`, `acc1`, `Loss` in `valLoss`. */
+const METRIC_PART =
+  /^(?:loss(?:es)?|acc(?:uracy)?|lr|err(?:ors?)?|scores?|f1|auc|ppl|perplexity|rewards?|mse|mae|rmse|bleu|iou|dice|map)\d*$/i;
+
+/**
+ * True when a whole part of the name (split at `_ . / -` and camelCase) is a
+ * metric word, so `val_loss` and `valLoss` count but `apples`, `previous`
+ * and `already` (which merely contain `ppl`, `iou`, `lr`) do not.
+ */
+export function isMetricName(name: string): boolean {
+  if (METRIC_PART.test(name)) return true;
+  return name.split(/[_./-]|(?<=[a-z])(?=[A-Z])/).some((part) => METRIC_PART.test(part));
+}
 /**
  * `loss: nan`, `loss=inf`, `val_loss -inf`. The separator is captured so the
  * space-separated form can be held to metric-like names, as SPACE_PAIR is.
@@ -249,7 +260,7 @@ export class MetricsModel {
     }
     for (const m of line.matchAll(PAIR)) this.collect(values, m[1], m[2]);
     for (const m of line.matchAll(SPACE_PAIR)) {
-      if (m[1] !== undefined && METRIC_WORD.test(m[1])) this.collect(values, m[1], m[2]);
+      if (m[1] !== undefined && isMetricName(m[1])) this.collect(values, m[1], m[2]);
     }
     if (values.size > 0) this.record(values, x);
     this.scanNonFinite(line, x);
@@ -264,7 +275,7 @@ export class MetricsModel {
       const sep = m[2];
       const raw = m[3];
       if (name === undefined || sep === undefined || raw === undefined) continue;
-      if (!/[:=]/.test(sep) && !METRIC_WORD.test(name)) continue;
+      if (!/[:=]/.test(sep) && !isMetricName(name)) continue;
       if (COUNTERS.has(name.toLowerCase())) continue;
       const kind = /nan/i.test(raw) ? "nan" : "inf";
       const s = this.series.find((entry) => entry.name === name);
