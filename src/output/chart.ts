@@ -372,6 +372,17 @@ export function isBoundedMetric(name: string): boolean {
   );
 }
 
+/**
+ * The range for a chart of `metric`: clamped into [0, 1] when the metric is
+ * bounded and every value fits, untouched otherwise. Accuracy printed as a
+ * percentage (`acc: 87.5`) keeps its own range instead of every point
+ * landing off-scale above a 0–1 axis.
+ */
+export function boundedRange(metric: string, values: readonly number[], range: Range): Range {
+  if (!isBoundedMetric(metric) || values.some((v) => v < 0 || v > 1)) return range;
+  return clampUnit(range);
+}
+
 /** Clamp a fitted range into [0, 1] for bounded metrics, keeping a hair of room. */
 export function clampUnit(range: Range): Range {
   const min = Math.max(0, range.min);

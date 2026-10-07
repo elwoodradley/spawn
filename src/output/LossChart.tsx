@@ -17,10 +17,9 @@ import type { Series, XUnit } from "../spawn/metrics";
 import { groupLines, type ChartGroup } from "../spawn/pairs";
 import type { RunRecord } from "../spawn/runHistory";
 import {
-  clampUnit,
+  boundedRange,
   clampedScale,
   fitRange,
-  isBoundedMetric,
   formatValue,
   gapPath,
   integerTicks,
@@ -134,7 +133,7 @@ export default function LossChart(props: {
       const hi = Math.max(...ys);
       range = { min: lo / 1.15, max: hi * 1.15, clipped: false };
     }
-    if (mode !== "log" && isBoundedMetric(props.group.metric)) range = clampUnit(range);
+    if (mode !== "log") range = boundedRange(props.group.metric, ys, range);
     const yMin = range.min;
     const yMax = range.max;
     const offScale = ys.filter((v) => v < yMin || v > yMax).length;

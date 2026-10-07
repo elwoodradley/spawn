@@ -6,6 +6,7 @@ import {
   formatRate,
   formatValue,
   alignSeries,
+  boundedRange,
   gapPath,
   integerTicks,
   linearScale,
@@ -273,5 +274,14 @@ describe("bounded metrics", () => {
       clipped: false,
     });
     expect(clampUnit({ min: -0.05, max: 0.5, clipped: false }).min).toBe(0);
+  });
+
+  it("leaves accuracy printed as a percentage on its own range", () => {
+    const range = { min: 78, max: 96, clipped: false };
+    expect(boundedRange("val_acc", [80, 87.5, 94], range)).toEqual(range);
+    expect(boundedRange("val_acc", [0.8, 0.9], { min: 0.7, max: 1.03, clipped: false }).max).toBe(
+      1,
+    );
+    expect(boundedRange("loss", [0.5], { min: 0.4, max: 1.2, clipped: false }).max).toBe(1.2);
   });
 });
