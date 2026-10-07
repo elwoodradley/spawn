@@ -43,6 +43,11 @@ export interface RevealRequest {
 }
 
 const docs = new Map<string, DocEntry>();
+/**
+ * The path each document's update listener reports to. A rename re-points
+ * it; a listener that kept its original path would stop tracking edits.
+ */
+const listenerPaths = new Map<string, { path: string }>();
 
 const [cursorPosition, setCursorPosition] = createSignal<CursorPosition | null>(null);
 const [dirtyPaths, setDirtyPaths] = createSignal<ReadonlySet<string>>(new Set());
@@ -64,8 +69,9 @@ function setDirty(path: string, dirty: boolean): void {
   setDirtyPaths(next);
 }
 
-function listenerFor(path: string): (update: ViewUpdate) => void {
+function listenerFor(ref: { path: string }): (update: ViewUpdate) => void {
   return (update) => {
+    const path = ref.path;
     const entry = docs.get(path);
     if (!entry) return;
     entry.state = update.state;
@@ -88,12 +94,14 @@ export async function openDocument(path: string): Promise<DocEntry> {
   const existing = docs.get(path);
   if (existing) return existing;
   const text = await readText(path);
+  const ref = { path };
   const entry: DocEntry = {
-    state: createDocumentState(text, currentTheme().appearance, listenerFor(path), path),
+    state: createDocumentState(text, currentTheme().appearance, listenerFor(ref), path),
     savedText: text,
     scroll: null,
   };
   docs.set(path, entry);
+  listenerPaths.set(path, ref);
   return entry;
 }
 
@@ -112,6 +120,12 @@ export function renameDocument(from: string, to: string): void {
   autosave.cancel(from);
   docs.delete(from);
   docs.set(to, entry);
+  const ref = listenerPaths.get(from);
+  listenerPaths.delete(from);
+  if (ref) {
+    ref.path = to;
+    listenerPaths.set(to, ref);
+  }
   const dirty = dirtyPaths().has(from);
   setDirty(from, false);
   setDirty(to, dirty);
@@ -120,6 +134,7 @@ export function renameDocument(from: string, to: string): void {
 export function closeDocument(path: string): void {
   autosave.cancel(path);
   docs.delete(path);
+  listenerPaths.delete(path);
   setDirty(path, false);
 }
 
