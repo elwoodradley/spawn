@@ -45,6 +45,8 @@ interface Message {
 }
 
 let procId: number | null = null;
+/** Which kernel's events count: one still exiting must not tear down its successor. */
+let generation = 0;
 let nextId = 0;
 /** Bumped every time an exec finishes, so caches keyed on pool state can expire. */
 const [execGeneration, setExecGeneration] = createSignal(0);
@@ -154,7 +156,16 @@ async function ensureStarted(): Promise<boolean> {
   setPoolStatus("starting");
   output.system(`console starting · ${python}`);
   try {
-    procId = await poolStart({ python, cwd: brood() }, onProc, onMessage);
+    const mine = ++generation;
+    procId = await poolStart(
+      { python, cwd: brood() },
+      (event) => {
+        if (mine === generation) onProc(event);
+      },
+      (line) => {
+        if (mine === generation) onMessage(line);
+      },
+    );
   } catch (err) {
     output.append("croak", `could not start the Interactive Console: ${describe(err)}\n`);
     teardown("croaked");
@@ -256,9 +267,10 @@ const live: PoolClient = {
     } catch {
       // Already gone.
     }
-    // Belt and braces: if the interpreter ignores the shutdown, kill it.
+    // Belt and braces: a kernel busy in a cell never reads the shutdown, so
+    // kill it. Ids are never reused; one that already exited just errors.
     setTimeout(() => {
-      if (procId === id) void invoke("proc_kill", { id }).catch(() => undefined);
+      void invoke("proc_kill", { id }).catch(() => undefined);
     }, 1500);
     teardown("cold");
   },
