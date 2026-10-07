@@ -1,0 +1,120 @@
+{
+  "name": "Catppuccin Mocha",
+  "appearance": "dark",
+  "author": "Port of Catppuccin (MIT)",
+  "colors": {
+    "bg": "#1e1e2e",
+    "bgPanel": "#181825",
+    "bgElevated": "#313244",
+    "bgHover": "#313244",
+    "bgActive": "#45475a",
+    "fg": "#cdd6f4",
+    "fgMuted": "#a6adc8",
+    "fgFaint": "#7f849c",
+    "border": "#313244",
+    "accent": "#cba6f7",
+    "accentFg": "#11111b",
+    "selection": "rgba(203, 166, 247, 0.28)",
+    "cursor": "#f5e0dc",
+    "lineHighlight": "rgba(205, 214, 244, 0.045)",
+    "gutterFg": "#7f849c",
+    "gutterActiveFg": "#cdd6f4",
+    "matchingBracket": "rgba(203, 166, 247, 0.35)",
+    "success": "#a6e3a1",
+    "warning": "#f9e2af",
+    "error": "#f38ba8",
+    "info": "#89b4fa",
+    "stderr": "#f9e2af"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#cba6f7"
+    },
+    "controlKeyword": {
+      "color": "#cba6f7"
+    },
+    "definitionKeyword": {
+      "color": "#cba6f7"
+    },
+    "moduleKeyword": {
+      "color": "#cba6f7"
+    },
+    "operator": {
+      "color": "#89dceb"
+    },
+    "string": {
+      "color": "#a6e3a1"
+    },
+    "docString": {
+      "color": "#7f849c",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#7f849c",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#fab387"
+    },
+    "bool": {
+      "color": "#fab387"
+    },
+    "null": {
+      "color": "#fab387"
+    },
+    "self": {
+      "color": "#f38ba8",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#89b4fa"
+    },
+    "className": {
+      "color": "#f9e2af"
+    },
+    "typeName": {
+      "color": "#f9e2af"
+    },
+    "variableName": {
+      "color": "#cdd6f4"
+    },
+    "propertyName": {
+      "color": "#b4befe"
+    },
+    "definition": {
+      "color": "#89b4fa"
+    },
+    "decorator": {
+      "color": "#fab387"
+    },
+    "punctuation": {
+      "color": "#a6adc8"
+    },
+    "bracket": {
+      "color": "#a6adc8"
+    },
+    "invalid": {
+      "color": "#f38ba8",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#89dceb"
+    },
+    "regexp": {
+      "color": "#a6e3a1"
+    }
+  },
+  "plot": {
+    "background": "#181825",
+    "foreground": "#cdd6f4",
+    "grid": "#313244",
+    "series": ["#cba6f7", "#fab387", "#a6e3a1", "#f9e2af", "#f38ba8", "#89dceb"]
+  }
+}

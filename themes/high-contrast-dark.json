@@ -1,0 +1,120 @@
+{
+  "name": "High Contrast Dark",
+  "appearance": "dark",
+  "author": "Stone Toad",
+  "colors": {
+    "bg": "#000000",
+    "bgPanel": "#000000",
+    "bgElevated": "#0a0a0a",
+    "bgHover": "#1f1f1f",
+    "bgActive": "#2b2b2b",
+    "fg": "#ffffff",
+    "fgMuted": "#d0d0d0",
+    "fgFaint": "#a8a8a8",
+    "border": "#8a8a8a",
+    "accent": "#ffd400",
+    "accentFg": "#000000",
+    "selection": "rgba(255, 212, 0, 0.35)",
+    "cursor": "#ffd400",
+    "lineHighlight": "rgba(255, 255, 255, 0.08)",
+    "gutterFg": "#a8a8a8",
+    "gutterActiveFg": "#ffffff",
+    "matchingBracket": "rgba(255, 212, 0, 0.5)",
+    "success": "#5cf27a",
+    "warning": "#ffd400",
+    "error": "#ff6b6b",
+    "info": "#7cb7ff",
+    "stderr": "#ffab4a"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#ff8af2"
+    },
+    "controlKeyword": {
+      "color": "#ff8af2"
+    },
+    "definitionKeyword": {
+      "color": "#ff8af2"
+    },
+    "moduleKeyword": {
+      "color": "#ff8af2"
+    },
+    "operator": {
+      "color": "#5ce1ff"
+    },
+    "string": {
+      "color": "#5cf27a"
+    },
+    "docString": {
+      "color": "#b8b8b8",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#b8b8b8",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#ffab4a"
+    },
+    "bool": {
+      "color": "#ffab4a"
+    },
+    "null": {
+      "color": "#ffab4a"
+    },
+    "self": {
+      "color": "#ff6b6b",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#7cb7ff"
+    },
+    "className": {
+      "color": "#ffd400"
+    },
+    "typeName": {
+      "color": "#ffd400"
+    },
+    "variableName": {
+      "color": "#ffffff"
+    },
+    "propertyName": {
+      "color": "#ffffff"
+    },
+    "definition": {
+      "color": "#7cb7ff"
+    },
+    "decorator": {
+      "color": "#ffab4a"
+    },
+    "punctuation": {
+      "color": "#d0d0d0"
+    },
+    "bracket": {
+      "color": "#d0d0d0"
+    },
+    "invalid": {
+      "color": "#ff6b6b",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#5ce1ff"
+    },
+    "regexp": {
+      "color": "#5cf27a"
+    }
+  },
+  "plot": {
+    "background": "#000000",
+    "foreground": "#ffffff",
+    "grid": "#8a8a8a",
+    "series": ["#ffd400", "#ffab4a", "#5cf27a", "#ff8af2", "#ff6b6b", "#5ce1ff"]
+  }
+}

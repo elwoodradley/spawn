@@ -1,0 +1,120 @@
+{
+  "name": "Gruvbox Light",
+  "appearance": "light",
+  "author": "Port of gruvbox by Pavel Pertsev (MIT)",
+  "colors": {
+    "bg": "#fbf1c7",
+    "bgPanel": "#f2e5bc",
+    "bgElevated": "#fdf6d8",
+    "bgHover": "#ebdbb2",
+    "bgActive": "#d5c4a1",
+    "fg": "#3c3836",
+    "fgMuted": "#665c54",
+    "fgFaint": "#928374",
+    "border": "#d5c4a1",
+    "accent": "#076678",
+    "accentFg": "#fbf1c7",
+    "selection": "rgba(7, 102, 120, 0.2)",
+    "cursor": "#076678",
+    "lineHighlight": "rgba(60, 56, 54, 0.05)",
+    "gutterFg": "#928374",
+    "gutterActiveFg": "#3c3836",
+    "matchingBracket": "rgba(7, 102, 120, 0.25)",
+    "success": "#79740e",
+    "warning": "#a05f00",
+    "error": "#9d0006",
+    "info": "#076678",
+    "stderr": "#b57614"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#9d0006"
+    },
+    "controlKeyword": {
+      "color": "#9d0006"
+    },
+    "definitionKeyword": {
+      "color": "#9d0006"
+    },
+    "moduleKeyword": {
+      "color": "#427b58"
+    },
+    "operator": {
+      "color": "#af3a03"
+    },
+    "string": {
+      "color": "#79740e"
+    },
+    "docString": {
+      "color": "#928374",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#928374",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#8f3f71"
+    },
+    "bool": {
+      "color": "#8f3f71"
+    },
+    "null": {
+      "color": "#8f3f71"
+    },
+    "self": {
+      "color": "#8f3f71",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#79740e"
+    },
+    "className": {
+      "color": "#b57614"
+    },
+    "typeName": {
+      "color": "#b57614"
+    },
+    "variableName": {
+      "color": "#3c3836"
+    },
+    "propertyName": {
+      "color": "#076678"
+    },
+    "definition": {
+      "color": "#79740e"
+    },
+    "decorator": {
+      "color": "#427b58"
+    },
+    "punctuation": {
+      "color": "#665c54"
+    },
+    "bracket": {
+      "color": "#665c54"
+    },
+    "invalid": {
+      "color": "#9d0006",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#427b58"
+    },
+    "regexp": {
+      "color": "#79740e"
+    }
+  },
+  "plot": {
+    "background": "#fbf1c7",
+    "foreground": "#3c3836",
+    "grid": "#d5c4a1",
+    "series": ["#076678", "#af3a03", "#79740e", "#9d0006", "#b57614", "#427b58"]
+  }
+}

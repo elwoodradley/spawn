@@ -1,0 +1,120 @@
+{
+  "name": "Kanagawa",
+  "appearance": "dark",
+  "author": "Port of Kanagawa by rebelot (MIT)",
+  "colors": {
+    "bg": "#1f1f28",
+    "bgPanel": "#16161d",
+    "bgElevated": "#2a2a37",
+    "bgHover": "#2a2a37",
+    "bgActive": "#363646",
+    "fg": "#dcd7ba",
+    "fgMuted": "#c8c093",
+    "fgFaint": "#727169",
+    "border": "#2a2a37",
+    "accent": "#7e9cd8",
+    "accentFg": "#16161d",
+    "selection": "rgba(126, 156, 216, 0.28)",
+    "cursor": "#dcd7ba",
+    "lineHighlight": "rgba(220, 215, 186, 0.045)",
+    "gutterFg": "#727169",
+    "gutterActiveFg": "#dcd7ba",
+    "matchingBracket": "rgba(126, 156, 216, 0.35)",
+    "success": "#98bb6c",
+    "warning": "#e6c384",
+    "error": "#e46876",
+    "info": "#7fb4ca",
+    "stderr": "#c0a36e"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#957fb8"
+    },
+    "controlKeyword": {
+      "color": "#957fb8"
+    },
+    "definitionKeyword": {
+      "color": "#957fb8"
+    },
+    "moduleKeyword": {
+      "color": "#e46876"
+    },
+    "operator": {
+      "color": "#c0a36e"
+    },
+    "string": {
+      "color": "#98bb6c"
+    },
+    "docString": {
+      "color": "#8a8980",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#8a8980",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#d27e99"
+    },
+    "bool": {
+      "color": "#ffa066"
+    },
+    "null": {
+      "color": "#ffa066"
+    },
+    "self": {
+      "color": "#e46876",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#7e9cd8"
+    },
+    "className": {
+      "color": "#7aa89f"
+    },
+    "typeName": {
+      "color": "#7aa89f"
+    },
+    "variableName": {
+      "color": "#dcd7ba"
+    },
+    "propertyName": {
+      "color": "#e6c384"
+    },
+    "definition": {
+      "color": "#7e9cd8"
+    },
+    "decorator": {
+      "color": "#e6c384"
+    },
+    "punctuation": {
+      "color": "#9cabca"
+    },
+    "bracket": {
+      "color": "#9cabca"
+    },
+    "invalid": {
+      "color": "#e46876",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#7fb4ca"
+    },
+    "regexp": {
+      "color": "#98bb6c"
+    }
+  },
+  "plot": {
+    "background": "#16161d",
+    "foreground": "#dcd7ba",
+    "grid": "#2a2a37",
+    "series": ["#7e9cd8", "#ffa066", "#98bb6c", "#957fb8", "#e6c384", "#e46876", "#7fb4ca"]
+  }
+}

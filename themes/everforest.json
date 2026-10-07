@@ -1,0 +1,120 @@
+{
+  "name": "Everforest",
+  "appearance": "dark",
+  "author": "Port of Everforest by sainnhe (MIT)",
+  "colors": {
+    "bg": "#2d353b",
+    "bgPanel": "#232a2e",
+    "bgElevated": "#343f44",
+    "bgHover": "#343f44",
+    "bgActive": "#3d484d",
+    "fg": "#d3c6aa",
+    "fgMuted": "#9da9a0",
+    "fgFaint": "#7a8478",
+    "border": "#3d484d",
+    "accent": "#a7c080",
+    "accentFg": "#2d353b",
+    "selection": "rgba(167, 192, 128, 0.28)",
+    "cursor": "#d3c6aa",
+    "lineHighlight": "rgba(211, 198, 170, 0.045)",
+    "gutterFg": "#7a8478",
+    "gutterActiveFg": "#d3c6aa",
+    "matchingBracket": "rgba(167, 192, 128, 0.35)",
+    "success": "#a7c080",
+    "warning": "#dbbc7f",
+    "error": "#e67e80",
+    "info": "#7fbbb3",
+    "stderr": "#dbbc7f"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#e67e80"
+    },
+    "controlKeyword": {
+      "color": "#e67e80"
+    },
+    "definitionKeyword": {
+      "color": "#e67e80"
+    },
+    "moduleKeyword": {
+      "color": "#d699b6"
+    },
+    "operator": {
+      "color": "#e69875"
+    },
+    "string": {
+      "color": "#dbbc7f"
+    },
+    "docString": {
+      "color": "#859289",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#859289",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#d699b6"
+    },
+    "bool": {
+      "color": "#d699b6"
+    },
+    "null": {
+      "color": "#d699b6"
+    },
+    "self": {
+      "color": "#d699b6",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#a7c080"
+    },
+    "className": {
+      "color": "#83c092"
+    },
+    "typeName": {
+      "color": "#dbbc7f"
+    },
+    "variableName": {
+      "color": "#d3c6aa"
+    },
+    "propertyName": {
+      "color": "#7fbbb3"
+    },
+    "definition": {
+      "color": "#a7c080"
+    },
+    "decorator": {
+      "color": "#83c092"
+    },
+    "punctuation": {
+      "color": "#9da9a0"
+    },
+    "bracket": {
+      "color": "#9da9a0"
+    },
+    "invalid": {
+      "color": "#e67e80",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#83c092"
+    },
+    "regexp": {
+      "color": "#a7c080"
+    }
+  },
+  "plot": {
+    "background": "#232a2e",
+    "foreground": "#d3c6aa",
+    "grid": "#3d484d",
+    "series": ["#a7c080", "#e69875", "#d699b6", "#dbbc7f", "#e67e80", "#83c092"]
+  }
+}

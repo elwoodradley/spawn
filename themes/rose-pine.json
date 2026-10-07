@@ -1,0 +1,120 @@
+{
+  "name": "Rosé Pine",
+  "appearance": "dark",
+  "author": "Port of Rosé Pine (MIT)",
+  "colors": {
+    "bg": "#191724",
+    "bgPanel": "#1f1d2e",
+    "bgElevated": "#26233a",
+    "bgHover": "#21202e",
+    "bgActive": "#403d52",
+    "fg": "#e0def4",
+    "fgMuted": "#908caa",
+    "fgFaint": "#6e6a86",
+    "border": "#26233a",
+    "accent": "#ebbcba",
+    "accentFg": "#191724",
+    "selection": "rgba(235, 188, 186, 0.28)",
+    "cursor": "#e0def4",
+    "lineHighlight": "rgba(224, 222, 244, 0.045)",
+    "gutterFg": "#6e6a86",
+    "gutterActiveFg": "#e0def4",
+    "matchingBracket": "rgba(235, 188, 186, 0.35)",
+    "success": "#9ccfd8",
+    "warning": "#f6c177",
+    "error": "#eb6f92",
+    "info": "#c4a7e7",
+    "stderr": "#f6c177"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#3e8fb0"
+    },
+    "controlKeyword": {
+      "color": "#3e8fb0"
+    },
+    "definitionKeyword": {
+      "color": "#3e8fb0"
+    },
+    "moduleKeyword": {
+      "color": "#3e8fb0"
+    },
+    "operator": {
+      "color": "#908caa"
+    },
+    "string": {
+      "color": "#f6c177"
+    },
+    "docString": {
+      "color": "#6e6a86",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#6e6a86",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#eb6f92"
+    },
+    "bool": {
+      "color": "#eb6f92"
+    },
+    "null": {
+      "color": "#eb6f92"
+    },
+    "self": {
+      "color": "#c4a7e7",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#ebbcba"
+    },
+    "className": {
+      "color": "#9ccfd8"
+    },
+    "typeName": {
+      "color": "#9ccfd8"
+    },
+    "variableName": {
+      "color": "#e0def4"
+    },
+    "propertyName": {
+      "color": "#c4a7e7"
+    },
+    "definition": {
+      "color": "#ebbcba"
+    },
+    "decorator": {
+      "color": "#ebbcba"
+    },
+    "punctuation": {
+      "color": "#908caa"
+    },
+    "bracket": {
+      "color": "#908caa"
+    },
+    "invalid": {
+      "color": "#eb6f92",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#9ccfd8"
+    },
+    "regexp": {
+      "color": "#9ccfd8"
+    }
+  },
+  "plot": {
+    "background": "#1f1d2e",
+    "foreground": "#e0def4",
+    "grid": "#26233a",
+    "series": ["#ebbcba", "#f6c177", "#9ccfd8", "#31748f", "#eb6f92"]
+  }
+}

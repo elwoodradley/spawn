@@ -1,0 +1,120 @@
+{
+  "name": "Tokyo Night",
+  "appearance": "dark",
+  "author": "Port of Tokyo Night by enkia (MIT)",
+  "colors": {
+    "bg": "#1a1b26",
+    "bgPanel": "#16161e",
+    "bgElevated": "#1f2335",
+    "bgHover": "#24283b",
+    "bgActive": "#292e42",
+    "fg": "#c0caf5",
+    "fgMuted": "#9aa5ce",
+    "fgFaint": "#6b7394",
+    "border": "#292e42",
+    "accent": "#7aa2f7",
+    "accentFg": "#16161e",
+    "selection": "rgba(122, 162, 247, 0.28)",
+    "cursor": "#c0caf5",
+    "lineHighlight": "rgba(192, 202, 245, 0.045)",
+    "gutterFg": "#6b7394",
+    "gutterActiveFg": "#c0caf5",
+    "matchingBracket": "rgba(122, 162, 247, 0.35)",
+    "success": "#9ece6a",
+    "warning": "#e0af68",
+    "error": "#f7768e",
+    "info": "#7aa2f7",
+    "stderr": "#e0af68"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#bb9af7"
+    },
+    "controlKeyword": {
+      "color": "#bb9af7"
+    },
+    "definitionKeyword": {
+      "color": "#bb9af7"
+    },
+    "moduleKeyword": {
+      "color": "#bb9af7"
+    },
+    "operator": {
+      "color": "#89ddff"
+    },
+    "string": {
+      "color": "#9ece6a"
+    },
+    "docString": {
+      "color": "#737aa2",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#737aa2",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#ff9e64"
+    },
+    "bool": {
+      "color": "#ff9e64"
+    },
+    "null": {
+      "color": "#ff9e64"
+    },
+    "self": {
+      "color": "#f7768e",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#7aa2f7"
+    },
+    "className": {
+      "color": "#2ac3de"
+    },
+    "typeName": {
+      "color": "#e0af68"
+    },
+    "variableName": {
+      "color": "#c0caf5"
+    },
+    "propertyName": {
+      "color": "#73daca"
+    },
+    "definition": {
+      "color": "#7aa2f7"
+    },
+    "decorator": {
+      "color": "#e0af68"
+    },
+    "punctuation": {
+      "color": "#9aa5ce"
+    },
+    "bracket": {
+      "color": "#9aa5ce"
+    },
+    "invalid": {
+      "color": "#f7768e",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#7dcfff"
+    },
+    "regexp": {
+      "color": "#9ece6a"
+    }
+  },
+  "plot": {
+    "background": "#16161e",
+    "foreground": "#c0caf5",
+    "grid": "#292e42",
+    "series": ["#7aa2f7", "#ff9e64", "#9ece6a", "#bb9af7", "#e0af68", "#f7768e", "#7dcfff"]
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "name": "Solarized Dark",
+  "appearance": "dark",
+  "author": "Port of Solarized by Ethan Schoonover (MIT)",
+  "colors": {
+    "bg": "#002b36",
+    "bgPanel": "#00232c",
+    "bgElevated": "#073642",
+    "bgHover": "#073642",
+    "bgActive": "#0d4a58",
+    "fg": "#839496",
+    "fgMuted": "#7b9096",
+    "fgFaint": "#5d777e",
+    "border": "#073642",
+    "accent": "#2aa198",
+    "accentFg": "#002b36",
+    "selection": "rgba(42, 161, 152, 0.28)",
+    "cursor": "#839496",
+    "lineHighlight": "rgba(131, 148, 150, 0.045)",
+    "gutterFg": "#5d777e",
+    "gutterActiveFg": "#839496",
+    "matchingBracket": "rgba(42, 161, 152, 0.35)",
+    "success": "#859900",
+    "warning": "#b58900",
+    "error": "#dc322f",
+    "info": "#268bd2",
+    "stderr": "#b58900"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#859900"
+    },
+    "controlKeyword": {
+      "color": "#859900"
+    },
+    "definitionKeyword": {
+      "color": "#859900"
+    },
+    "moduleKeyword": {
+      "color": "#cb4b16"
+    },
+    "operator": {
+      "color": "#859900"
+    },
+    "string": {
+      "color": "#2aa198"
+    },
+    "docString": {
+      "color": "#6b8189",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#6b8189",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#d33682"
+    },
+    "bool": {
+      "color": "#d33682"
+    },
+    "null": {
+      "color": "#d33682"
+    },
+    "self": {
+      "color": "#6c71c4",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#268bd2"
+    },
+    "className": {
+      "color": "#b58900"
+    },
+    "typeName": {
+      "color": "#b58900"
+    },
+    "variableName": {
+      "color": "#839496"
+    },
+    "propertyName": {
+      "color": "#839496"
+    },
+    "definition": {
+      "color": "#268bd2"
+    },
+    "decorator": {
+      "color": "#cb4b16"
+    },
+    "punctuation": {
+      "color": "#7b9096"
+    },
+    "bracket": {
+      "color": "#7b9096"
+    },
+    "invalid": {
+      "color": "#dc322f",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#2aa198"
+    },
+    "regexp": {
+      "color": "#dc322f"
+    }
+  },
+  "plot": {
+    "background": "#00232c",
+    "foreground": "#839496",
+    "grid": "#073642",
+    "series": ["#2aa198", "#cb4b16", "#859900", "#6c71c4", "#b58900", "#dc322f"]
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "name": "Ink",
+  "appearance": "dark",
+  "author": "Stone Toad",
+  "colors": {
+    "bg": "#111111",
+    "bgPanel": "#0c0c0c",
+    "bgElevated": "#1a1a1a",
+    "bgHover": "#1c1c1c",
+    "bgActive": "#262626",
+    "fg": "#d4d4d4",
+    "fgMuted": "#8e8e8e",
+    "fgFaint": "#5e5e5e",
+    "border": "#222222",
+    "accent": "#e8e8e8",
+    "accentFg": "#111111",
+    "selection": "rgba(255, 255, 255, 0.16)",
+    "cursor": "#d4d4d4",
+    "lineHighlight": "rgba(212, 212, 212, 0.045)",
+    "gutterFg": "#5e5e5e",
+    "gutterActiveFg": "#d4d4d4",
+    "matchingBracket": "rgba(255, 255, 255, 0.22)",
+    "success": "#a8c29a",
+    "warning": "#d6c38a",
+    "error": "#e07a7a",
+    "info": "#a9b6c9",
+    "stderr": "#bdbdbd"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#ffffff",
+      "fontWeight": "bold"
+    },
+    "controlKeyword": {
+      "color": "#ffffff",
+      "fontWeight": "bold"
+    },
+    "definitionKeyword": {
+      "color": "#ffffff",
+      "fontWeight": "bold"
+    },
+    "moduleKeyword": {
+      "color": "#ffffff",
+      "fontWeight": "bold"
+    },
+    "operator": {
+      "color": "#9a9a9a"
+    },
+    "string": {
+      "color": "#a8a8a8"
+    },
+    "docString": {
+      "color": "#6a6a6a",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#6a6a6a",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#d4d4d4"
+    },
+    "bool": {
+      "color": "#d4d4d4"
+    },
+    "null": {
+      "color": "#d4d4d4"
+    },
+    "self": {
+      "color": "#bdbdbd",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#ffffff"
+    },
+    "className": {
+      "color": "#ffffff",
+      "fontWeight": "bold"
+    },
+    "typeName": {
+      "color": "#bdbdbd"
+    },
+    "variableName": {
+      "color": "#d4d4d4"
+    },
+    "propertyName": {
+      "color": "#c4c4c4"
+    },
+    "definition": {
+      "color": "#ffffff",
+      "fontWeight": "bold"
+    },
+    "decorator": {
+      "color": "#bdbdbd"
+    },
+    "punctuation": {
+      "color": "#8e8e8e"
+    },
+    "bracket": {
+      "color": "#8e8e8e"
+    },
+    "invalid": {
+      "color": "#e07a7a",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#d4d4d4"
+    },
+    "regexp": {
+      "color": "#a8a8a8"
+    }
+  },
+  "plot": {
+    "background": "#0c0c0c",
+    "foreground": "#d4d4d4",
+    "grid": "#222222",
+    "series": ["#e8e8e8", "#d6a77a", "#a8c29a", "#ffffff", "#d6c38a", "#e07a7a", "#9fb8c2"]
+  }
+}

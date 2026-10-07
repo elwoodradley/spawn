@@ -1,0 +1,121 @@
+{
+  "name": "Dracula",
+  "appearance": "dark",
+  "author": "Port of Dracula by Zeno Rocha (MIT)",
+  "colors": {
+    "bg": "#282a36",
+    "bgPanel": "#21222c",
+    "bgElevated": "#343746",
+    "bgHover": "#343746",
+    "bgActive": "#44475a",
+    "fg": "#f8f8f2",
+    "fgMuted": "#bfbfbf",
+    "fgFaint": "#7d86b5",
+    "border": "#44475a",
+    "accent": "#bd93f9",
+    "accentFg": "#191a21",
+    "selection": "rgba(189, 147, 249, 0.28)",
+    "cursor": "#f8f8f2",
+    "lineHighlight": "rgba(248, 248, 242, 0.045)",
+    "gutterFg": "#7d86b5",
+    "gutterActiveFg": "#f8f8f2",
+    "matchingBracket": "rgba(189, 147, 249, 0.35)",
+    "success": "#50fa7b",
+    "warning": "#f1fa8c",
+    "error": "#ff5555",
+    "info": "#8be9fd",
+    "stderr": "#ffb86c"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#ff79c6"
+    },
+    "controlKeyword": {
+      "color": "#ff79c6"
+    },
+    "definitionKeyword": {
+      "color": "#ff79c6"
+    },
+    "moduleKeyword": {
+      "color": "#ff79c6"
+    },
+    "operator": {
+      "color": "#ff79c6"
+    },
+    "string": {
+      "color": "#f1fa8c"
+    },
+    "docString": {
+      "color": "#6272a4",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#6272a4",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#bd93f9"
+    },
+    "bool": {
+      "color": "#bd93f9"
+    },
+    "null": {
+      "color": "#bd93f9"
+    },
+    "self": {
+      "color": "#bd93f9",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#50fa7b"
+    },
+    "className": {
+      "color": "#8be9fd"
+    },
+    "typeName": {
+      "color": "#8be9fd",
+      "fontStyle": "italic"
+    },
+    "variableName": {
+      "color": "#f8f8f2"
+    },
+    "propertyName": {
+      "color": "#f8f8f2"
+    },
+    "definition": {
+      "color": "#50fa7b"
+    },
+    "decorator": {
+      "color": "#50fa7b"
+    },
+    "punctuation": {
+      "color": "#bfbfbf"
+    },
+    "bracket": {
+      "color": "#bfbfbf"
+    },
+    "invalid": {
+      "color": "#ff5555",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#8be9fd"
+    },
+    "regexp": {
+      "color": "#50fa7b"
+    }
+  },
+  "plot": {
+    "background": "#21222c",
+    "foreground": "#f8f8f2",
+    "grid": "#44475a",
+    "series": ["#bd93f9", "#ffb86c", "#50fa7b", "#ff79c6", "#f1fa8c", "#ff5555", "#8be9fd"]
+  }
+}

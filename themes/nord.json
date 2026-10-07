@@ -1,0 +1,120 @@
+{
+  "name": "Nord",
+  "appearance": "dark",
+  "author": "Port of Nord by Arctic Ice Studio (MIT)",
+  "colors": {
+    "bg": "#2e3440",
+    "bgPanel": "#292e39",
+    "bgElevated": "#3b4252",
+    "bgHover": "#3b4252",
+    "bgActive": "#434c5e",
+    "fg": "#d8dee9",
+    "fgMuted": "#a6b0c3",
+    "fgFaint": "#7b88a1",
+    "border": "#3b4252",
+    "accent": "#88c0d0",
+    "accentFg": "#2e3440",
+    "selection": "rgba(136, 192, 208, 0.28)",
+    "cursor": "#d8dee9",
+    "lineHighlight": "rgba(216, 222, 233, 0.045)",
+    "gutterFg": "#7b88a1",
+    "gutterActiveFg": "#d8dee9",
+    "matchingBracket": "rgba(136, 192, 208, 0.35)",
+    "success": "#a3be8c",
+    "warning": "#ebcb8b",
+    "error": "#bf616a",
+    "info": "#81a1c1",
+    "stderr": "#ebcb8b"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#81a1c1"
+    },
+    "controlKeyword": {
+      "color": "#81a1c1"
+    },
+    "definitionKeyword": {
+      "color": "#81a1c1"
+    },
+    "moduleKeyword": {
+      "color": "#81a1c1"
+    },
+    "operator": {
+      "color": "#81a1c1"
+    },
+    "string": {
+      "color": "#a3be8c"
+    },
+    "docString": {
+      "color": "#7b88a1",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#7b88a1",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#b48ead"
+    },
+    "bool": {
+      "color": "#81a1c1"
+    },
+    "null": {
+      "color": "#81a1c1"
+    },
+    "self": {
+      "color": "#81a1c1",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#88c0d0"
+    },
+    "className": {
+      "color": "#8fbcbb"
+    },
+    "typeName": {
+      "color": "#8fbcbb"
+    },
+    "variableName": {
+      "color": "#d8dee9"
+    },
+    "propertyName": {
+      "color": "#8fbcbb"
+    },
+    "definition": {
+      "color": "#88c0d0"
+    },
+    "decorator": {
+      "color": "#d08770"
+    },
+    "punctuation": {
+      "color": "#a6b0c3"
+    },
+    "bracket": {
+      "color": "#a6b0c3"
+    },
+    "invalid": {
+      "color": "#bf616a",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#88c0d0"
+    },
+    "regexp": {
+      "color": "#a3be8c"
+    }
+  },
+  "plot": {
+    "background": "#292e39",
+    "foreground": "#d8dee9",
+    "grid": "#3b4252",
+    "series": ["#88c0d0", "#d08770", "#a3be8c", "#81a1c1", "#ebcb8b", "#bf616a"]
+  }
+}

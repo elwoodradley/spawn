@@ -1,0 +1,120 @@
+{
+  "name": "High Contrast Light",
+  "appearance": "light",
+  "author": "Stone Toad",
+  "colors": {
+    "bg": "#ffffff",
+    "bgPanel": "#ffffff",
+    "bgElevated": "#ffffff",
+    "bgHover": "#e8e8e8",
+    "bgActive": "#d6d6d6",
+    "fg": "#000000",
+    "fgMuted": "#2b2b2b",
+    "fgFaint": "#555555",
+    "border": "#4d4d4d",
+    "accent": "#0037da",
+    "accentFg": "#ffffff",
+    "selection": "rgba(0, 55, 218, 0.22)",
+    "cursor": "#000000",
+    "lineHighlight": "rgba(0, 0, 0, 0.06)",
+    "gutterFg": "#555555",
+    "gutterActiveFg": "#000000",
+    "matchingBracket": "rgba(0, 55, 218, 0.3)",
+    "success": "#006b1f",
+    "warning": "#6b5300",
+    "error": "#b00000",
+    "info": "#0037da",
+    "stderr": "#6b5300"
+  },
+  "fonts": {
+    "ui": "Adwaita Sans",
+    "mono": "JetBrains Mono",
+    "sizeUi": 13,
+    "sizeMono": 13,
+    "lineHeight": 1.5
+  },
+  "syntax": {
+    "keyword": {
+      "color": "#7a0099"
+    },
+    "controlKeyword": {
+      "color": "#7a0099"
+    },
+    "definitionKeyword": {
+      "color": "#7a0099"
+    },
+    "moduleKeyword": {
+      "color": "#7a0099"
+    },
+    "operator": {
+      "color": "#005a7a"
+    },
+    "string": {
+      "color": "#006b1f"
+    },
+    "docString": {
+      "color": "#4d4d4d",
+      "fontStyle": "italic"
+    },
+    "comment": {
+      "color": "#4d4d4d",
+      "fontStyle": "italic"
+    },
+    "number": {
+      "color": "#8f3f00"
+    },
+    "bool": {
+      "color": "#8f3f00"
+    },
+    "null": {
+      "color": "#8f3f00"
+    },
+    "self": {
+      "color": "#b00000",
+      "fontStyle": "italic"
+    },
+    "function": {
+      "color": "#0037da"
+    },
+    "className": {
+      "color": "#6b5300"
+    },
+    "typeName": {
+      "color": "#6b5300"
+    },
+    "variableName": {
+      "color": "#000000"
+    },
+    "propertyName": {
+      "color": "#000000"
+    },
+    "definition": {
+      "color": "#0037da"
+    },
+    "decorator": {
+      "color": "#8f3f00"
+    },
+    "punctuation": {
+      "color": "#2b2b2b"
+    },
+    "bracket": {
+      "color": "#2b2b2b"
+    },
+    "invalid": {
+      "color": "#b00000",
+      "textDecoration": "underline"
+    },
+    "escape": {
+      "color": "#005a7a"
+    },
+    "regexp": {
+      "color": "#006b1f"
+    }
+  },
+  "plot": {
+    "background": "#ffffff",
+    "foreground": "#000000",
+    "grid": "#4d4d4d",
+    "series": ["#0037da", "#8f3f00", "#006b1f", "#7a0099", "#6b5300", "#b00000", "#005a7a"]
+  }
+}
