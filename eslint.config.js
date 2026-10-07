@@ -3,7 +3,7 @@ import solid from "eslint-plugin-solid/configs/typescript";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/", "node_modules/", "src-tauri/", "coverage/"] },
+  { ignores: ["dist/", "node_modules/", "src-tauri/", "coverage/", ".claude/"] },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {
