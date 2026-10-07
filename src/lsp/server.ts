@@ -36,6 +36,14 @@ let process: ServerProcess | null = null;
 let startedFor: { root: string; python: string | null } | null = null;
 let restarts = 0;
 const MAX_RESTARTS = 3;
+/** A crash after this long counts as a fresh failure, not part of a loop. */
+const STABLE_MS = 60_000;
+/**
+ * Bumped by every stop. A start that sees it change while awaiting was
+ * overtaken (project opened, then its interpreter chosen a moment later)
+ * and must not install its server over the newer one.
+ */
+let startToken = 0;
 
 export function lspClient(): LSPClient | null {
   return client;
@@ -79,6 +87,7 @@ function log(line: string): void {
 }
 
 async function stop(): Promise<void> {
+  startToken += 1;
   const p = process;
   const c = client;
   process = null;
@@ -95,11 +104,14 @@ async function stop(): Promise<void> {
 
 async function start(root: string): Promise<void> {
   await stop();
+  const token = ++startToken;
+  const stale = () => token !== startToken;
   if (!settings().lsp.enabled) {
     setStatus("off");
     return;
   }
   const launch = await locateServer();
+  if (stale()) return;
   if ("missing" in launch) {
     setStatus("missing");
     setDetail(launch.missing);
@@ -108,6 +120,7 @@ async function start(root: string): Promise<void> {
   setStatus("starting");
   setDetail(launch.how);
   const python = selectedInterpreter();
+  const startedAt = Date.now();
   try {
     const proc = await startServerProcess(
       { program: launch.program, args: launch.args, cwd: root },
@@ -121,6 +134,7 @@ async function start(root: string): Promise<void> {
           setClientGeneration((g) => g + 1);
           setStatus("error");
           setDetail(`pyright exited with code ${code ?? "?"}`);
+          if (Date.now() - startedAt > STABLE_MS) restarts = 0;
           if (restarts < MAX_RESTARTS && settings().lsp.enabled) {
             restarts += 1;
             void start(root);
@@ -129,6 +143,10 @@ async function start(root: string): Promise<void> {
         onCroak: (message) => log(`error: ${message}`),
       },
     );
+    if (stale()) {
+      await proc.stop().catch(() => undefined);
+      return;
+    }
     process = proc;
     const next = createClient({
       rootUri: pathToUri(root),
@@ -139,11 +157,14 @@ async function start(root: string): Promise<void> {
     startedFor = { root, python };
     setClientGeneration((g) => g + 1);
     await next.initializing;
+    if (stale()) return;
     sendConfiguration(next, settings().lsp.diagnostics, python);
-    restarts = 0;
+    // `restarts` is not reset here: a server that initializes and then
+    // crashes every time would otherwise restart forever.
     setStatus("ready");
     setDetail(`${launch.how} · ${python ?? "no interpreter"}`);
   } catch (err) {
+    if (stale()) return;
     setStatus("error");
     setDetail(err instanceof Error ? err.message : String(err));
   }
