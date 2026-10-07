@@ -24,6 +24,18 @@ describe("normalizeSettings", () => {
     expect(s.editor.tabSize).toBe(8);
   });
 
+  it("resets only the bad field, not its whole section", () => {
+    const s = normalizeSettings({
+      editor: { tabSize: 2, wordWrap: true, autosave: "onSomethingNewer" },
+      ui: { zoom: 1.5, sizeUi: 999 },
+    });
+    expect(s.editor.tabSize).toBe(2);
+    expect(s.editor.wordWrap).toBe(true);
+    expect(s.editor.autosave).toBe("off");
+    expect(s.ui.zoom).toBe(1.5);
+    expect(s.ui.sizeUi).toBeNull();
+  });
+
   it("rejects an oversize run pattern name into defaults for that section", () => {
     const s = normalizeSettings({ run: { patterns: [{ name: "x".repeat(40), regex: "(\\d+)" }] } });
     expect(s.run.patterns).toEqual([]);

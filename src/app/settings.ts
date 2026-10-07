@@ -122,12 +122,25 @@ export { settings };
 export function normalizeSettings(input: unknown): Settings {
   const direct = SettingsSchema.safeParse(input);
   if (direct.success) return direct.data;
-  // Salvage section by section so one bad value does not reset everything.
-  const raw = typeof input === "object" && input !== null ? (input as Record<string, unknown>) : {};
+  // Salvage field by field so one bad value (say, an option from a newer
+  // version) resets only itself, not its whole section or everything.
+  const raw = isPlainObject(input) ? input : {};
   const salvaged: Record<string, unknown> = {};
   for (const key of Object.keys(SettingsSchema.shape) as (keyof Settings)[]) {
-    const section = SettingsSchema.shape[key].safeParse(raw[key]);
-    salvaged[key] = section.success ? section.data : DEFAULT_SETTINGS[key];
+    const schema = SettingsSchema.shape[key];
+    const section = schema.safeParse(raw[key]);
+    if (section.success) {
+      salvaged[key] = section.data;
+      continue;
+    }
+    const rawSection = isPlainObject(raw[key]) ? raw[key] : {};
+    const fields: Record<string, unknown> = {};
+    for (const [name, field] of Object.entries(schema.unwrap().shape)) {
+      const parsed = (field as z.ZodType).safeParse(rawSection[name]);
+      if (parsed.success) fields[name] = parsed.data;
+    }
+    const rebuilt = schema.safeParse(fields);
+    salvaged[key] = rebuilt.success ? rebuilt.data : DEFAULT_SETTINGS[key];
   }
   return SettingsSchema.parse(salvaged);
 }
