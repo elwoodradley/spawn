@@ -219,6 +219,20 @@ describe("OutputModel housekeeping", () => {
     expect(flushed()).toEqual([["stdout", "fresh"]]);
   });
 
+  it("starts the next run under its header, not on the last run's unfinished line", () => {
+    const { m, flushed } = model();
+    m.append("stdout", "Name: ");
+    m.system("stopped after 2.0s");
+    m.system("run b.py");
+    m.append("stdout", "hello\n");
+    expect(flushed()).toEqual([
+      ["stdout", "Name: "],
+      ["system", "stopped after 2.0s"],
+      ["system", "run b.py"],
+      ["stdout", "hello"],
+    ]);
+  });
+
   it("system notes get their own line", () => {
     const { m, flushed } = model();
     m.append("stdout", "no newline");

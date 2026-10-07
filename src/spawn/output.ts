@@ -155,8 +155,10 @@ export class OutputModel {
   private write(lines: OutputLine[], stream: Stream, text: string): void {
     // What the user typed answers whatever prompt is pending, so the prompt's
     // unterminated line ends here; the program's reply then starts fresh
-    // instead of being glued onto the prompt.
-    if (stream === "stdin") {
+    // instead of being glued onto the prompt. A note from SPAWN ("exited…",
+    // "run b.py…") ends them too, so the next run's first output lands under
+    // its own header, not on the last run's unfinished line above it.
+    if (stream === "stdin" || stream === "system") {
       if (this.open.stdout) this.closeLine(lines, "stdout");
       if (this.open.stderr) this.closeLine(lines, "stderr");
     }
