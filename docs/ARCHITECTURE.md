@@ -357,8 +357,11 @@ namespace. Rich blocks live in `src/output/rich/`.
 
 **Security.** The kernel runs the user's code with the user's privileges,
 exactly like F5. Only the child can connect to the socket (token, loopback,
-single accept). Library HTML renders in a sandboxed iframe with no scripts and
-an opaque origin, so it cannot reach the Tauri bridge. Hover and pane
+single accept). Library HTML renders in an iframe sandboxed with
+`allow-scripts` only: an opaque origin, so it cannot reach the app's DOM or
+the Tauri bridge; it reports its height by postMessage, which the parent
+accepts only from that frame. Inline SVG (figures, hover) passes through
+DOMPurify's SVG profile first. Hover and pane
 inspection evaluate dotted names only, never expressions, so looking at a
 value cannot run code.
 
