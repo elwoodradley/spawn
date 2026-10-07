@@ -9,8 +9,8 @@
  * Pure: no Tauri, no DOM. `feed()` accepts arbitrary chunks and buffers the
  * partial last line; `\r` counts as a line break so tqdm rewrites are seen.
  */
-import { createSignal } from "solid-js";
-import { createStore, produce } from "solid-js/store";
+import { batch, createSignal } from "solid-js";
+import { createStore, produce, unwrap } from "solid-js/store";
 
 export interface Point {
   step: number;
@@ -237,7 +237,11 @@ export class MetricsModel {
     this.buffer += text;
     const lines = this.buffer.split(/\r\n|\n|\r/);
     this.buffer = lines.pop() ?? "";
-    for (const line of lines) if (line.length > 0) this.line(line);
+    // One update per chunk, not per line: a chunk of a fast loop holds
+    // hundreds of lines, and every update re-lays out every chart.
+    batch(() => {
+      for (const line of lines) if (line.length > 0) this.line(line);
+    });
   }
 
   /** Parse what is left in the buffer (call at exit). */
@@ -302,25 +306,30 @@ export class MetricsModel {
     this.recordSamples.push([this.now(), this.recordCount]);
     if (this.recordSamples.length > 20) this.recordSamples.shift();
     this.updateRate();
-    this.setSeries(
-      produce((list) => {
-        for (const [name, value] of values) {
-          let s = list.find((entry) => entry.name === name);
-          if (!s) {
-            if (list.length >= this.maxSeries) continue;
-            s = { name, points: [] };
-            list.push(s);
-          }
-          const step = explicitStep ?? this.impliedX(s);
+    // Update each series by index. A produce() over the whole list costs time
+    // proportional to every point already stored, on every printed line.
+    for (const [name, value] of values) {
+      let index = this.series.findIndex((entry) => entry.name === name);
+      if (index === -1) {
+        if (this.series.length >= this.maxSeries) continue;
+        index = this.series.length;
+        this.setSeries(index, { name, points: [] });
+      }
+      const current = this.series[index];
+      if (!current) continue;
+      const step = explicitStep ?? this.impliedX(current);
+      this.setSeries(
+        index,
+        produce((s) => {
           s.points.push({ step, value });
           if (s.points.length > this.maxPoints) {
             const last = s.points[s.points.length - 1];
             s.points = s.points.filter((_, i) => i % 2 === 0);
             if (last && s.points[s.points.length - 1] !== last) s.points.push(last);
           }
-        }
-      }),
-    );
+        }),
+      );
+    }
   }
 
   private scanProgress(line: string): void {
@@ -388,8 +397,10 @@ export class MetricsModel {
    */
   private impliedX(s: Series): number {
     const counter = this.lastStep ?? this.lastEpoch;
-    if (counter !== null && !s.points.some((p) => p.step === counter)) return counter;
-    return s.points.length;
+    // The raw array: scanning 2000 points through the store proxy per line is slow.
+    const points = unwrap(s).points;
+    if (counter !== null && !points.some((p) => p.step === counter)) return counter;
+    return points.length;
   }
 
   /** tqdm beats step counters, which beat epochs, which beat sample cadence. */

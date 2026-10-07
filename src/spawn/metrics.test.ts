@@ -209,6 +209,24 @@ describe("housekeeping", () => {
     expect(points[points.length - 1]).toEqual([10, 10]);
   });
 
+  it("keeps up with a flood: 20k lines in well under a few seconds", () => {
+    const { m } = model();
+    const t0 = performance.now();
+    for (let c = 0; c < 100; c++) {
+      let chunk = "";
+      for (let i = 0; i < 200; i++) {
+        const n = c * 200 + i;
+        chunk += `epoch ${Math.floor(n / 10)} loss: ${1 / (n + 1)} acc: 0.5\n`;
+      }
+      m.feed(chunk);
+    }
+    // Updating the whole store per line took over 20 s here.
+    expect(performance.now() - t0).toBeLessThan(3000);
+    expect(m.series.map((s) => s.name)).toEqual(["loss", "acc"]);
+    for (const s of m.series) expect(s.points.length).toBeLessThanOrEqual(2000);
+    expect(pts(m, "loss")?.at(-1)).toEqual([1999, 1 / 20000]);
+  });
+
   it("reset clears everything including the partial buffer", () => {
     const { m } = model();
     m.feed("loss: 1\nEpoch 1/2\npartial");
