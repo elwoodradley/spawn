@@ -13,12 +13,13 @@ import { settings } from "../app/settings";
 import { openFile } from "../app/state";
 import { baseName } from "../ipc";
 import type { DisplayPayload } from "../pool/protocol";
-import { isCroakEnd, parseCroak, type Croak } from "../spawn/croak";
+import { parseCroak, type Croak } from "../spawn/croak";
 import type { OutputLine } from "../spawn/output";
 import Icon from "../ui/Icon";
 import "./ErrorCard.css";
 import { buildContext, installing, probeFs, resolveActions, type ResolvedAction } from "./fixes";
 import { croakFromPayload, match, probe } from "./match";
+import { tracebackEndingAt } from "./tracebackLines";
 
 export default function ErrorCard(props: { croak: Croak; source: "run" | "console" }) {
   const [dismissed, setDismissed] = createSignal(false);
@@ -117,26 +118,12 @@ function ActionButton(props: { action: ResolvedAction }) {
 
 /**
  * For the Output panel: renders a card when `index` is the last line of a
- * traceback. The traceback's lines are all tagged `croak`, so the closing
- * `Type: message` line followed by anything else (or nothing yet) ends it.
+ * traceback (the final one of a chain). See `tracebackEndingAt`.
  */
 export function TracebackCard(props: { lines: OutputLine[]; index: number }) {
-  const closes = () => {
-    const line = props.lines[props.index];
-    if (!line || line.stream !== "croak" || !isCroakEnd(line.text)) return false;
-    const next = props.lines[props.index + 1];
-    return next === undefined || next.stream !== "croak";
-  };
   const croak = createMemo(() => {
-    if (!closes()) return null;
-    let start = props.index;
-    while (start > 0 && props.lines[start - 1]?.stream === "croak") start--;
-    return parseCroak(
-      props.lines
-        .slice(start, props.index + 1)
-        .map((l) => l.text)
-        .join("\n"),
-    );
+    const text = tracebackEndingAt(props.lines, props.index);
+    return text === null ? null : parseCroak(text);
   });
   return <Show when={croak()}>{(c) => <ErrorCard croak={c()} source="run" />}</Show>;
 }
