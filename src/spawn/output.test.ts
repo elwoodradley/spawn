@@ -242,6 +242,16 @@ describe("OutputModel housekeeping", () => {
     expect(flushed()).toContainEqual(["stderr", " 20%|##        | 2/10"]);
   });
 
+  it("moves back on backspace, so a Keras progress bar redraws in place", () => {
+    const { m, flushed } = model();
+    const bar1 = "1/3 [=>....] - loss: 0.90";
+    const bar2 = "2/3 [===>..] - loss: 0.70";
+    m.append("stdout", bar1);
+    m.append("stdout", `${"\b".repeat(bar1.length)}\r${bar2}`);
+    m.append("stdout", "ab\b\bcd\n");
+    expect(flushed()).toEqual([["stdout", `${bar2}cd`]]);
+  });
+
   it("system notes get their own line", () => {
     const { m, flushed } = model();
     m.append("stdout", "no newline");

@@ -2,7 +2,8 @@
  * The output model: what the output panel shows.
  *
  * Child output arrives as arbitrary chunks. This model turns them into lines,
- * honouring `\r` the way a terminal does (tqdm rewrites its bar in place),
+ * honouring `\r` and backspace the way a terminal does (tqdm and Keras
+ * rewrite their bars in place),
  * stripping ANSI escapes, tagging each line by stream, and marking stderr
  * lines that belong to a Python traceback as croaks with a clickable link.
  *
@@ -162,11 +163,17 @@ export class OutputModel {
       if (this.open.stdout) this.closeLine(lines, "stdout");
       if (this.open.stderr) this.closeLine(lines, "stderr");
     }
-    for (const token of text.split(/(\r\n|\n|\r)/)) {
+    // eslint-disable-next-line no-control-regex -- backspace is a cursor move here
+    for (const token of text.split(/(\r\n|\n|\r|\x08+)/)) {
       if (token === "") continue;
       if (token === "\n" || token === "\r\n") this.closeLine(lines, stream);
       else if (token === "\r") this.ensureOpen(lines, stream).col = 0;
-      else this.overwrite(lines, stream, token);
+      else if (token.startsWith("\x08")) {
+        // Backspace moves the cursor left, as in a terminal. Keras redraws
+        // its progress bar with a run of them before the `\r`.
+        const open = this.ensureOpen(lines, stream);
+        open.col = Math.max(0, open.col - token.length);
+      } else this.overwrite(lines, stream, token);
     }
   }
 
