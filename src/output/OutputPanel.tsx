@@ -21,7 +21,6 @@ import {
   outcome,
   output,
   spawnCommand,
-  spawnFile,
   spawnStatus,
   stopSpawn,
 } from "../spawn/controller";
@@ -151,12 +150,9 @@ export default function OutputPanel() {
           fallback={
             <button
               class="sp-output__button is-primary"
-              disabled={activeFilePath() === null}
+              disabled={!/\.pyw?$/i.test(activeFilePath() ?? "")}
               title="Run the current file (F5)"
-              onClick={() => {
-                const path = activeFilePath();
-                if (path) void spawnFile(path);
-              }}
+              onClick={() => void runCommand("spawn.run")}
             >
               Run
             </button>
