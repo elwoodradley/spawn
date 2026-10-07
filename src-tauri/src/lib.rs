@@ -5,6 +5,7 @@
 mod env;
 mod error;
 mod lsp;
+mod nav;
 mod pool;
 mod proc;
 
@@ -32,6 +33,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_notification::init())
+        .plugin(nav::guard())
         .manage(Arc::new(proc::ProcRegistry::default()))
         .manage(Arc::new(pool::PoolRegistry::default()))
         .manage(Arc::new(lsp::LspRegistry::default()))
