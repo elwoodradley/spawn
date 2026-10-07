@@ -50,6 +50,9 @@ function deviceNudge(ctx: NudgeContext): Nudge | null {
   const device = ctx.ml?.device;
   if (device !== "cuda" && device !== "mps") return null;
   if (!ctx.variables.some((v) => v.device === "cpu")) return null;
+  // Something already on the accelerator means the run uses it; a tensor
+  // moved back with .cpu() for plotting or printing is not worth a word.
+  if (ctx.variables.some((v) => v.device === device)) return null;
   const label = device === "cuda" ? "CUDA" : "MPS";
   const name = ctx.ml?.deviceName ? `${label} (${ctx.ml.deviceName})` : label;
   return {
