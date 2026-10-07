@@ -5,6 +5,7 @@
 mod env;
 mod error;
 mod lsp;
+mod menu;
 mod nav;
 mod pool;
 mod proc;
@@ -27,7 +28,12 @@ pub fn run() {
     // friends; without them uv, pyright and node are not found.
     env::locations::extend_process_path();
 
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // Replace Tauri's default macOS menu, whose Cmd+W/H/Q bypass SPAWN.
+    #[cfg(target_os = "macos")]
+    let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
+
+    builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
