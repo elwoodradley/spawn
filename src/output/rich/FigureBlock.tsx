@@ -6,6 +6,7 @@ import { createSignal, Show } from "solid-js";
 
 import { toast } from "../../app/toast";
 import { pickSaveImage, writeBytes } from "../../ipc";
+import { sanitizeSvg } from "./sanitizeSvg";
 import type { DisplayPayload } from "../../pool/protocol";
 import { showContextMenu } from "../../ui/ContextMenu";
 
@@ -46,10 +47,7 @@ export default function FigureBlock(props: { payload: Figure }) {
     >
       <Show
         when={props.payload.format === "png"}
-        fallback={
-          // Trusted: SVG produced by the user's own matplotlib in the Interactive Console.
-          <div class="sp-rich__svg" innerHTML={props.payload.data} />
-        }
+        fallback={<div class="sp-rich__svg" innerHTML={sanitizeSvg(props.payload.data)} />}
       >
         <img
           class="sp-rich__img"

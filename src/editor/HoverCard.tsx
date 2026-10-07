@@ -6,6 +6,7 @@
 import { For, Match, onMount, Show, Switch } from "solid-js";
 
 import { normalize, parseCssColor, previewRange, rampColor, rgbCss } from "../output/rich/heatmap";
+import { sanitizeSvg } from "../output/rich/sanitizeSvg";
 import type { DisplayPayload } from "../pool/protocol";
 
 const MAX_TEXT_LINES = 6;
@@ -136,7 +137,7 @@ function FigureCard(props: { payload: FigurePayload }) {
         <div
           class="sp-hover__thumb"
           style={{ "max-width": `${THUMB_PX}px` }}
-          innerHTML={p().data}
+          innerHTML={sanitizeSvg(p().data)}
         />
       }
     >
