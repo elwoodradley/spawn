@@ -104,7 +104,11 @@ describe("chordLabel", () => {
   it("renders platform labels", () => {
     expect(chordLabel("Mod-Shift-P", false)).toBe("Ctrl+Shift+P");
     expect(chordLabel("Mod-Shift-P", true)).toBe("⇧⌘P");
-    expect(chordLabel("F5", false)).toBe("f5".toUpperCase() === "F5" ? "f5" : "f5");
+    expect(chordLabel("F5", false)).toBe("F5");
+    expect(chordLabel("Shift-F5", true)).toBe("⇧F5");
+    expect(chordLabel("Mod-PageDown", false)).toBe("Ctrl+PageDown");
+    expect(chordLabel("Mod-Enter", false)).toBe("Ctrl+Enter");
+    expect(chordLabel("Mod--", false)).toBe("Ctrl+-");
   });
 });
 

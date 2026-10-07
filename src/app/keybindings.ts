@@ -116,8 +116,15 @@ export function matchesChord(chord: Chord, event: KeyLike, byCode = false): bool
 /** Human label for the status bar and palette: `Ctrl+S`, `⌘S`. */
 export function chordLabel(chord: string, mac = isMac()): string {
   const parsed = parseChord(chord, mac);
+  // parseChord lowercases the key for matching; show it as written (F5,
+  // PageDown, Enter), not as "f5" or "pagedown".
+  const written = chord.endsWith("-") ? "-" : (chord.split("-").pop() ?? "");
   const keyName =
-    parsed.key === " " ? "Space" : parsed.key.length === 1 ? parsed.key.toUpperCase() : parsed.key;
+    parsed.key === " "
+      ? "Space"
+      : parsed.key.length === 1
+        ? parsed.key.toUpperCase()
+        : written.charAt(0).toUpperCase() + written.slice(1);
   if (mac) {
     return [parsed.ctrl && "⌃", parsed.alt && "⌥", parsed.shift && "⇧", parsed.meta && "⌘", keyName]
       .filter(Boolean)
