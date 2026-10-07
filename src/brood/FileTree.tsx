@@ -95,6 +95,14 @@ function EditRow(props: { depth: number }) {
   );
 }
 
+/** Move focus to the next or previous visible row (tree keyboard pattern). */
+function focusSibling(row: HTMLElement, delta: 1 | -1): void {
+  const rows = [...document.querySelectorAll<HTMLElement>(".sp-tree-row")];
+  const next = rows[rows.indexOf(row) + delta];
+  next?.focus();
+  next?.scrollIntoView({ block: "nearest" });
+}
+
 function Row(props: { row: TreeRow }) {
   const node = () => props.row.node;
   const isActive = () => activeFilePath() === node().path;
@@ -124,6 +132,12 @@ function Row(props: { row: TreeRow }) {
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") activate();
+          else if (e.key === "ArrowDown" || e.key === "ArrowUp")
+            focusSibling(e.currentTarget, e.key === "ArrowDown" ? 1 : -1);
+          else if (e.key === "ArrowRight" && node().isDirectory && !node().expanded)
+            void toggleDirectory(node().path);
+          else if (e.key === "ArrowLeft" && node().isDirectory && node().expanded)
+            void toggleDirectory(node().path);
           else if (e.key === "F2") beginRename(node().path);
           else if (e.key === "Delete") void deleteEntry(node().path, node().isDirectory);
           else return;

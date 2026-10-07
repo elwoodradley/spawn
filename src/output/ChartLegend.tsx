@@ -61,6 +61,7 @@ export default function ChartLegend(props: {
           >
             <input
               type="checkbox"
+              aria-label={`Show run ${o.run.id} on this chart`}
               checked={o.enabled}
               onChange={() => props.onToggleOverlay(o.run.id)}
             />
