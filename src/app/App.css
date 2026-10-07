@@ -35,6 +35,11 @@
 .sp-editor-area > * {
   min-height: 0;
 }
+/* `display: flex` above beats the browser's own [hidden] rule, so the code
+   editor stayed visible above an open .docx handout. */
+.sp-editor-area[hidden] {
+  display: none;
+}
 
 .sp-output-area {
   flex: none;

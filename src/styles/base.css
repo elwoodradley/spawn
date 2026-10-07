@@ -102,3 +102,9 @@ pre,
 .sp-print-only {
   display: none;
 }
+
+/* An element with the hidden attribute stays hidden even when a component
+   rule gives it a display value. */
+[hidden] {
+  display: none !important;
+}
