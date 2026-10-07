@@ -63,6 +63,12 @@ export default function RunPanel() {
     reuseGroups(prev ?? [], groupSeries(promoted().charted)),
   );
 
+  // The Compare/Cancel button needs two runs; without them compare mode
+  // would leave checkboxes behind with no way out.
+  createEffect(() => {
+    if (runs().length < 2 && compareMode()) exitCompare();
+  });
+
   /** Runs the user switched off in a legend; everything else overlays. */
   const [hidden, setHidden] = createSignal<ReadonlySet<number>>(new Set());
   const toggle = (id: number) =>
