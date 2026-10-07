@@ -49,6 +49,12 @@ export interface OutputModelOptions {
 // eslint-disable-next-line no-control-regex -- matching ESC is the whole point
 const ANSI = /\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[@-Z\\-_]/g;
 
+/** An escape sequence cut off at the end of a chunk; the rest is in the next. */
+// eslint-disable-next-line no-control-regex -- matching ESC is the whole point
+const ESC_TAIL = /\x1b(?:\[[0-9;?]*[ -/]*|\][^\x07\x1b]*)?$/;
+/** Longer than any colour or title sequence: a stray ESC, not a split one. */
+const MAX_ESC_TAIL = 256;
+
 export function stripAnsi(text: string): string {
   return text.replace(ANSI, "");
 }
@@ -79,6 +85,7 @@ export class OutputModel {
   private nextId = 1;
   /** One unterminated line per stream, so stdout and stderr never merge. */
   private open: Partial<Record<Stream, OpenLine>> = {};
+  private escTail: Partial<Record<Stream, string>> = {};
   private inCroak = false;
   /** Lines discarded by the cap since the last clear. Reactive. */
   readonly dropped: Accessor<number>;
@@ -97,8 +104,17 @@ export class OutputModel {
 
   /** Queue text for a stream. Applied on the next `flush`. */
   append(stream: Stream, text: string): void {
-    if (text.length === 0) return;
-    this.pending.push({ stream, text });
+    // Hold back an escape sequence split across two reads, so `\x1b[3` +
+    // `2m` is stripped whole instead of showing `[32m` in the output.
+    let whole = (this.escTail[stream] ?? "") + text;
+    delete this.escTail[stream];
+    const tail = ESC_TAIL.exec(whole);
+    if (tail && tail[0].length <= MAX_ESC_TAIL) {
+      this.escTail[stream] = tail[0];
+      whole = whole.slice(0, tail.index);
+    }
+    if (whole.length === 0) return;
+    this.pending.push({ stream, text: whole });
     if (!this.scheduled) {
       this.scheduled = true;
       this.schedule(() => this.flush());
@@ -126,6 +142,7 @@ export class OutputModel {
   clear(): void {
     this.pending = [];
     this.open = {};
+    this.escTail = {};
     this.inCroak = false;
     this.setLines([]);
     this.setDropped(0);

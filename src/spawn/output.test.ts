@@ -252,6 +252,18 @@ describe("OutputModel housekeeping", () => {
     expect(flushed()).toEqual([["stdout", `${bar2}cd`]]);
   });
 
+  it("strips a colour sequence split across two chunks", () => {
+    const { m, flushed } = model();
+    m.append("stdout", "loss \x1b[3");
+    m.append("stdout", "2m0.5\x1b[0m\n");
+    m.append("stderr", "warn \x1b");
+    m.append("stderr", "[33mslow\x1b[0m\n");
+    expect(flushed()).toEqual([
+      ["stdout", "loss 0.5"],
+      ["stderr", "warn slow"],
+    ]);
+  });
+
   it("system notes get their own line", () => {
     const { m, flushed } = model();
     m.append("stdout", "no newline");
