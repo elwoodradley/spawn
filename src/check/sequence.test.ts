@@ -188,6 +188,32 @@ describe("runChecks", () => {
   });
 });
 
+describe("runChecks cancelled while the tests run", () => {
+  it("does not report the cancelled tests as failed", async () => {
+    const controller = new AbortController();
+    const w = world({ files: { "/hw/main.py": "", "/hw/test_main.py": "" } });
+    const ports = portsFor(w, {
+      signal: controller.signal,
+      run: (request) => {
+        w.runs.push(request);
+        const isTests = request.args.includes("unittest") || request.args.includes("pytest");
+        if (isTests) controller.abort();
+        return Promise.resolve({
+          stdout: "",
+          stderr: "",
+          code: isTests ? null : request.args[1] === "import pytest" ? 1 : 0,
+          timedOut: false,
+          cancelled: isTests,
+          startFailure: null,
+        });
+      },
+    });
+    await runChecks(ports);
+    const tests = w.emitted.filter((i) => i.id === "tests");
+    expect(tests.map((i) => i.state)).toEqual(["running", "running"]);
+  });
+});
+
 describe("summarize", () => {
   const item = (state: CheckItem["state"]): CheckItem => ({ id: "fresh", state, title: "" });
 
