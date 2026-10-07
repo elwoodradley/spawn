@@ -62,6 +62,9 @@ export async function loadProjectSettings(root: string | null): Promise<ProjectS
   } catch {
     loaded = {};
   }
+  // Another project opened while this file was being read: its settings
+  // (loaded by its own call) must not be overwritten with this one's.
+  if (brood() !== root) return loaded;
   setProjectSettings(loaded);
   return loaded;
 }
