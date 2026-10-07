@@ -7,13 +7,13 @@ import { cmd, separator, type Menu, type MenuEntry } from "../ui/menus";
 import { EDITOR_HINTS } from "./editCommands";
 import { forgetRecent, recentBroods, recentFiles } from "./recent";
 import { settings } from "./settings";
-import { openBrood, openFile } from "./state";
+import { openFile, openRecentBrood } from "./state";
 
 function recentEntries(): MenuEntry[] {
   const broods: MenuEntry[] = recentBroods().map((path) => ({
     kind: "action",
     label: path,
-    run: () => openBrood(path),
+    run: () => openRecentBrood(path),
   }));
   const files: MenuEntry[] = recentFiles().map((path) => ({
     kind: "action",
