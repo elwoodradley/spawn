@@ -41,8 +41,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # The AppImage is built in its own step below so it can be repacked.
           - os: ubuntu-22.04
-            args: ""
+            args: "--bundles deb,rpm"
           - os: macos-latest
             args: "--target universal-apple-darwin"
           - os: windows-latest
@@ -80,6 +81,12 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         with:
           args: ${{ matrix.args }}
+      - name: Build the AppImage
+        if: runner.os == 'Linux'
+        run: npx tauri build --bundles appimage
+      - name: Repack the AppImage without bundled Wayland libraries
+        if: runner.os == 'Linux'
+        run: bash scripts/fix-appimage.sh src-tauri/target/release/bundle/appimage/*.AppImage
       - name: Upload dry-run bundles
         if: "!startsWith(github.ref, 'refs/tags/v')"
         uses: actions/upload-artifact@v4
@@ -90,6 +97,7 @@ jobs:
             src-tauri/target/universal-apple-darwin/release/bundle/
           if-no-files-found: error
       - name: Build and attach to the draft release
+        id: release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: tauri-apps/tauri-action@v0
         env:
@@ -101,3 +109,23 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+      - name: Attach the AppImage to the draft release
+        if: startsWith(github.ref, 'refs/tags/v') && runner.os == 'Linux'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ steps.release.outputs.releaseId }}
+        run: |
+          # tauri-action may already have picked up the repacked file.
+          existing=$(gh api "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets" --jq '.[].name')
+          for f in src-tauri/target/release/bundle/appimage/*.AppImage; do
+            if grep -qxF "$(basename "$f")" <<<"$existing"; then
+              echo "$(basename "$f") already attached"
+              continue
+            fi
+            curl -fsSL -X POST \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"$f" \
+              "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets?name=$(basename "$f")" >/dev/null
+            echo "attached $(basename "$f")"
+          done
