@@ -103,6 +103,9 @@ manages; Homebrew and pyenv installs; and finally whatever is on PATH. The
 operating system's own Python (`/usr/bin/python3`, Apple's 3.9 on a Mac) is
 listed last, labelled **system**, and chosen only when nothing else exists,
 with a warning in the status bar, because projects almost never want it.
+On Windows, Python from python.org is found even if "Add to PATH" was left
+unticked during install, and so are pyenv-win installs. Conda and Anaconda
+environments are not searched yet; pick one with "Browse for a Python…".
 
 If the project has no environment, the picker offers **Create .venv with uv**
 (runs `uv venv`), and **uv sync** when a `pyproject.toml` exists, which also
@@ -184,7 +187,12 @@ can help, the card has a button that says exactly what it will run:
   with a `pyproject.toml`, `uv pip install --python …` for any other
   environment, and never installs into the operating system's Python: with
   the system interpreter selected the button reads **Create a .venv first**
-  and opens Select Python Interpreter.
+  and opens Select Python Interpreter. The button appears only for packages
+  SPAWN knows (numpy, pandas, scikit-learn, torch and about 70 more). For any
+  other name the card shows the command as text and asks you to check the
+  spelling first, because a typo such as `sklern` could install an unrelated
+  package. If the name is one of your own files elsewhere in the project, the
+  card explains Python's import path instead.
 - `FileNotFoundError` → the card shows the path and the folder the run
   started in, checks the disk, and if the file is in the project root (or
   next to the script) offers **Run from project root** / **Run from the
@@ -533,6 +541,11 @@ The example project at `examples/tour` has a file per feature:
   shape tracing through a forward pass: all planned on top of the Interactive
   Console.
 - Remote / SSH, notebooks, extensions: later, if ever.
+- Links inside a `.docx` handout do not open; copy the address instead.
+- Conda environments are not discovered automatically (use Browse).
+- If pyright was installed with nvm or volta, SPAWN may not find Node when
+  opened from the dock or app menu. Set the pyright path in Settings, or use
+  "Run pyright through uv".
 
 ## Where things live
 
