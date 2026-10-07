@@ -76,10 +76,86 @@ pub fn extend_process_path() {
     }
 }
 
+/// python.org installs on Windows, newest first, with the version their
+/// folder names: per user under `%LOCALAPPDATA%\Programs\Python\Python312`,
+/// for all users under `%ProgramFiles%\Python312`. The installer leaves
+/// "Add python.exe to PATH" unticked by default, so PATH alone misses them.
+pub fn python_org_windows(
+    local_app_data: Option<&Path>,
+    program_files: Option<&Path>,
+) -> Vec<(String, Option<String>)> {
+    let roots = [
+        local_app_data.map(|d| d.join("Programs").join("Python")),
+        program_files.map(Path::to_path_buf),
+    ];
+    let mut found: Vec<((u32, u32), String)> = Vec::new();
+    for root in roots.into_iter().flatten() {
+        let Ok(entries) = std::fs::read_dir(&root) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            let Some(version) = python_org_version(&name) else {
+                continue;
+            };
+            let python = entry.path().join("python.exe");
+            if python.is_file() {
+                found.push((version, python.to_string_lossy().into_owned()));
+            }
+        }
+    }
+    found.sort_by_key(|entry| std::cmp::Reverse(entry.0));
+    found
+        .into_iter()
+        .map(|((major, minor), path)| (path, Some(format!("{major}.{minor}"))))
+        .collect()
+}
+
+/// `(3, 12)` from `Python312` or `Python312-32`.
+fn python_org_version(folder: &str) -> Option<(u32, u32)> {
+    if !folder.get(..6)?.eq_ignore_ascii_case("python") {
+        return None;
+    }
+    let rest = folder.get(6..)?;
+    let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
+    let minor = digits.strip_prefix('3')?;
+    Some((3, minor.parse().ok()?))
+}
+
 #[cfg(test)]
 #[allow(clippy::expect_used)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn finds_python_org_installs_newest_first() {
+        let root = std::env::temp_dir().join(format!("spawn-pyorg-test-{}", std::process::id()));
+        let local = root.join("Local");
+        let programs = root.join("Program Files");
+        for dir in [
+            local.join("Programs/Python/Python39"),
+            local.join("Programs/Python/Python312"),
+            programs.join("Python311-32"),
+            programs.join("Python310"),      // no python.exe inside
+            programs.join("PythonSoftware"), // not an install
+        ] {
+            std::fs::create_dir_all(&dir).expect("dir");
+        }
+        for exe in [
+            local.join("Programs/Python/Python39/python.exe"),
+            local.join("Programs/Python/Python312/python.exe"),
+            programs.join("Python311-32/python.exe"),
+            programs.join("PythonSoftware/python.exe"),
+        ] {
+            std::fs::write(exe, "").expect("write");
+        }
+        let found = python_org_windows(Some(&local), Some(&programs));
+        let versions: Vec<_> = found.iter().map(|(_, v)| v.as_deref()).collect();
+        assert_eq!(versions, vec![Some("3.12"), Some("3.11"), Some("3.9")]);
+        assert!(found[0].0.ends_with("python.exe"));
+        assert!(python_org_windows(None, None).is_empty());
+        std::fs::remove_dir_all(&root).expect("cleanup");
+    }
 
     #[test]
     fn appends_existing_missing_folders_only() {
