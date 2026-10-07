@@ -22,7 +22,7 @@ import {
   fitRange,
   formatValue,
   gapPath,
-  integerTicks,
+  xAxisTicks,
   linearScale,
   linePath,
   logScale,
@@ -159,7 +159,7 @@ export default function LossChart(props: {
       PAD.top + 6,
       h - PAD.bottom - 6,
     );
-    const xTicks = integerTicks(xMin, xMax, Math.max(2, Math.floor((w - PAD.left - right) / 70)));
+    const xTicks = xAxisTicks(xMin, xMax, x, w - PAD.left - right, CHAR_W);
     const gap =
       props.group.train && props.group.val
         ? gapPath(props.group.train.points, props.group.val.points, x, y)

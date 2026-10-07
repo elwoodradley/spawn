@@ -74,6 +74,23 @@ export function integerTicks(min: number, max: number, count = 5): number[] {
 }
 
 /**
+ * Integer x-axis ticks for a plot `plotWidth` pixels wide, with no two labels
+ * closer than the widest label plus one glyph: while a run streams the end
+ * tick is the latest step, and `100` beside `101` must not print as `100101`.
+ */
+export function xAxisTicks(
+  min: number,
+  max: number,
+  toPx: (v: number) => number,
+  plotWidth: number,
+  charW: number,
+): number[] {
+  const ticks = integerTicks(min, max, Math.max(2, Math.floor(plotWidth / 70)));
+  const widest = Math.max(0, ...ticks.map((t) => String(t).length)) * charW;
+  return spacedTicks(ticks, toPx, widest + charW);
+}
+
+/**
  * Value-axis labels that cover the data: the true minimum and maximum at the
  * ends plus nice ticks in between, dropping any tick that would crowd an end.
  */
