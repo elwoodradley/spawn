@@ -51,11 +51,26 @@ pub fn run() {
             env::ml::sys_memory,
             print_page,
         ])
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())
         .unwrap_or_else(|err| {
             eprintln!("spawn: could not start: {err}");
             std::process::exit(1);
+        })
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                stop_children(app);
+            }
         });
+}
+
+/// Kill runs, the Interactive Console and the language server when SPAWN
+/// quits. Tauri exits the process directly, so the async tasks that own the
+/// children are never dropped and `kill_on_drop` alone would leave a
+/// training run or a busy kernel running with no window.
+fn stop_children(app: &tauri::AppHandle) {
+    use tauri::Manager;
+    app.state::<Arc<proc::ProcRegistry>>().kill_all();
+    app.state::<Arc<lsp::LspRegistry>>().kill_all();
 }
 
 /// WebKitGTK can paint a blank window on some Wayland + GPU driver

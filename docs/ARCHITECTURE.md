@@ -125,8 +125,12 @@ Croak   { message }      something failed on our side
 
 `proc_write(id, data)` writes to stdin. `proc_close_stdin(id)` drops the pipe,
 which sends EOF (Python's `input()` then raises `EOFError`). `proc_kill(id)`
-fires the kill sender; the run task calls `start_kill`, waits, and still emits
-`Exit`. `kill_on_drop` is set so a child never outlives the app.
+fires the kill sender; the run task kills the child's whole tree (`proc/kill.rs`),
+waits, and still emits `Exit`. On Unix every child leads its own process group,
+so `kill(-pid)` also reaches multiprocessing workers; on Windows `taskkill /T`
+walks the tree. Tauri exits the process without dropping async tasks, so
+`kill_on_drop` does not fire at quit: `lib.rs` kills every registered run,
+console and language server on `RunEvent::Exit`.
 
 On Windows the child is created with `CREATE_NO_WINDOW` so no console flashes
 behind the IDE.

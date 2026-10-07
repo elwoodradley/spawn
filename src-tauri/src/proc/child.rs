@@ -67,11 +67,7 @@ pub fn spawn(request: &SpawnRequest) -> Result<Spawned> {
         cmd.env(key, value);
     }
 
-    #[cfg(windows)]
-    {
-        // CREATE_NO_WINDOW: never flash a console window behind the IDE.
-        cmd.creation_flags(0x0800_0000);
-    }
+    super::kill::prepare(&mut cmd);
 
     let mut child = cmd.spawn()?;
     let stdin = child.stdin.take();
@@ -116,6 +112,10 @@ pub async fn run(spawned: Spawned, kill: oneshot::Receiver<()>, on_event: Channe
     let status = tokio::select! {
         status = child.wait() => status,
         _ = kill => {
+            if let Some(pid) = child.id() {
+                // taskkill on Windows blocks briefly; keep it off the runtime.
+                let _ = tokio::task::spawn_blocking(move || super::kill::kill_tree(pid)).await;
+            }
             let _ = child.start_kill();
             child.wait().await
         }

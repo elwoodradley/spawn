@@ -19,6 +19,7 @@ use tokio::process::Command;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::error::{Error, Result};
+use crate::proc::{kill_tree, prepare};
 use framing::{Deframer, frame};
 
 #[derive(Debug, Deserialize)]
@@ -52,6 +53,7 @@ pub enum LspEvent {
 }
 
 struct Handle {
+    pid: Option<u32>,
     outgoing: mpsc::UnboundedSender<String>,
     kill: Option<oneshot::Sender<()>>,
 }
@@ -60,6 +62,16 @@ struct Handle {
 pub struct LspRegistry {
     next_id: std::sync::Mutex<u32>,
     servers: std::sync::Mutex<HashMap<u32, Handle>>,
+}
+
+impl LspRegistry {
+    /// Kill every server and its descendants, synchronously, at app exit.
+    pub fn kill_all(&self) {
+        let pids: Vec<u32> = lock(&self.servers).values().filter_map(|h| h.pid).collect();
+        for pid in pids {
+            kill_tree(pid);
+        }
+    }
 }
 
 fn lock<T>(m: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -87,10 +99,12 @@ pub async fn lsp_start(
     for (k, v) in &request.env {
         cmd.env(k, v);
     }
-    #[cfg(windows)]
-    cmd.creation_flags(0x0800_0000);
+    // Own process group / no console window; a `.cmd` shim or uv starts
+    // node underneath, which must die with it.
+    prepare(&mut cmd);
 
     let mut child = cmd.spawn()?;
+    let pid = child.id();
     let mut stdin = child
         .stdin
         .take()
@@ -111,6 +125,7 @@ pub async fn lsp_start(
     lock(&registry.servers).insert(
         id,
         Handle {
+            pid,
             outgoing: tx,
             kill: Some(kill_tx),
         },
@@ -180,6 +195,9 @@ pub async fn lsp_start(
         let status = tokio::select! {
             status = child.wait() => status,
             _ = kill_rx => {
+                if let Some(pid) = child.id() {
+                    let _ = tokio::task::spawn_blocking(move || kill_tree(pid)).await;
+                }
                 let _ = child.start_kill();
                 child.wait().await
             }

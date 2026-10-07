@@ -7,6 +7,7 @@
 //! is; the same command will later run the pool and the language server.
 
 mod child;
+mod kill;
 mod utf8;
 
 use std::collections::HashMap;
@@ -20,6 +21,7 @@ use tokio::sync::{Mutex, oneshot};
 use crate::error::{Error, Result};
 
 pub use child::ProcEvent;
+pub use kill::{kill_tree, prepare};
 
 /// What the frontend sends to start a process.
 #[derive(Debug, Deserialize)]
@@ -66,6 +68,19 @@ impl ProcRegistry {
     /// OS pid of a live child, for signalling.
     pub fn pid(&self, id: u32) -> Option<u32> {
         lock_or_recover(&self.procs).get(&id).and_then(|h| h.pid)
+    }
+
+    /// Kill every live child and its descendants, synchronously. Called when
+    /// the app exits: Tauri ends the process without dropping the async
+    /// tasks that own the children, so `kill_on_drop` never fires there.
+    pub fn kill_all(&self) {
+        let pids: Vec<u32> = lock_or_recover(&self.procs)
+            .values()
+            .filter_map(|h| h.pid)
+            .collect();
+        for pid in pids {
+            kill_tree(pid);
+        }
     }
 
     fn stdin(&self, id: u32) -> Result<Arc<Mutex<Option<tokio::process::ChildStdin>>>> {
