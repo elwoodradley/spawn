@@ -74,6 +74,12 @@ describe("metric pairs", () => {
     m.feed("time: 00:03 done: 45% ratio: 3/4\n");
     expect(m.series).toHaveLength(0);
   });
+
+  it("does not read dates or ranges as metrics", () => {
+    const { m } = model();
+    m.feed("date: 2024-01-05\nrange=1-10\nphone 555-1234 loss: 0.5\n");
+    expect(m.series.map((s) => s.name)).toEqual(["loss"]);
+  });
 });
 
 describe("tqdm", () => {

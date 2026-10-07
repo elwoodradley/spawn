@@ -75,16 +75,21 @@ const MAX_NAME = 24;
 
 const NUMBER = String.raw`(-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)`;
 /**
+ * What may not follow a value: more of a word or number, a percent, a clock
+ * (`12:30`), a fraction, or a dash (a date `2024-01-05`, a range `1-10`).
+ */
+const END = String.raw`(?![\w.%:/-])`;
+/**
  * `name: 1.23` / `name=1.23`, names of 2 to 24 chars of word, dot, slash,
  * dash. Single letters (`w=1.4`, `b=-0.1`) are almost never metrics.
  */
 const PAIR = new RegExp(
-  String.raw`(?<![\w./-])([A-Za-z_][\w./-]{1,${MAX_NAME - 1}})\s*[:=]\s*${NUMBER}(?![\w.%:/])`,
+  String.raw`(?<![\w./-])([A-Za-z_][\w./-]{1,${MAX_NAME - 1}})\s*[:=]\s*${NUMBER}${END}`,
   "g",
 );
 /** `train_loss 0.234`: space-separated, only for names that read as metrics. */
 const SPACE_PAIR = new RegExp(
-  String.raw`(?<![\w./-])([A-Za-z_][\w./-]{0,${MAX_NAME - 1}})\s+${NUMBER}(?![\w.%:/])`,
+  String.raw`(?<![\w./-])([A-Za-z_][\w./-]{0,${MAX_NAME - 1}})\s+${NUMBER}${END}`,
   "g",
 );
 const METRIC_WORD =
