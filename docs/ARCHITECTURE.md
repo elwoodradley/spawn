@@ -144,6 +144,11 @@ executable, version, prefix and platform as JSON. `env_uv_path()` says whether
 uv is installed. Policy (which one to select, persistence per project) is in
 `src/env`.
 
+At startup `env/locations.rs` appends the standard install folders
+(`~/.local/bin`, `~/.cargo/bin`, `/opt/homebrew/bin`, `/usr/local/bin`,
+Linuxbrew, `%APPDATA%\npm`) to SPAWN's own PATH when they exist and are
+missing, because a Finder or desktop launch does not read shell rc files.
+
 ### `lib.rs`
 
 Registers the fs, dialog and store plugins, manages the process registry, and

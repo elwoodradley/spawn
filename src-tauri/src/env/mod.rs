@@ -10,6 +10,7 @@ use tokio::process::Command;
 
 use crate::error::{Error, Result};
 
+pub mod locations;
 pub mod ml;
 
 pub mod discover;

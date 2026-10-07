@@ -22,6 +22,9 @@ fn print_page(webview: tauri::Webview) -> error::Result<()> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     linux_render_compat();
+    // A Finder or desktop launch lacks ~/.local/bin, /opt/homebrew/bin and
+    // friends; without them uv, pyright and node are not found.
+    env::locations::extend_process_path();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
