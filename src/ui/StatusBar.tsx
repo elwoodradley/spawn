@@ -175,8 +175,8 @@ export default function StatusBar() {
         </Show>
         <button
           class="sp-statusbar__item sp-statusbar__button"
-          title="Cycle theme"
-          onClick={() => void runCommand("theme.cycle")}
+          title="Choose a theme"
+          onClick={() => void runCommand("theme.pick")}
         >
           {currentTheme().name}
         </button>

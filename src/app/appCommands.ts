@@ -3,6 +3,7 @@
  * print, quit. Edit-menu commands live in `editCommands.ts`, spawn commands
  * in `spawn/commands.ts`.
  */
+import { openThemePicker } from "../ui/ThemePicker";
 import { createEffect, on, onCleanup } from "solid-js";
 
 import { beginNewDir, beginNewFile } from "../brood/ops";
@@ -131,6 +132,7 @@ const shellCommands: Command[] = [
     keys: "Mod-J",
     run: () => setOutputVisible(!outputVisible()),
   },
+  { id: "theme.pick", title: "Choose Theme…", run: openThemePicker },
   { id: "theme.cycle", title: "Next theme", run: cycleTheme },
   {
     id: "theme.reload",

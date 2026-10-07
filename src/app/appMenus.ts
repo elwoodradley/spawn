@@ -46,7 +46,14 @@ function themeEntries(): MenuEntry[] {
       selectTheme(theme.name);
     },
   }));
-  return [...list, separator, cmd("theme.reload"), cmd("theme.openFolder")];
+  return [
+    cmd("theme.pick"),
+    separator,
+    ...list,
+    separator,
+    cmd("theme.reload"),
+    cmd("theme.openFolder"),
+  ];
 }
 
 export function appMenus(): Menu[] {

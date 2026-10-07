@@ -34,6 +34,7 @@ import { installRunHistory } from "../spawn/runStore";
 import { initTheme } from "../theme/store";
 import { loadSettings } from "./settings";
 import CommandPalette from "../ui/CommandPalette";
+import ThemePicker from "../ui/ThemePicker";
 import ContextMenuHost from "../ui/ContextMenu";
 import DialogHost from "../ui/Dialog";
 import MenuBar from "../ui/MenuBar";
@@ -234,6 +235,7 @@ export default function App() {
       </div>
       <div class="sp-chrome sp-no-print">
         <CommandPalette />
+        <ThemePicker />
         <ContextMenuHost />
         <DialogHost />
         <SettingsDialog />
