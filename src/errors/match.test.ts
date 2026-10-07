@@ -267,6 +267,16 @@ describe("explain: FileNotFoundError", () => {
     expect(ex?.actions).toEqual([]);
   });
 
+  it("shows a Windows path the way it was written, not as its repr", () => {
+    const ex = run(
+      "FileNotFoundError: [Errno 2] No such file or directory: 'C:\\\\Users\\\\sam\\\\data.csv'",
+      CTX,
+      "C:\\Users\\sam\\hw\\train.py",
+    );
+    expect(ex.facts?.[0]).toEqual({ label: "File", value: "C:\\Users\\sam\\data.csv" });
+    expect(ex.where).toEqual({ file: "C:\\Users\\sam\\hw\\train.py", line: 12 });
+  });
+
   it("leaves an absolute path alone", async () => {
     const croak = parseCroak(
       tb("FileNotFoundError: [Errno 2] No such file or directory: '/tmp/x.csv'"),

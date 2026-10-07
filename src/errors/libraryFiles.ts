@@ -33,7 +33,10 @@ const missingFile = define<MissingFile>({
     if (type !== "FileNotFoundError") return null;
     const m = /['"]([^'"]+)['"]/.exec(message);
     if (!m?.[1]) return null;
-    return { path: m[1], script: userFrame(frames)?.file ?? entryFrame(frames)?.file ?? null };
+    // The message shows the path's repr, so on Windows every backslash is
+    // doubled: 'data\\train.csv'. Show (and look for) the real path.
+    const path = m[1].replace(/\\\\/g, "\\");
+    return { path, script: userFrame(frames)?.file ?? entryFrame(frames)?.file ?? null };
   },
   describe(details, context) {
     return describeMissingFile(details, context, []);
