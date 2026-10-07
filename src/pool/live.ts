@@ -45,6 +45,12 @@ interface Message {
 }
 
 let procId: number | null = null;
+/**
+ * Bumped for every kernel start and every shutdown. Events carry the
+ * generation they were started with, so a kernel that is shutting down (its
+ * exit arrives after a restart has begun) cannot tear down its successor.
+ */
+let generation = 0;
 let nextId = 0;
 /** Bumped every time an exec finishes, so caches keyed on pool state can expire. */
 const [execGeneration, setExecGeneration] = createSignal(0);
@@ -153,11 +159,28 @@ async function ensureStarted(): Promise<boolean> {
   }
   setPoolStatus("starting");
   output.system(`console starting · ${python}`);
+  const started = ++generation;
+  const current = () => started === generation;
   try {
-    procId = await poolStart({ python, cwd: brood() }, onProc, onMessage);
+    procId = await poolStart(
+      { python, cwd: brood() },
+      (event) => {
+        if (current()) onProc(event);
+      },
+      (line) => {
+        if (current()) onMessage(line);
+      },
+    );
   } catch (err) {
     output.append("croak", `could not start the Interactive Console: ${describe(err)}\n`);
     teardown("croaked");
+    return false;
+  }
+  // The kernel may already have died (a broken interpreter exits at once)
+  // or said ready before its id arrived; waiting then would never end.
+  if (poolStatus() === "idle") return true;
+  if (!current() || poolStatus() !== "starting") {
+    procId = null;
     return false;
   }
   await new Promise<void>((resolve) => readyResolvers.push(resolve));
@@ -250,6 +273,7 @@ const live: PoolClient = {
   async shutdown(): Promise<void> {
     if (procId === null) return;
     const id = procId;
+    generation++;
     output.system("console shutting down");
     try {
       await poolSend(id, JSON.stringify({ op: "shutdown" }));
