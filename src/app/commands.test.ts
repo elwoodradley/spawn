@@ -8,6 +8,7 @@ import {
   runCommand,
 } from "./commands";
 import { chordLabel, installKeybindings, matchesChord, parseChord } from "./keybindings";
+import { toasts } from "./toast";
 
 beforeEach(() => clearCommands());
 
@@ -26,6 +27,19 @@ describe("command registry", () => {
     expect(listCommands()).toEqual([]);
     expect(await runCommand("t.off")).toBe(false);
     expect(run).not.toHaveBeenCalled();
+  });
+
+  it("shows a failing command as a toast instead of rejecting", async () => {
+    registerCommand({
+      id: "file.save",
+      title: "Save file",
+      run: () => Promise.reject(new Error("No such file or directory")),
+    });
+    expect(await runCommand("file.save")).toBe(false);
+    expect(toasts().at(-1)).toMatchObject({
+      kind: "croak",
+      message: "Save file failed: No such file or directory",
+    });
   });
 
   it("returns false for unknown ids", async () => {
