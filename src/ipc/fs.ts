@@ -65,6 +65,11 @@ export function pathExists(path: string): Promise<boolean> {
   return tauriExists(path);
 }
 
+/** Size in bytes, without reading the file. */
+export async function fileSize(path: string): Promise<number> {
+  return (await stat(path)).size;
+}
+
 export async function isDirectory(path: string): Promise<boolean> {
   return (await stat(path)).isDirectory;
 }

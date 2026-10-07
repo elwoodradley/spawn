@@ -13,10 +13,11 @@ import { createSignal } from "solid-js";
 
 import { settings } from "../app/settings";
 import { croakToast } from "../app/toast";
-import { readText, writeText } from "../ipc";
+import { fileSize, readBytes, writeText } from "../ipc";
 import { currentTheme } from "../theme/store";
 import { AutosaveTimers, ensureFinalNewline, trimTrailingWhitespace } from "./autosave";
 import { createDocumentState } from "./createEditor";
+import { decodeText, encodeText, MAX_EDITABLE_BYTES, type TextFormat } from "./textFormat";
 import { activeView } from "./view";
 
 export interface CursorPosition {
@@ -28,6 +29,8 @@ export interface DocEntry {
   /** Always the latest state; the update listener keeps it fresh. */
   state: EditorState;
   savedText: string;
+  /** Line ending and BOM the file had on disk; restored on save. */
+  format: TextFormat;
   /**
    * Where the view was scrolled when this document was last shown, as the
    * effect `EditorView.scrollSnapshot()` returns. Dispatched after the state
@@ -93,11 +96,15 @@ function listenerFor(ref: { path: string }): (update: ViewUpdate) => void {
 export async function openDocument(path: string): Promise<DocEntry> {
   const existing = docs.get(path);
   if (existing) return existing;
-  const text = await readText(path);
+  if ((await fileSize(path)) > MAX_EDITABLE_BYTES) {
+    throw new Error("the file is too large to edit here");
+  }
+  const { text, format } = decodeText(await readBytes(path));
   const ref = { path };
   const entry: DocEntry = {
     state: createDocumentState(text, currentTheme().appearance, listenerFor(ref), path),
     savedText: text,
+    format,
     scroll: null,
   };
   docs.set(path, entry);
@@ -162,7 +169,7 @@ export async function saveDocument(path: string): Promise<void> {
   autosave.cancel(path);
   applySaveTransforms(entry);
   const text = entry.state.doc.toString();
-  await writeText(path, text);
+  await writeText(path, encodeText(text, entry.format));
   entry.savedText = text;
   setDirty(path, false);
 }

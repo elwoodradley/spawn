@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const disk = new Map<string, string>();
 
 vi.mock("../ipc", () => ({
-  readText: (path: string) => Promise.resolve(disk.get(path) ?? ""),
+  readBytes: (path: string) => Promise.resolve(new TextEncoder().encode(disk.get(path) ?? "")),
+  fileSize: (path: string) => Promise.resolve((disk.get(path) ?? "").length),
   writeText: (path: string, text: string) => {
     disk.set(path, text);
     return Promise.resolve();
@@ -45,5 +46,25 @@ describe("a renamed open document", () => {
 
     view.destroy();
     closeDocument("/p/new.py");
+  });
+});
+
+describe("line endings", () => {
+  it("saves a CRLF file with CRLF and is clean after undoing an edit", async () => {
+    disk.set("/p/win.py", "a = 1\r\nb = 2\r\n");
+    const entry = await openDocument("/p/win.py");
+    const view = new EditorView({ parent: document.body, state: entry.state });
+
+    view.dispatch({ changes: { from: 0, insert: "#" } });
+    expect(isDirty("/p/win.py")).toBe(true);
+    view.dispatch({ changes: { from: 0, to: 1 } });
+    expect(isDirty("/p/win.py")).toBe(false);
+
+    view.dispatch({ changes: { from: 0, insert: "# x\n" } });
+    await saveDocument("/p/win.py");
+    expect(disk.get("/p/win.py")).toBe("# x\r\na = 1\r\nb = 2\r\n");
+
+    view.destroy();
+    closeDocument("/p/win.py");
   });
 });
