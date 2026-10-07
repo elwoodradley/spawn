@@ -28,7 +28,12 @@ vi.mock("../ipc", () => ({
   poolSend: vi.fn(() => Promise.resolve()),
   poolInterrupt: vi.fn(() => Promise.resolve()),
 }));
-vi.mock("../app/state", () => ({ brood: () => "/proj" }));
+const project = vi.hoisted(() => ({ set: (_root: string) => {} }));
+vi.mock("../app/state", () => {
+  const [brood, setBrood] = createSignal("/proj");
+  project.set = setBrood;
+  return { brood };
+});
 vi.mock("../env/store", () => {
   const [python] = createSignal("/venv/bin/python");
   return { selectedInterpreter: python };
@@ -49,7 +54,7 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 const ready = (k: FakeKernel | undefined) =>
   k?.onMessage(JSON.stringify({ event: "ready", python: "3.12.1" }));
 
-describe("Interactive Console restart", () => {
+describe("Interactive Console lifecycle", () => {
   installLivePool();
 
   it("is not torn down by the previous kernel exiting after the restart began", async () => {
@@ -109,5 +114,40 @@ describe("Interactive Console restart", () => {
     kernel?.onMessage(JSON.stringify({ event: "done", id: b?.id, ok: true }));
     await second;
     expect(poolStatus()).toBe("idle");
+  });
+
+  it("stops the console and forgets its variables when another project opens", async () => {
+    const { refreshVariables, variables } = await import("./variables");
+    const { poolSend } = await import("../ipc");
+    const cell = { code: "1", file: null, startLine: 1, scope: "cell" as const, cwd: null };
+    void pool().exec(cell);
+    await tick();
+    ready(kernels[kernels.length - 1]);
+    await tick();
+    expect(poolProcId()).not.toBeNull();
+    const refreshed = refreshVariables();
+    await tick();
+    const asked = vi
+      .mocked(poolSend)
+      .mock.calls.map(([, line]) => JSON.parse(line) as { id?: number; op: string })
+      .filter((m) => m.op === "variables")
+      .pop();
+    const df = {
+      name: "df",
+      type: "DataFrame",
+      summary: "3 rows",
+      shape: null,
+      dtype: null,
+      size: null,
+    };
+    kernels[kernels.length - 1]?.onMessage(
+      JSON.stringify({ event: "result", id: asked?.id, data: [df] }),
+    );
+    await refreshed;
+    expect(variables.list).toHaveLength(1);
+    project.set("/other");
+    await tick();
+    expect(poolProcId()).toBeNull();
+    expect(variables.list).toHaveLength(0);
   });
 });

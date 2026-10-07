@@ -16,6 +16,7 @@ import { output, setStdinFallback } from "../spawn/controller";
 import { currentTheme } from "../theme/store";
 import { emitPoolEvent, poolStatus, setPoolClient, setPoolStatus } from "./client";
 import { notifyExecFinished } from "./hooks";
+import { clearVariables } from "./variables";
 import type {
   Cell,
   DatasetHealth,
@@ -138,6 +139,9 @@ function onMessage(line: string): void {
 
 function teardown(status: "cold" | "croaked"): void {
   procId = null;
+  // The namespace died with the kernel; a stale list would also tell an
+  // error card that a name "exists in the Interactive Console".
+  clearVariables();
   for (const [, p] of pending) {
     p.resolveDone?.({ exec: -1, ok: false, durationMs: 0 });
     p.resolveResult?.(null);
@@ -296,6 +300,9 @@ export function installLivePool(): () => void {
   setStdinFallback(poolProcId);
   const dispose = createRoot((disposeRoot) => {
     createEffect(on(selectedInterpreter, () => void live.shutdown(), { defer: true }));
+    // One console per project: another project must not inherit this one's
+    // variables (or its working directory), even on the same interpreter.
+    createEffect(on(brood, () => void live.shutdown(), { defer: true }));
     createEffect(on(currentTheme, () => void configure(), { defer: true }));
     return disposeRoot;
   });
