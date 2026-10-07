@@ -171,7 +171,8 @@ export async function saveDocument(path: string): Promise<void> {
   const text = entry.state.doc.toString();
   await writeText(path, encodeText(text, entry.format));
   entry.savedText = text;
-  setDirty(path, false);
+  // Typing while the write was in flight (autosave) leaves the tab unsaved.
+  setDirty(path, entry.state.doc.toString() !== text);
 }
 
 export async function saveAllDirty(): Promise<void> {
