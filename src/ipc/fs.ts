@@ -65,9 +65,16 @@ export function pathExists(path: string): Promise<boolean> {
   return tauriExists(path);
 }
 
-/** Size in bytes, without reading the file. */
-export async function fileSize(path: string): Promise<number> {
-  return (await stat(path)).size;
+export interface FileInfo {
+  size: number;
+  /** Last modification, ms since the epoch, or null where unknown. */
+  modified: number | null;
+}
+
+/** Size and modification time, without reading the file. */
+export async function fileInfo(path: string): Promise<FileInfo> {
+  const info = await stat(path);
+  return { size: info.size, modified: info.mtime ? info.mtime.getTime() : null };
 }
 
 export async function isDirectory(path: string): Promise<boolean> {

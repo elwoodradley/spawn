@@ -13,7 +13,7 @@ import { createSignal } from "solid-js";
 
 import { settings } from "../app/settings";
 import { croakToast } from "../app/toast";
-import { fileSize, readBytes, writeText } from "../ipc";
+import { baseName, fileInfo, readBytes, writeText } from "../ipc";
 import { currentTheme } from "../theme/store";
 import { AutosaveTimers, ensureFinalNewline, trimTrailingWhitespace } from "./autosave";
 import { createDocumentState } from "./createEditor";
@@ -31,6 +31,10 @@ export interface DocEntry {
   savedText: string;
   /** Line ending and BOM the file had on disk; restored on save. */
   format: TextFormat;
+  /** Disk modification time when last read or written; null forces a re-read. */
+  modified: number | null;
+  /** Disk text already reported as conflicting with unsaved edits. */
+  conflict: string | null;
   /**
    * Where the view was scrolled when this document was last shown, as the
    * effect `EditorView.scrollSnapshot()` returns. Dispatched after the state
@@ -51,6 +55,8 @@ const docs = new Map<string, DocEntry>();
  * it; a listener that kept its original path would stop tracking edits.
  */
 const listenerPaths = new Map<string, { path: string }>();
+/** Paths being written now; the watcher's echo of our own save is not news. */
+const saving = new Set<string>();
 
 const [cursorPosition, setCursorPosition] = createSignal<CursorPosition | null>(null);
 const [dirtyPaths, setDirtyPaths] = createSignal<ReadonlySet<string>>(new Set());
@@ -96,7 +102,8 @@ function listenerFor(ref: { path: string }): (update: ViewUpdate) => void {
 export async function openDocument(path: string): Promise<DocEntry> {
   const existing = docs.get(path);
   if (existing) return existing;
-  if ((await fileSize(path)) > MAX_EDITABLE_BYTES) {
+  const info = await fileInfo(path);
+  if (info.size > MAX_EDITABLE_BYTES) {
     throw new Error("the file is too large to edit here");
   }
   const { text, format } = decodeText(await readBytes(path));
@@ -105,6 +112,8 @@ export async function openDocument(path: string): Promise<DocEntry> {
     state: createDocumentState(text, currentTheme().appearance, listenerFor(ref), path),
     savedText: text,
     format,
+    modified: info.modified,
+    conflict: null,
     scroll: null,
   };
   docs.set(path, entry);
@@ -169,14 +178,72 @@ export async function saveDocument(path: string): Promise<void> {
   autosave.cancel(path);
   applySaveTransforms(entry);
   const text = entry.state.doc.toString();
-  await writeText(path, encodeText(text, entry.format));
+  saving.add(path);
+  try {
+    await writeText(path, encodeText(text, entry.format));
+  } finally {
+    saving.delete(path);
+  }
   entry.savedText = text;
+  entry.modified = null;
+  entry.conflict = null;
   // Typing while the write was in flight (autosave) leaves the tab unsaved.
   setDirty(path, entry.state.doc.toString() !== text);
 }
 
 export async function saveAllDirty(): Promise<void> {
   await Promise.all([...dirtyPaths()].map(saveDocument));
+}
+
+export type DiskSync = "same" | "reloaded" | "conflict";
+
+/**
+ * Pick up a change made outside SPAWN (another editor, a git checkout, a
+ * script). A document without unsaved edits is reloaded in place, as an
+ * undoable edit; one with unsaved edits is left alone and reported once, so
+ * nothing typed here is lost. A file that vanished or became unreadable is
+ * left alone too: saving writes it back.
+ */
+export async function syncFromDisk(path: string): Promise<DiskSync> {
+  const entry = docs.get(path);
+  if (!entry || saving.has(path)) return "same";
+  let decoded: ReturnType<typeof decodeText>;
+  let modified: number | null;
+  try {
+    modified = (await fileInfo(path)).modified;
+    if (modified !== null && modified === entry.modified) return "same";
+    decoded = decodeText(await readBytes(path));
+  } catch {
+    return "same";
+  }
+  // The document may have been closed, saved or renamed while reading.
+  if (docs.get(path) !== entry || saving.has(path)) return "same";
+  entry.modified = modified;
+  if (decoded.text === entry.savedText) return "same";
+  if (isDirty(path)) {
+    if (entry.conflict === decoded.text) return "same";
+    entry.conflict = decoded.text;
+    return "conflict";
+  }
+  const current = entry.state.doc.toString();
+  entry.savedText = decoded.text;
+  entry.format = decoded.format;
+  entry.conflict = null;
+  if (current !== decoded.text) {
+    transact(entry, { changes: { from: 0, to: current.length, insert: decoded.text } });
+  }
+  return "reloaded";
+}
+
+/** Check every open document against the disk; warn about conflicts. */
+export async function syncAllFromDisk(): Promise<void> {
+  for (const path of [...docs.keys()]) {
+    if ((await syncFromDisk(path)) === "conflict") {
+      croakToast(
+        `${baseName(path)} changed on disk, but has unsaved changes here. Saving will replace the version on disk.`,
+      );
+    }
+  }
 }
 
 export function isDirty(path: string): boolean {

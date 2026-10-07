@@ -6,7 +6,10 @@ const disk = new Map<string, string>();
 
 vi.mock("../ipc", () => ({
   readBytes: (path: string) => Promise.resolve(new TextEncoder().encode(disk.get(path) ?? "")),
-  fileSize: (path: string) => Promise.resolve((disk.get(path) ?? "").length),
+  // No modification times, so every sync compares content.
+  fileInfo: (path: string) =>
+    Promise.resolve({ size: (disk.get(path) ?? "").length, modified: null }),
+  baseName: (path: string) => path.split("/").pop() ?? path,
   writeText: (path: string, text: string) => {
     disk.set(path, text);
     return Promise.resolve();
@@ -18,8 +21,16 @@ vi.mock("../ipc", () => ({
   userThemesDir: () => Promise.resolve("/themes"),
 }));
 
-const { closeDocument, getDocument, isDirty, openDocument, renameDocument, saveDocument } =
-  await import("./documents");
+const {
+  closeDocument,
+  getDocument,
+  isDirty,
+  openDocument,
+  renameDocument,
+  saveDocument,
+  syncFromDisk,
+} = await import("./documents");
+const { setActiveView } = await import("./view");
 
 // jsdom has no layout; give CodeMirror's measuring code inert rectangles.
 const emptyRect = { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 };
@@ -64,6 +75,52 @@ describe("saving", () => {
     expect(isDirty("/p/a.py")).toBe(true);
     view.destroy();
     closeDocument("/p/a.py");
+  });
+});
+
+describe("changes made outside SPAWN", () => {
+  it("reloads a document without unsaved edits", async () => {
+    disk.set("/p/a.py", "old\n");
+    const entry = await openDocument("/p/a.py");
+    const view = new EditorView({ parent: document.body, state: entry.state });
+    setActiveView(view);
+
+    disk.set("/p/a.py", "new\n");
+    expect(await syncFromDisk("/p/a.py")).toBe("reloaded");
+    expect(view.state.doc.toString()).toBe("new\n");
+    expect(isDirty("/p/a.py")).toBe(false);
+    expect(await syncFromDisk("/p/a.py")).toBe("same");
+
+    setActiveView(null);
+    view.destroy();
+    closeDocument("/p/a.py");
+  });
+
+  it("keeps unsaved edits and reports the conflict once", async () => {
+    disk.set("/p/b.py", "old\n");
+    const entry = await openDocument("/p/b.py");
+    const view = new EditorView({ parent: document.body, state: entry.state });
+    view.dispatch({ changes: { from: 0, insert: "mine " } });
+
+    disk.set("/p/b.py", "theirs\n");
+    expect(await syncFromDisk("/p/b.py")).toBe("conflict");
+    expect(await syncFromDisk("/p/b.py")).toBe("same");
+    expect(view.state.doc.toString()).toBe("mine old\n");
+    expect(isDirty("/p/b.py")).toBe(true);
+
+    view.destroy();
+    closeDocument("/p/b.py");
+  });
+
+  it("ignores its own save", async () => {
+    disk.set("/p/c.py", "x\n");
+    const entry = await openDocument("/p/c.py");
+    const view = new EditorView({ parent: document.body, state: entry.state });
+    view.dispatch({ changes: { from: 0, insert: "y" } });
+    await saveDocument("/p/c.py");
+    expect(await syncFromDisk("/p/c.py")).toBe("same");
+    view.destroy();
+    closeDocument("/p/c.py");
   });
 });
 

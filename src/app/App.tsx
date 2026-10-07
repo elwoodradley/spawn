@@ -13,7 +13,7 @@ import {
 import { startBroodTree } from "../brood/store";
 import { registerCheckCommands } from "../check/commands";
 import { installDatasetChecks } from "../dataset/checks";
-import { isDirty, saveAllDirty } from "../editor/documents";
+import { isDirty, saveAllDirty, syncAllFromDisk } from "../editor/documents";
 import Editor from "../editor/Editor";
 import { installInlineValues } from "../editor/inlineValues/install";
 import { installNudges } from "../nudges/store";
@@ -110,11 +110,16 @@ export default function App() {
       if (settings().editor.autosave === "onFocusChange") void saveAllDirty();
     };
     window.addEventListener("blur", onBlur);
+    // Coming back from another editor or a terminal: pick up their changes.
+    // (The project watcher covers files inside the project while focused.)
+    const onFocus = () => void syncAllFromDisk();
+    window.addEventListener("focus", onFocus);
     onCleanup(() => {
       disposeSpawn();
       uninstall();
       unlisteners.forEach((fn) => fn());
       window.removeEventListener("blur", onBlur);
+      window.removeEventListener("focus", onFocus);
     });
     // After the awaits the reactive owner is gone, so re-enter it explicitly
     // or the autosave effect would never be disposed with the component.
