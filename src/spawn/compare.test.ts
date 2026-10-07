@@ -128,6 +128,20 @@ describe("fmt and describeFinal", () => {
       "final acc improved slightly (0.9 → 0.901).",
     );
   });
+
+  it("does not call a learning rate or other neutral value better or worse", () => {
+    expect(describeFinal("lr", 0.01, 0.1)).toEqual({
+      kind: "metric",
+      text: "final lr rose 900% (0.01 → 0.1).",
+      direction: "changed",
+    });
+    expect(describeFinal("grad_norm", 2, 1).text).toBe("final grad_norm fell 50% (2 → 1).");
+    expect(describeFinal("f1_score", 0.8, 0.7).direction).toBe("worse");
+  });
+
+  it("gives no percentage for a change from zero", () => {
+    expect(describeFinal("val_acc", 0, 0.5).text).toBe("final val_acc improved (0 → 0.5).");
+  });
 });
 
 describe("compareRuns", () => {
