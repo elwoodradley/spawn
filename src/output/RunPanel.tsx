@@ -17,7 +17,7 @@ import {
 import { settings } from "../app/settings";
 import { elapsedMs, metrics, spawnCommand, spawnStatus } from "../spawn/controller";
 import { analyzeHealth, type Finding } from "../spawn/health";
-import { groupSeries } from "../spawn/pairs";
+import { groupSeries, reuseGroups, type ChartGroup } from "../spawn/pairs";
 import { promote } from "../spawn/promote";
 import { codeChanged, removeRun, runLabel, runs, type RunRecord } from "../spawn/runHistory";
 import { formatDuration, formatRate, formatValue } from "./chart";
@@ -58,7 +58,10 @@ export default function RunPanel() {
   const percent = () => Math.round((progress()?.fraction ?? 0) * 100);
 
   const promoted = createMemo(() => promote(metrics.series));
-  const groups = createMemo(() => groupSeries(promoted().charted));
+  // Same group objects while only points change, so <For> keeps each chart.
+  const groups = createMemo<ChartGroup[]>((prev) =>
+    reuseGroups(prev ?? [], groupSeries(promoted().charted)),
+  );
 
   /** Runs the user switched off in a legend; everything else overlays. */
   const [hidden, setHidden] = createSignal<ReadonlySet<number>>(new Set());
