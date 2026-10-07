@@ -86,6 +86,27 @@ describe("parseTestSummary", () => {
     });
   });
 
+  it("reads pytest -q's bare summary line, the form the check runs", () => {
+    const failing = [
+      ".F",
+      "=================================== FAILURES ===================================",
+      "____________________________________ test_b ____________________________________",
+      "test_x.py:5: AssertionError",
+      "=========================== short test summary info ============================",
+      "FAILED test_x.py::test_b - assert 0",
+      "1 failed, 1 passed in 0.01s",
+    ].join("\n");
+    expect(parseTestSummary(failing)).toEqual({
+      passed: 1,
+      failed: 1,
+      errors: 0,
+      skipped: 0,
+      total: 2,
+    });
+    expect(parseTestSummary(".   [100%]\n12 passed, 1 warning in 0.30s\n")?.total).toBe(12);
+    expect(parseTestSummary("\nno tests ran in 0.01s\n")?.total).toBe(0);
+  });
+
   it("reads unittest's Ran N tests plus OK or FAILED", () => {
     expect(parseTestSummary("...\nRan 3 tests in 0.001s\n\nOK\n")).toEqual({
       passed: 3,
