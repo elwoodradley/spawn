@@ -1,7 +1,7 @@
 [package]
 name = "spawn"
 version = "0.1.0"
-description = "SPAWN: a Python IDE for machine learning work"
+description = "SPAWN: a small Python IDE for students learning Python, data science and ML"
 authors = ["elwoodradley"]
 license = "MIT"
 repository = "https://github.com/elwoodradley/spawn"

@@ -26,6 +26,21 @@ trim = true
 
 [git]
 conventional_commits = true
+# Early commits used names the app has since retired (see CONTRIBUTING,
+# Terminology). Rewrite them so the changelog reads in today's terms.
+commit_preprocessors = [
+  { pattern = '^(\w+)\(pool\)', replace = '${1}(console)' },
+  { pattern = '^(\w+)\(spawn\)', replace = '${1}(run)' },
+  { pattern = '^(\w+)\(brood\)', replace = '${1}(project)' },
+  { pattern = '^(\w+)\(clutch\)', replace = '${1}(session)' },
+  { pattern = '(?i)\bspawn-into-pool\b', replace = 'run-in-console' },
+  { pattern = '(?i)\bbrood tree\b', replace = 'project tree' },
+  { pattern = '(?i)\bbroods?\b', replace = 'project' },
+  { pattern = '(?i)\bclutch\b', replace = 'session' },
+  { pattern = '(?i)\bcroaks?\b', replace = 'error' },
+  { pattern = '(?i)\bthe pool\b', replace = 'the Interactive Console' },
+  { pattern = '(?i)\bmetamorphosis\b', replace = 'interpreter picker' },
+]
 filter_unconventional = true
 split_commits = false
 commit_parsers = [

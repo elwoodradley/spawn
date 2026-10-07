@@ -32,6 +32,22 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "Stone Toad",
+    "copyright": "Copyright (c) 2026 Stone Toad. MIT License.",
+    "homepage": "https://github.com/elwoodradley/spawn",
+    "license": "MIT",
+    "category": "DeveloperTool",
+    "shortDescription": "A small Python IDE for students learning Python, data science and ML",
+    "longDescription": "SPAWN runs your Python inside the IDE, with output, tracebacks and input() in a panel under the editor. An Interactive Console keeps your data loaded between runs, a Metrics tab charts training as it prints, and plain-language checks point out common mistakes before you submit. No AI features: you write the code, SPAWN makes what it does visible.",
+    "linux": {
+      "deb": {
+        "section": "devel"
+      },
+      "rpm": {}
+    },
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
   }
 }
