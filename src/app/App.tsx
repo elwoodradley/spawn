@@ -195,10 +195,14 @@ export default function App() {
               <MissingBanner />
               <Editor />
             </div>
-            <Show when={isViewerPath(activeFilePath()) ? activeFilePath() : null}>
+            {/* Keyed: the viewer gets a plain path, so its cleanup (which saves the
+                scroll position under that path) can still read it after the
+                active tab has moved to a code file. Unkeyed, that read threw
+                "stale value from <Show>" and the tab switch never happened. */}
+            <Show when={isViewerPath(activeFilePath()) ? activeFilePath() : null} keyed>
               {(path) => (
                 <div class="sp-editor-area sp-chrome">
-                  <DocxView path={path()} />
+                  <DocxView path={path} />
                 </div>
               )}
             </Show>

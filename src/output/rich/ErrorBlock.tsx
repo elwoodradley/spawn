@@ -20,7 +20,8 @@ export default function ErrorBlock(props: { payload: ErrorPayload }) {
     const exc = props.payload.message
       ? `${props.payload.type}: ${props.payload.message}`
       : props.payload.type;
-    return last.trim() === exc.trim() ? all.slice(0, -1) : all;
+    // Python may add a hint the payload's message lacks ("Did you mean: 'astype'?").
+    return last.trim().startsWith(exc.trim()) ? all.slice(0, -1) : all;
   };
   return (
     <>
