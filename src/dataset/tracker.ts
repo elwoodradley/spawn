@@ -19,7 +19,9 @@ export function isDataset(v: VariableInfo): boolean {
   const [rows, cols] = v.shape;
   if (rows === undefined || cols === undefined || rows < MIN_ROWS || cols < 1) return false;
   if (v.type === "DataFrame") return true;
-  return v.type === "ndarray" && cols >= 2;
+  // A square array is far more often an image, a weight matrix or a
+  // distance matrix than a table of samples, so it is not checked.
+  return v.type === "ndarray" && cols >= 2 && rows !== cols;
 }
 
 export function signatureOf(v: VariableInfo): string {

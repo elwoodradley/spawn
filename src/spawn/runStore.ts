@@ -10,10 +10,9 @@ import { createEffect, createRoot, on } from "solid-js";
 import { z } from "zod";
 
 import { brood } from "../app/state";
-import { getSetting, setSetting } from "../ipc";
+import { getRunHistory, setRunHistory } from "../ipc";
 import { capRuns, restoreRuns, runs, type RunRecord } from "./runHistory";
 
-export const HISTORY_KEY = "runs.history";
 /** Runs written to disk per project (the in-memory cap is a setting). */
 export const MAX_STORED_RUNS = 10;
 /** Projects whose history is kept; the least recently saved is dropped. */
@@ -86,7 +85,7 @@ export function withProject(
 
 export async function loadRunHistory(root: string): Promise<RunRecord[]> {
   try {
-    const history = parseHistory(await getSetting<unknown>(HISTORY_KEY, {}));
+    const history = parseHistory(await getRunHistory());
     return history[root]?.runs ?? [];
   } catch {
     return [];
@@ -98,8 +97,8 @@ let queue: Promise<void> = Promise.resolve();
 /** Read-modify-write the map; calls are serialised so none clobbers another. */
 export function saveRunHistory(root: string, list: readonly RunRecord[]): Promise<void> {
   queue = queue.then(async () => {
-    const history = parseHistory(await getSetting<unknown>(HISTORY_KEY, {}));
-    await setSetting(HISTORY_KEY, withProject(history, root, list));
+    const history = parseHistory(await getRunHistory());
+    await setRunHistory(withProject(history, root, list));
   }, undefined);
   queue = queue.catch(() => undefined);
   return queue;

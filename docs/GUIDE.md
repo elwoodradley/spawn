@@ -297,7 +297,8 @@ Print metrics as `name: value` or `name=value` (any name), count epochs as
   the curve stays readable. Each chart has an **auto / full / log** toggle;
 - metrics that cannot exceed 1 (`acc`, `accuracy`, `precision`, `recall`,
   `f1`, `auc`, `iou`, `dice`, `map`, `top5`, anything ending in `_acc`) never
-  get an axis above 1.0 in auto or full mode;
+  get an axis above 1.0 in auto or full mode while every value is between 0
+  and 1; accuracy printed as a percentage (`acc: 87.5`) keeps its own axis;
 - values printed fewer than three times (`hidden=64`, `accuracy 0.923`) are
   listed above the charts, not charted;
 - the last five runs are kept and overlaid as dashed lines you can toggle per
@@ -328,8 +329,9 @@ the working directory, the final value of each metric and the best validation
 value. The runs are saved with the project, so they are still there after a
 restart. Press **Compare** in the runs strip, tick two runs, and the Metrics
 tab explains the difference in plain sentences: "Learning rate went 0.01 →
-0.1. Final val_acc dropped 8% (0.91 → 0.84). Best val_loss improved: 0.42 at
-epoch 9 → 0.31 at epoch 6." SPAWN finds the settings by looking for simple
+0.1. final val_acc dropped 8% (0.91 → 0.84). best val_loss improved: 0.42 at
+epoch 9 → 0.31 at epoch 6." Scores and losses are called better or worse;
+values that are neither, like the learning rate, just rose or fell. SPAWN finds the settings by looking for simple
 `name = value` lines and keyword arguments such as `lr=0.01` in the two
 versions of the file, and names the common ones in words (learning rate,
 batch size, epochs, dropout, hidden size, weight decay, seed…). Below the
@@ -338,9 +340,8 @@ diff of the code with unchanged lines folded (click "⋯ N unchanged lines" to
 unfold). "No code changed between these runs" and "Same result" say so when
 nothing moved. Runs from different files can be compared too; a note says
 which files. A small dot on a run in the strip means its code differs from
-the run before it. Press **Close** to get the charts back. SPAWN keeps the
-last 10 runs per project; Settings › Run › kept runs controls how many are
-shown.
+the run before it. Press **Close** to get the charts back. Settings › Run ›
+kept runs sets how many runs each project keeps (5 by default, up to 10).
 
 ### 6. Read the handout
 

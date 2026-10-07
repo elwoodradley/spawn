@@ -43,6 +43,8 @@ describe("isDataset", () => {
     expect(isDataset(array("vector", [400]))).toBe(false);
     expect(isDataset(array("column", [400, 1]))).toBe(false);
     expect(isDataset(array("images", [8, 3, 32, 32]))).toBe(false);
+    expect(isDataset(array("image", [28, 28]))).toBe(false);
+    expect(isDataset(array("weights", [256, 256]))).toBe(false);
     expect(isDataset(scalar)).toBe(false);
     expect(isDataset({ ...array("t", [400, 4]), type: "Tensor" })).toBe(false);
   });
