@@ -86,4 +86,28 @@ describe("Interactive Console restart", () => {
     expect(poolProcId()).toBeNull();
     expect(poolStatus()).toBe("croaked");
   });
+
+  it("stays busy until the last queued cell is done", async () => {
+    const { poolSend } = await import("../ipc");
+    const sent = () =>
+      vi
+        .mocked(poolSend)
+        .mock.calls.map(([, line]) => JSON.parse(line) as { id?: number; op: string })
+        .filter((m) => m.op === "exec");
+    const cell = { code: "1", file: null, startLine: 1, scope: "cell" as const, cwd: null };
+    const first = pool().exec(cell);
+    await tick();
+    const kernel = kernels[kernels.length - 1];
+    ready(kernel);
+    await tick();
+    const second = pool().exec(cell);
+    await tick();
+    const [a, b] = sent().slice(-2);
+    kernel?.onMessage(JSON.stringify({ event: "done", id: a?.id, ok: true }));
+    await first;
+    expect(poolStatus()).toBe("busy");
+    kernel?.onMessage(JSON.stringify({ event: "done", id: b?.id, ok: true }));
+    await second;
+    expect(poolStatus()).toBe("idle");
+  });
 });

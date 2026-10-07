@@ -110,7 +110,9 @@ function onMessage(line: string): void {
       if (msg.id === undefined) break;
       const p = pending.get(msg.id);
       pending.delete(msg.id);
-      setPoolStatus("idle");
+      // Shift+Enter pressed again while a cell ran queues the next exec; the
+      // console is still busy until the last one is done.
+      setPoolStatus([...pending.values()].some((q) => q.resolveDone) ? "busy" : "idle");
       setExecGeneration((g) => g + 1);
       const result = { exec: msg.id, ok: msg.ok ?? false, durationMs: msg.durationMs ?? 0 };
       p?.resolveDone?.(result);
