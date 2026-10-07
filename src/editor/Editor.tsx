@@ -6,6 +6,7 @@ import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { createEffect, on, onCleanup, onMount, Show } from "solid-js";
 
+import { chordLabel } from "../app/keybindings";
 import { settings } from "../app/settings";
 import { activeFilePath } from "../app/state";
 import { currentTheme } from "../theme/store";
@@ -115,7 +116,7 @@ export default function Editor() {
         <div class="sp-editor-empty sp-chrome">
           <p>No file open.</p>
           <p class="sp-editor-empty-hint">
-            Pick one from the project, or press Mod-N for a new file.
+            Pick one from the project, or press {chordLabel("Mod-N")} for a new file.
           </p>
         </div>
       </Show>

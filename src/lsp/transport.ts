@@ -5,6 +5,7 @@
 import type { Transport } from "@codemirror/lsp-client";
 
 import { lspSend, lspStart, lspStop, type LspEvent, type LspStartRequest } from "../ipc";
+import { uriToPath } from "./uri";
 
 export interface ServerProcess {
   id: number;
@@ -32,7 +33,7 @@ export function withWorkspaceFolders(message: string, rootUri: string | undefine
     if (parsed.method !== "initialize" || !parsed.params) return message;
     const name = decodeURIComponent(rootUri.split("/").filter(Boolean).pop() ?? "project");
     parsed.params.rootUri = rootUri;
-    parsed.params.rootPath = decodeURIComponent(rootUri.replace(/^file:\/\//, ""));
+    parsed.params.rootPath = uriToPath(rootUri);
     parsed.params.workspaceFolders = [{ uri: rootUri, name }];
     return JSON.stringify(parsed);
   } catch {

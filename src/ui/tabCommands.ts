@@ -1,5 +1,6 @@
 /**
- * Tab navigation as commands: Mod-Tab cycles by most recent use (a frozen
+ * Tab navigation as commands: Ctrl-Tab (Ctrl on macOS too, where Cmd-Tab is
+ * the system app switcher) cycles by most recent use (a frozen
  * snapshot while the modifier is held, like every editor), Mod-PageUp/Down
  * walk the strip, Mod-1..9 jump, and the close-family from the tab menu.
  */
@@ -103,14 +104,14 @@ export function registerTabCommands(): () => void {
     {
       id: "tab.cycle",
       title: "Tab: most recent",
-      keys: "Mod-Tab",
+      keys: "Ctrl-Tab",
       enabled: hasTabs,
       run: () => cycleBy(1),
     },
     {
       id: "tab.cycleBack",
       title: "Tab: most recent (backwards)",
-      keys: "Mod-Shift-Tab",
+      keys: "Ctrl-Shift-Tab",
       enabled: hasTabs,
       run: () => cycleBy(-1),
     },

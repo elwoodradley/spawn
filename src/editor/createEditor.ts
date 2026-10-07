@@ -19,6 +19,7 @@ import { drawSelection, EditorView, keymap, type ViewUpdate } from "@codemirror/
 import { settings } from "../app/settings";
 import { spawnEditorTheme } from "../theme/codemirror";
 import type { Theme } from "../theme/schema";
+import { appKeys } from "./appKeys";
 import { cellExtensions } from "./cellDecorations";
 import { lspExtensionFor } from "../lsp/server";
 import { mergedHover } from "../lsp/hover";
@@ -39,6 +40,7 @@ export function baseExtensions(appearance: Theme["appearance"]): Extension[] {
   return [
     ...prefsExtensions(settings().editor),
     completionKeys(),
+    appKeys(),
     history(),
     foldGutter(),
     drawSelection(),

@@ -8,6 +8,7 @@ import {
   runCommand,
 } from "./commands";
 import { chordLabel, installKeybindings, matchesChord, parseChord } from "./keybindings";
+import { toasts } from "./toast";
 
 beforeEach(() => clearCommands());
 
@@ -26,6 +27,19 @@ describe("command registry", () => {
     expect(listCommands()).toEqual([]);
     expect(await runCommand("t.off")).toBe(false);
     expect(run).not.toHaveBeenCalled();
+  });
+
+  it("shows a failing command as a toast instead of rejecting", async () => {
+    registerCommand({
+      id: "file.save",
+      title: "Save file",
+      run: () => Promise.reject(new Error("No such file or directory")),
+    });
+    expect(await runCommand("file.save")).toBe(false);
+    expect(toasts().at(-1)).toMatchObject({
+      kind: "croak",
+      message: "Save file failed: No such file or directory",
+    });
   });
 
   it("returns false for unknown ids", async () => {
@@ -90,7 +104,11 @@ describe("chordLabel", () => {
   it("renders platform labels", () => {
     expect(chordLabel("Mod-Shift-P", false)).toBe("Ctrl+Shift+P");
     expect(chordLabel("Mod-Shift-P", true)).toBe("⇧⌘P");
-    expect(chordLabel("F5", false)).toBe("f5".toUpperCase() === "F5" ? "f5" : "f5");
+    expect(chordLabel("F5", false)).toBe("F5");
+    expect(chordLabel("Shift-F5", true)).toBe("⇧F5");
+    expect(chordLabel("Mod-PageDown", false)).toBe("Ctrl+PageDown");
+    expect(chordLabel("Mod-Enter", false)).toBe("Ctrl+Enter");
+    expect(chordLabel("Mod--", false)).toBe("Ctrl+-");
   });
 });
 

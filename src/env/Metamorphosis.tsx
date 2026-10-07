@@ -2,7 +2,7 @@
  * Metamorphosis: the interpreter switcher. A popover above the status bar
  * listing every Python SPAWN found, where it came from, and a refresh button.
  */
-import { For, Show } from "solid-js";
+import { createEffect, For, onCleanup, Show } from "solid-js";
 
 import { brood } from "../app/state";
 import "./Metamorphosis.css";
@@ -30,6 +30,13 @@ export default function Metamorphosis() {
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Escape") setMetamorphosisOpen(false);
   };
+  // Opened from the status bar, focus stays outside the popover, so listen on
+  // the window: Escape must close it wherever focus is.
+  createEffect(() => {
+    if (!metamorphosisOpen()) return;
+    window.addEventListener("keydown", onKeyDown);
+    onCleanup(() => window.removeEventListener("keydown", onKeyDown));
+  });
   const [hasPyproject] = createResource(
     () => (metamorphosisOpen() ? brood() : null),
     async (root) => (root ? pathExists(`${root}/pyproject.toml`) : false),
@@ -39,12 +46,7 @@ export default function Metamorphosis() {
   return (
     <Show when={metamorphosisOpen()}>
       <div class="sp-meta__backdrop" onClick={() => setMetamorphosisOpen(false)} />
-      <div
-        class="sp-meta"
-        role="dialog"
-        aria-label="Select Python Interpreter"
-        onKeyDown={onKeyDown}
-      >
+      <div class="sp-meta" role="dialog" aria-label="Select Python Interpreter">
         <header class="sp-meta__header">
           <span class="sp-meta__title">Select Python Interpreter</span>
           <button

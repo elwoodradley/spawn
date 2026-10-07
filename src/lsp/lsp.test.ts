@@ -12,8 +12,18 @@ describe("file URIs", () => {
   });
 
   it("handles Windows drive paths", () => {
-    expect(pathToUri("C:\\Users\\me\\a.py")).toBe("file:///C:/Users/me/a.py");
+    // Spelled as pyright (and VS Code) normalise it, so its replies match.
+    expect(pathToUri("C:\\Users\\me\\a.py")).toBe("file:///c%3A/Users/me/a.py");
+    expect(uriToPath("file:///c%3A/Users/me/a.py")).toBe("c:/Users/me/a.py");
     expect(uriToPath("file:///C:/Users/me/a.py")).toBe("C:/Users/me/a.py");
+  });
+
+  it("encodes characters the way pyright echoes them", () => {
+    // Observed: pyright answers a didOpen of ".../ML%20(copy)/a.py" with
+    // diagnostics for ".../ML%20%28copy%29/a.py".
+    expect(pathToUri("/home/me/ML (copy)/a.py")).toBe("file:///home/me/ML%20%28copy%29/a.py");
+    expect(pathToUri("/home/me/a&b+c/x.py")).toBe("file:///home/me/a%26b%2Bc/x.py");
+    expect(uriToPath(pathToUri("/home/me/ML (copy)/a#1.py"))).toBe("/home/me/ML (copy)/a#1.py");
   });
 });
 

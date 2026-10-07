@@ -5,7 +5,7 @@ import { baseName, dirName } from "../ipc";
 import { runCommand } from "./commands";
 import { chordLabel } from "./keybindings";
 import { recentBroods, recentFiles } from "./recent";
-import { openBrood, openFile } from "./state";
+import { openFile, openRecentBrood } from "./state";
 import "./Welcome.css";
 
 function RecentList(props: {
@@ -80,7 +80,11 @@ export default function Welcome() {
         </p>
       </div>
       <div class="sp-welcome__lists">
-        <RecentList title="Recent projects" items={recentBroods()} onPick={openBrood} />
+        <RecentList
+          title="Recent projects"
+          items={recentBroods()}
+          onPick={(path) => void openRecentBrood(path)}
+        />
         <RecentList
           title="Recent files"
           items={recentFiles()}

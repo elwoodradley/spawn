@@ -10,7 +10,7 @@
 import { createSignal, type Accessor } from "solid-js";
 
 import { closeDocument, isDirty, openDocument, renameDocument, reveal } from "../editor/documents";
-import { baseName, confirm } from "../ipc";
+import { baseName, confirm, pathExists } from "../ipc";
 import { isViewerPath } from "../viewer/docx";
 import { croakToast } from "./toast";
 import { addRecentBrood, addRecentFile, forgetRecent } from "./recent";
@@ -48,6 +48,20 @@ export type BroodAccessor = Accessor<string | null>;
 export function openBrood(path: string): void {
   setBrood(path);
   addRecentBrood(path);
+}
+
+/**
+ * Open a project from a recent list. The folder may have been moved or
+ * deleted since; say so and drop it from the list instead of opening an
+ * empty, broken project.
+ */
+export async function openRecentBrood(path: string): Promise<void> {
+  if (await pathExists(path)) {
+    openBrood(path);
+    return;
+  }
+  forgetRecent(path);
+  setLastCroak(`The project folder ${path} no longer exists`);
 }
 
 export const openFile = async (path: string, line?: number): Promise<void> => {

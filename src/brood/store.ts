@@ -6,6 +6,7 @@ import { createEffect, createMemo, createRoot, on, onCleanup } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 
 import { brood } from "../app/state";
+import { syncAllFromDisk } from "../editor/documents";
 import { baseName, listDir, watchTree, type Unwatch } from "../ipc";
 import {
   findNode,
@@ -103,7 +104,10 @@ export function startBroodTree(): void {
       void loadDirectory(root);
       void watchTree(root, () => {
         if (timer) clearTimeout(timer);
-        timer = setTimeout(() => void refreshTree(), 200);
+        timer = setTimeout(() => {
+          void refreshTree();
+          void syncAllFromDisk();
+        }, 200);
       }).then((fn) => {
         unwatch = fn;
       });
