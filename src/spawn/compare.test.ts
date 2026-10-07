@@ -129,6 +129,13 @@ describe("fmt and describeFinal", () => {
     );
   });
 
+  it("says how many times for a change past 1000%", () => {
+    expect(describeFinal("loss", 0.0209, 10000).text).toBe(
+      "final loss rose 478000× (0.0209 → 10000).",
+    );
+    expect(describeFinal("lr", 0.01, 0.1).text).toBe("final lr rose 900% (0.01 → 0.1).");
+  });
+
   it("does not call a learning rate or other neutral value better or worse", () => {
     expect(describeFinal("lr", 0.01, 0.1)).toEqual({
       kind: "metric",

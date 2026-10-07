@@ -177,7 +177,15 @@ export function describeFinal(name: string, from: number, to: number): Finding {
           : "dropped";
   const pct = percent(from, to);
   // From zero there is no percentage; say nothing rather than "slightly".
-  const amount = pct === null ? "" : pct < 1 ? " slightly" : ` ${pct}%`;
+  // Past 1000% a percentage stops meaning anything; say how many times.
+  const amount =
+    pct === null
+      ? ""
+      : pct < 1
+        ? " slightly"
+        : pct >= 1000
+          ? ` ${fmt(Math.abs(to / from))}×`
+          : ` ${pct}%`;
   return {
     kind: "metric",
     text: `final ${name} ${verb}${amount} (${fmt(from)} → ${fmt(to)}).`,

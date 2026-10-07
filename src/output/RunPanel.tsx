@@ -15,6 +15,7 @@ import {
 } from "solid-js";
 
 import { settings } from "../app/settings";
+import { baseName } from "../ipc";
 import { elapsedMs, metrics, spawnCommand, spawnStatus } from "../spawn/controller";
 import { analyzeHealth, type Finding } from "../spawn/health";
 import { groupSeries, reuseGroups, type ChartGroup } from "../spawn/pairs";
@@ -78,11 +79,19 @@ export default function RunPanel() {
       else next.add(id);
       return next;
     });
-  const overlays = createMemo<OverlayRun[]>(() =>
-    settings().run.overlayPrevious
-      ? runs().map((run) => ({ run, enabled: !hidden().has(run.id) }))
-      : [],
-  );
+  // Only earlier runs of the same file: another script's loss (say one that
+  // exploded to 10,000) would set the scale and flatten the live curve.
+  const currentFile = () => {
+    const ran = spawnCommand();
+    return ran ? baseName(ran.args[ran.args.length - 1] ?? "") : null;
+  };
+  const overlays = createMemo<OverlayRun[]>(() => {
+    if (!settings().run.overlayPrevious) return [];
+    const file = currentFile();
+    return runs()
+      .filter((run) => file === null || run.file === file)
+      .map((run) => ({ run, enabled: !hidden().has(run.id) }));
+  });
 
   /**
    * Findings are recomputed on a timer while the run streams rather than on
